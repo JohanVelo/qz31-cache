@@ -175,7 +175,8 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
 /* board view */
 #board{flex:1 1 auto;overflow-y:auto;padding:12px 14px 40px;display:none}
 .bcols{display:grid;grid-template-columns:1fr;gap:12px;max-width:1080px;margin:0 auto}
-@media(min-width:760px){.bcols{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:620px){.bcols{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:980px){.bcols{grid-template-columns:repeat(4,1fr)}}
 .bcol{background:linear-gradient(180deg,rgba(255,255,255,.015),transparent);border:1px solid var(--line);border-radius:11px;padding:11px;min-height:140px;transition:.12s}
 .bcol.over{border-color:var(--cyan,#22D3EE);box-shadow:0 0 0 1px var(--cyan,#22D3EE) inset,0 0 24px rgba(34,211,238,.12)}
 .bcolh{display:flex;align-items:center;gap:8px;font-family:var(--m);font-size:10px;letter-spacing:1.5px;color:var(--txt2);margin-bottom:10px;padding:0 2px}
@@ -208,6 +209,18 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
 .rel{display:flex;align-items:center;gap:9px;background:var(--cell);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-top:7px;cursor:pointer;font-size:12.5px}
 .rel:hover{border-color:var(--line2)}.rel .tid{font-family:var(--m);font-size:10px;color:var(--txt3)}
 .rel .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rel .rwhy{font-family:var(--m);font-size:9px;color:var(--cyan,#22D3EE)}
+/* help overlay */
+.help{position:fixed;inset:0;background:rgba(2,4,8,.62);backdrop-filter:blur(4px);display:none;z-index:85;align-items:center;justify-content:center}
+.help.on{display:flex}
+.help-box{width:min(440px,92vw);background:var(--cell);border:1px solid var(--line2);border-radius:14px;padding:20px 22px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.help-box h3{font-family:var(--m);font-size:12px;letter-spacing:2px;color:var(--cyan,#22D3EE);margin-bottom:14px}
+.help-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.help-row:last-child{border:0}
+.help-row kbd{font-family:var(--m);font-size:11px;background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:3px 8px;color:var(--txt2)}
+.help-x{margin-top:16px;text-align:center;font-family:var(--m);font-size:11px;color:var(--txt3)}
+/* pin star on rows */
+.star{flex:0 0 auto;cursor:pointer;font-size:13px;color:var(--txt3);transition:.15s}
+.star.on{color:var(--amber);text-shadow:0 0 8px rgba(255,176,32,.5)}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -244,6 +257,16 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
   <div class="reply"><textarea id="reply-text" placeholder="Reply to the planner…"></textarea><button class="send" id="reply-send">SEND</button></div>
 </div>
 <div class="cmdk" id="cmdk"><div class="cmdk-box"><input class="cmdk-in" id="cmdk-in" placeholder="Type a command or ticket #…   (Esc to close)"><div class="cmdk-list" id="cmdk-list"></div></div></div>
+<div class="help" id="help"><div class="help-box"><h3>// KEYBOARD SHORTCUTS</h3>
+ <div class="help-row"><span>Command palette</span><kbd>Ctrl / ⌘ K</kbd></div>
+ <div class="help-row"><span>Focus search</span><kbd>/</kbd></div>
+ <div class="help-row"><span>List · Board · Stats</span><kbd>1 · 2 · 3</kbd></div>
+ <div class="help-row"><span>Refresh</span><kbd>R</kbd></div>
+ <div class="help-row"><span>Next theme</span><kbd>T</kbd></div>
+ <div class="help-row"><span>Full-screen</span><kbd>F</kbd></div>
+ <div class="help-row"><span>Export CSV</span><kbd>E</kbd></div>
+ <div class="help-row"><span>This help</span><kbd>?</kbd></div>
+ <div class="help-x">Esc or click outside to close</div></div></div>
 <div class="toast" id="toast"></div>
 <script>
 var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
@@ -376,8 +399,9 @@ function setView(v){
   render();
 }
 function renderBoard(){
-  var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return t.open&&!t.prog&&!isSnoozed(t);},set:'new'},
-            {lab:'IN-PROGRESS',dot:'var(--cyan,#22D3EE)',f:function(t){return t.prog;},set:'in_progress'},
+  var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return (t.status==='new'||t.status==='reopened')&&!isSnoozed(t);},set:'new'},
+            {lab:'IN-PROGRESS',dot:'var(--cyan,#22D3EE)',f:function(t){return t.status==='in_progress';},set:'in_progress'},
+            {lab:'ON-HOLD',dot:'var(--violet)',f:function(t){return t.status==='needs_info'||t.status==='triage';},set:'needs_info'},
             {lab:'SHIPPED',dot:'var(--green)',f:function(t){return t.done;},set:'done'}];
   var h='<div class="bhint">⠿ drag a card between columns to change its status</div><div class="bcols">';
   cols.forEach(function(c){
@@ -435,7 +459,10 @@ function cmdItems(q){
     {lbl:'Toggle full-screen',hint:'window',run:function(){toggleFs()}},
     {lbl:'Minimise',hint:'window',run:function(){minimise()}},
     {lbl:'Next theme',hint:'theme',run:function(){cycleTheme()}},
-    {lbl:'Theme: Cyber Void',hint:'theme',run:function(){applyThemeName('void')}}];
+    {lbl:'Theme: Cyber Void',hint:'theme',run:function(){applyThemeName('void')}},
+    {sec:'TOOLS'},
+    {lbl:'Export CSV',hint:'download',run:function(){exportCSV()}},
+    {lbl:'Keyboard help',hint:'?',run:function(){openHelp()}}];
   var items=[],pendingSec=null;
   acts.forEach(function(a){if(a.sec){pendingSec=a;return;}if(!q||a.lbl.toLowerCase().indexOf(q)>=0){if(pendingSec){items.push(pendingSec);pendingSec=null;}items.push(a);}});
   var ts=STATE.tickets.filter(function(t){if(!q)return true;return String(t.title).toLowerCase().indexOf(q)>=0||String(t.id).indexOf(q)>=0;}).slice(0,8);
@@ -471,6 +498,46 @@ function closeCmd(){document.getElementById('cmdk').classList.remove('on');}
   var ov=document.getElementById('cmdk');
   if(ov)ov.addEventListener('click',function(e){if(e.target.id==='cmdk')closeCmd();});
 })();
+/* ── pins / star ── */
+var PINS=[];try{PINS=JSON.parse(localStorage.getItem('vr_pins')||'[]')||[];}catch(e){PINS=[];}
+function isPinned(id){return PINS.indexOf(id)>=0;}
+function togglePin(id){var i=PINS.indexOf(id);if(i>=0)PINS.splice(i,1);else PINS.push(id);try{localStorage.setItem('vr_pins',JSON.stringify(PINS));}catch(e){}toast(isPinned(id)?'📌 pinned':'unpinned');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();render();var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on'))openT(id);}
+function togglePinEv(e,id){e.stopPropagation();togglePin(id);}
+/* ── CSV export ── */
+function exportCSV(){
+  var ts=STATE.tickets.slice().sort(function(a,b){return b.id-a.id;});
+  var rows=[['id','status','kind','priority','title','reporter','assignee','version','created']];
+  ts.forEach(function(t){rows.push([t.id,t.status,t.kind,t.priority||'',t.title,t.who,t.assignee||'',t.ver||'',t.created]);});
+  var csv=rows.map(function(r){return r.map(function(c){c=String(c==null?'':c);return /[",\n]/.test(c)?('"'+c.replace(/"/g,'""')+'"'):c;}).join(',');}).join('\n');
+  try{var blob=new Blob([csv],{type:'text/csv'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='velocity-relay-tickets.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},2000);toast('📄 CSV exported ('+ts.length+')');}catch(e){toast('export failed');}
+}
+function copyLink(id){copyText('https://johanvelo.github.io/qz31-cache/ticketapp/index.html?t='+id);}
+/* ── help ── */
+function openHelp(){document.getElementById('help').classList.add('on');}
+function closeHelp(){document.getElementById('help').classList.remove('on');}
+(function(){var h=document.getElementById('help');if(h)h.addEventListener('click',function(e){if(e.target.id==='help')closeHelp();});})();
+/* ── single-key shortcuts (ignored while typing / palette open) ── */
+document.addEventListener('keydown',function(e){
+  var t=e.target,tag=(t&&t.tagName)||'';
+  if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var cmdOpen=document.getElementById('cmdk').classList.contains('on');
+  var helpOpen=document.getElementById('help').classList.contains('on');
+  if(e.key==='Escape'){if(helpOpen)closeHelp();return;}
+  if(cmdOpen)return;
+  if(helpOpen&&e.key!=='?')return;
+  switch(e.key){
+    case '/':e.preventDefault();setView('list');var s=document.getElementById('q');if(s)s.focus();break;
+    case '1':setView('list');break;
+    case '2':setView('board');break;
+    case '3':setView('stats');break;
+    case 'r':case 'R':load();break;
+    case 't':case 'T':cycleTheme();break;
+    case 'f':case 'F':toggleFs();break;
+    case 'e':case 'E':exportCSV();break;
+    case '?':openHelp();break;
+  }
+});
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){
@@ -553,6 +620,8 @@ function listHtml(){
   var opens=ts.filter(function(t){return t.open&&!isSnoozed(t)}),done=ts.filter(function(t){return t.done}),snoozed=ts.filter(function(t){return t.open&&isSnoozed(t)});
   var h='';
   if(STATE.tab==='all'){
+    var pinned=STATE.tickets.filter(function(t){return isPinned(t.id);});
+    if(pinned.length)h+='<div class="sec">// 📌 PINNED · '+pinned.length+'</div>'+pinned.map(rowHtml).join('');
     h+='<div class="sec">// INBOX'+(opens.length?(' · '+opens.length):'')+'</div>';
     var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+p[0]+' &amp; #'+p[1]+' look similar — possible duplicate</div>';}).join('');
     h+=opens.length?opens.map(rowHtml).join(''):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
@@ -575,6 +644,7 @@ function rowHtml(t){
    '<span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+H(t.id)+'</span>'+
    '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+stale+thread+asg+
    '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span>'+
+   '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+t.id+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
    '<span class="meta-r">'+right+'</span></div>';
 }
 function insightsHtml(){
@@ -617,6 +687,8 @@ function openT(id){
   var relHtml=rel.length?('<div class="thread"><div class="sec">// RELATED</div>'+rel.map(function(o){var why=o.who===t.who?'same reporter':'similar';return '<div class="rel" onclick="openT('+o.id+')"><span class="tid">#'+o.id+'</span><span class="rt">'+(o.kind==='bug'?'🐛 ':'✨ ')+H(o.title)+'</span><span class="rwhy">'+why+'</span></div>';}).join('')+'</div>'):'';
   var acts='<div class="acts">'+
     '<button class="act hand" onclick="handoff('+id+')">⎘ Hand to Terminal</button>'+
+    '<button class="act" onclick="togglePin('+id+')">'+(isPinned(id)?'★ Unpin':'☆ Pin')+'</button>'+
+    '<button class="act" onclick="copyLink('+id+')">🔗 Copy link</button>'+
     (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
     (t.status!=='done'?'<button class="act go" onclick="setStatus('+id+',\'done\')">✓ Mark done</button>':'')+
     (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+

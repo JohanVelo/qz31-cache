@@ -383,19 +383,13 @@ function handoff(id){
   L.push(t.body||"(none)");
   if(t.thread&&t.thread.length){L.push("");L.push("CONVERSATION SO FAR:");t.thread.forEach(function(m){L.push("- "+(m.author==='office'?'office':t.who)+": "+m.body)});}
   L.push("");
-  L.push("DO THIS (terminal):");
-  L.push("1) Read the PDF + screenshots linked above.");
-  L.push("2) Reproduce-first on the real data shape (not a memory layer).");
-  L.push("3) Run: research/ticket_triage.py triage("+t.id+")  — pinpoints the suspect file/function.");
-  L.push("4) Fix the blamed frame; keep every edit runnable.");
-  L.push("5) research/smoke_check.py smoke().");
-  L.push("6) publish_plugin.py — ONLY after the other terminal has published (coord-gated).");
-  L.push("7) Resolve ticket #"+t.id+" with resolved_in_version (Telegram echo).");
+  L.push("GOAL: investigate and fix this ticket, then mark it resolved once verified.");
+  L.push("Start from the PDF report and screenshots above, reproduce the issue on the real project data, find the cause, apply the fix, smoke-test it, and resolve the ticket.");
   copyText(L.join("\n"));
   if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
 }
 function copyText(b){
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(b).then(function(){toast('📋 handoff copied — paste into a terminal')},function(){legacyCopy(b)});}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(b).then(function(){toast('📋 ticket brief copied')},function(){legacyCopy(b)});}
   else legacyCopy(b);
 }
 function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}

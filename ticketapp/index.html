@@ -172,13 +172,33 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
  mask-image:linear-gradient(90deg,transparent,black 14%,black 86%,transparent)}
 .ticker span{display:inline-block;animation:tick 22s linear infinite}
 @keyframes tick{0%{transform:translateX(60%)}100%{transform:translateX(-100%)}}
+/* board view */
+#board{flex:1 1 auto;overflow-y:auto;padding:12px 14px 40px;display:none}
+.bcols{display:grid;grid-template-columns:1fr;gap:12px;max-width:1080px;margin:0 auto}
+@media(min-width:760px){.bcols{grid-template-columns:repeat(3,1fr)}}
+.bcol{background:linear-gradient(180deg,rgba(255,255,255,.015),transparent);border:1px solid var(--line);border-radius:11px;padding:11px;min-height:140px;transition:.12s}
+.bcol.over{border-color:var(--cyan,#22D3EE);box-shadow:0 0 0 1px var(--cyan,#22D3EE) inset,0 0 24px rgba(34,211,238,.12)}
+.bcolh{display:flex;align-items:center;gap:8px;font-family:var(--m);font-size:10px;letter-spacing:1.5px;color:var(--txt2);margin-bottom:10px;padding:0 2px}
+.bcolh .bdot{width:9px;height:9px;border-radius:50%}.bcolh .bn{margin-left:auto;background:var(--cell);border:1px solid var(--line);border-radius:14px;padding:1px 8px;color:var(--txt)}
+.bcard{background:var(--cell);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:9px;padding:11px;margin-bottom:9px;cursor:grab;transition:.12s}
+.bcard:hover{border-color:var(--line2);transform:translateY(-1px)}
+.bcard.dragging{opacity:.4}
+.bctop{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.bctt{font-weight:600;font-size:13px;line-height:1.3;margin-bottom:8px}
+.bcf{display:flex;align-items:center;gap:8px;font-family:var(--m);font-size:9px;color:var(--txt3)}
+.bcf .who{display:flex;align-items:center;gap:5px}.bcf .who i{width:7px;height:7px;border-radius:50%}.bcf .meta-r{margin-left:auto}
+.bempty{font-family:var(--m);font-size:11px;color:var(--txt3);text-align:center;padding:16px;border:1px dashed var(--line);border-radius:9px}
+.bcard .pri{font-family:var(--m);font-size:8px;padding:2px 5px;border-radius:4px;margin-left:auto}
+.bcard .pri.high{color:var(--red,#FF2E55);background:rgba(255,46,85,.14)}.bcard .pri.med{color:var(--amber);background:rgba(255,176,32,.12)}.bcard .pri.low{color:var(--txt2)}
+.bcard .asg{font-family:var(--m);font-size:8px;color:var(--violet);border:1px solid rgba(167,139,250,.4);border-radius:7px;padding:2px 5px}
+.bhint{font-family:var(--m);font-size:9px;color:var(--txt3);text-align:center;margin:2px auto 10px;max-width:1080px}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
     <div class="bar">
       <div class="glyph">♞</div>
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
-      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vS" onclick="setView('stats')">STATS</div></div>
+      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" onclick="toggleFs()" title="maximise / restore" style="font-size:14px">⛶</div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
@@ -196,6 +216,7 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
     <div class="alert" id="alert" onclick="clearNew()"></div>
   </div>
   <div class="list" id="list"></div>
+  <div id="board"></div>
   <div id="stats"></div>
 </div>
 <div class="deny" id="deny" style="display:none">⚠ Not authorized.<br>This board is private to the planning office.</div>
@@ -316,19 +337,64 @@ function render(){
   else{al.classList.remove('on');document.getElementById('bell').classList.remove('has');}
   document.getElementById('list').innerHTML=listHtml();
   buildTicker();
+  if(STATE.view==='board')renderBoard();
   if(STATE.view==='stats')renderStats();
 }
 function setView(v){
   STATE.view=v;
   try{localStorage.setItem('vr_view',v)}catch(e){}
-  var L=document.getElementById('vL'),S=document.getElementById('vS');
-  if(L)L.className=v==='list'?'on':'';if(S)S.className=v==='stats'?'on':'';
-  var stats=v==='stats';
-  document.getElementById('list').style.display=stats?'none':'';
-  document.getElementById('stats').style.display=stats?'block':'none';
-  ['.kp','.tabs','.tools','.chips','.alert'].forEach(function(sel){var el=document.querySelector(sel);if(el)el.style.display=stats?'none':'';});
+  var ids={list:'vL',board:'vB',stats:'vS'};
+  ['vL','vB','vS'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
+  document.getElementById('list').style.display=(v==='list')?'':'none';
+  document.getElementById('board').style.display=(v==='board')?'block':'none';
+  document.getElementById('stats').style.display=(v==='stats')?'block':'none';
+  var hide=(v!=='list');
+  ['.kp','.tabs','.tools','.chips','.alert'].forEach(function(sel){var el=document.querySelector(sel);if(el)el.style.display=hide?'none':'';});
   if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();
   render();
+}
+function renderBoard(){
+  var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return t.open&&!t.prog;},set:'new'},
+            {lab:'IN-PROGRESS',dot:'var(--cyan,#22D3EE)',f:function(t){return t.prog;},set:'in_progress'},
+            {lab:'SHIPPED',dot:'var(--green)',f:function(t){return t.done;},set:'done'}];
+  var h='<div class="bhint">⠿ drag a card between columns to change its status</div><div class="bcols">';
+  cols.forEach(function(c){
+    var items=STATE.tickets.filter(c.f);
+    h+='<div class="bcol" data-set="'+c.set+'" ondragover="bOver(event)" ondragleave="bLeave(event)" ondrop="bDrop(event,\''+c.set+'\')">'+
+       '<div class="bcolh"><span class="bdot" style="background:'+c.dot+'"></span>'+c.lab+'<span class="bn">'+items.length+'</span></div>'+
+       (items.map(bCard).join('')||'<div class="bempty">—</div>')+'</div>';
+  });
+  document.getElementById('board').innerHTML=h+'</div>';
+}
+function bCard(t){
+  var ic=t.kind==='bug'?'🐛':'✨';
+  var pri=t.priority?'<span class="pri '+priClass(t.priority)+'">'+H(String(t.priority).toUpperCase().slice(0,4))+'</span>':'';
+  var asg=t.assignee?'<span class="asg">'+H(t.assignee)+'</span>':'';
+  return '<div class="bcard" draggable="true" ondragstart="bStart(event,'+t.id+')" ondragend="bEnd(event)" onclick="openT('+t.id+')" style="border-left-color:'+t.color+'">'+
+    '<div class="bctop"><span class="tid">#'+H(t.id)+'</span>'+pri+asg+'</div>'+
+    '<div class="bctt">'+ic+' '+H(t.title)+'</div>'+
+    '<div class="bcf"><span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span><span class="meta-r">'+(t.done?('v'+(H(t.ver)||'?')):ageS(t.created))+'</span></div></div>';
+}
+var _drag=null;
+function bStart(e,id){_drag=id;try{e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';}catch(_){}var el=e.currentTarget;setTimeout(function(){if(el&&el.classList)el.classList.add('dragging');},0);}
+function bEnd(e){if(e.currentTarget&&e.currentTarget.classList)e.currentTarget.classList.remove('dragging');_drag=null;}
+function bOver(e){e.preventDefault();e.currentTarget.classList.add('over');}
+function bLeave(e){e.currentTarget.classList.remove('over');}
+function bDrop(e,set){
+  e.preventDefault();e.currentTarget.classList.remove('over');
+  var id=_drag;if(!id){try{id=parseInt(e.dataTransfer.getData('text/plain'),10);}catch(_){}}
+  if(!id)return;var t=find(id);if(!t)return;
+  var st=set;if(set==='new'&&t.done)st='reopened';
+  if(t.status===st){return;}
+  t.status=st;t.open=['new','triage','in_progress','needs_info','reopened'].indexOf(st)>=0;t.prog=['in_progress','triage','needs_info','reopened'].indexOf(st)>=0;t.done=(st==='done');
+  renderBoard();
+  moveStatus(id,st);
+}
+function moveStatus(id,st){
+  api('/status',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,status:st})}).then(function(res){
+    if(res.ok){toast('#'+id+' → '+st);if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');load();}
+    else{toast('move failed');load();}
+  }).catch(function(){toast('move failed');load();});
 }
 function buildFeed(){
   var ev=[];

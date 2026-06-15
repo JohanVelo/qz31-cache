@@ -279,6 +279,10 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:''}}
 function api(p,opt){opt=opt||{};opt.headers=hdrs();return fetch(API+p,opt).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})}
 function priClass(p){p=(p||'').toLowerCase();return p.indexOf('high')>=0||p.indexOf('crit')>=0?'high':(p.indexOf('med')>=0?'med':'low')}
+function isSnoozed(t){return !!t.snz&&new Date(t.snz).getTime()>Date.now();}
+function snooze(id,days){var until=new Date(Date.now()+days*864e5).toISOString();api('/snooze',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,until:until})}).then(function(res){if(res.ok){toast('😴 snoozed '+days+'d');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');closeT();load();}else{toast('snooze failed')}});}
+function unsnooze(id){api('/snooze',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,until:null})}).then(function(res){if(res.ok){toast('⏰ woke up');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');load();setTimeout(function(){openT(id);},400);}else{toast('failed')}});}
+function snoozeRow(t){var wake=Math.max(0,(new Date(t.snz).getTime()-Date.now())/3.6e6);var w=wake<48?Math.ceil(wake)+'h':Math.ceil(wake/24)+'d';return '<div class="row" style="border-left-color:'+t.color+';opacity:.72" onclick="openT('+t.id+')"><span class="tag prog">😴 SNZ</span><span class="tid">#'+H(t.id)+'</span><div class="ttl"><div class="tl1">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div></div><span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span><span class="meta-r">wakes '+w+'</span></div>';}
 
 function toggleFs(){try{if(!tg)return;if(tg.isFullscreen){tg.exitFullscreen&&tg.exitFullscreen()}else{tg.requestFullscreen&&tg.requestFullscreen()}tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light')}catch(e){}}
 function minimise(){try{if(!tg)return;tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');if(tg.isFullscreen&&tg.exitFullscreen)tg.exitFullscreen();if(tg.close)tg.close();}catch(e){}}
@@ -372,7 +376,7 @@ function setView(v){
   render();
 }
 function renderBoard(){
-  var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return t.open&&!t.prog;},set:'new'},
+  var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return t.open&&!t.prog&&!isSnoozed(t);},set:'new'},
             {lab:'IN-PROGRESS',dot:'var(--cyan,#22D3EE)',f:function(t){return t.prog;},set:'in_progress'},
             {lab:'SHIPPED',dot:'var(--green)',f:function(t){return t.done;},set:'done'}];
   var h='<div class="bhint">⠿ drag a card between columns to change its status</div><div class="bcols">';
@@ -546,12 +550,13 @@ function applyFilters(){
 function listHtml(){
   var ts=applyFilters();
   if(!ts.length)return '<div class="sec">// TICKETS</div><div class="empty">✦ nothing matches</div>';
-  var opens=ts.filter(function(t){return t.open}),done=ts.filter(function(t){return t.done});
+  var opens=ts.filter(function(t){return t.open&&!isSnoozed(t)}),done=ts.filter(function(t){return t.done}),snoozed=ts.filter(function(t){return t.open&&isSnoozed(t)});
   var h='';
   if(STATE.tab==='all'){
     h+='<div class="sec">// INBOX'+(opens.length?(' · '+opens.length):'')+'</div>';
     var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+p[0]+' &amp; #'+p[1]+' look similar — possible duplicate</div>';}).join('');
     h+=opens.length?opens.map(rowHtml).join(''):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
+    if(snoozed.length)h+='<div class="sec">// SNOOZED · '+snoozed.length+'</div>'+snoozed.map(snoozeRow).join('');
     h+='<div class="sec">// SHIPPED · RECENT</div>'+(done.length?done.slice(0,40).map(rowHtml).join(''):'<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>');
   }else{
     h+='<div class="sec">// '+STATE.tab.toUpperCase()+' · '+ts.length+'</div>'+ts.map(rowHtml).join('');
@@ -617,7 +622,8 @@ function openT(id){
     (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+
     '<button class="act asn" onclick="assign('+id+',\'A\')">→ A</button>'+
     '<button class="act asn" onclick="assign('+id+',\'B\')">→ B</button>'+
-    (t.assignee?'<button class="act" onclick="assign('+id+',\'\')">unassign</button>':'')+'</div>';
+    (t.assignee?'<button class="act" onclick="assign('+id+',\'\')">unassign</button>':'')+
+    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>';
   document.getElementById('sh-body').innerHTML=
     '<div class="tag '+tag+'" style="display:inline-block;margin-bottom:8px">'+lab+'</div>'+
     '<div class="dt">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div>'+

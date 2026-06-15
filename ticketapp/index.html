@@ -192,6 +192,22 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
 .bcard .pri.high{color:var(--red,#FF2E55);background:rgba(255,46,85,.14)}.bcard .pri.med{color:var(--amber);background:rgba(255,176,32,.12)}.bcard .pri.low{color:var(--txt2)}
 .bcard .asg{font-family:var(--m);font-size:8px;color:var(--violet);border:1px solid rgba(167,139,250,.4);border-radius:7px;padding:2px 5px}
 .bhint{font-family:var(--m);font-size:9px;color:var(--txt3);text-align:center;margin:2px auto 10px;max-width:1080px}
+/* command palette */
+.cmdk{position:fixed;inset:0;background:rgba(2,4,8,.62);backdrop-filter:blur(4px);display:none;z-index:80;align-items:flex-start;justify-content:center}
+.cmdk.on{display:flex}
+.cmdk-box{margin-top:9vh;width:min(560px,92vw);background:var(--cell);border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.cmdk-in{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--txt);font-family:var(--m);font-size:15px;padding:16px 18px;outline:none}
+.cmdk-list{max-height:52vh;overflow-y:auto;padding:6px}
+.cmdk-it{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:9px;cursor:pointer;font-size:13.5px}
+.cmdk-it .lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdk-it .hint{font-family:var(--m);font-size:9px;color:var(--txt3)}
+.cmdk-it.sel,.cmdk-it:hover{background:var(--bg)}
+.cmdk-it.sel{box-shadow:inset 2px 0 0 var(--cyan,#22D3EE)}
+.cmdk-sec{font-family:var(--m);font-size:9px;letter-spacing:1.5px;color:var(--txt3);padding:9px 13px 4px}
+.dupe{margin-top:8px;border-radius:9px;padding:10px 13px;font-family:var(--m);font-size:11px;color:var(--amber);background:rgba(255,176,32,.08);border:1px dashed rgba(255,176,32,.4)}
+.rel{display:flex;align-items:center;gap:9px;background:var(--cell);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-top:7px;cursor:pointer;font-size:12.5px}
+.rel:hover{border-color:var(--line2)}.rel .tid{font-family:var(--m);font-size:10px;color:var(--txt3)}
+.rel .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rel .rwhy{font-family:var(--m);font-size:9px;color:var(--cyan,#22D3EE)}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -201,6 +217,7 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" onclick="toggleFs()" title="maximise / restore" style="font-size:14px">⛶</div>
+      <div class="bell" onclick="openCmd()" title="commands (Ctrl/⌘K)" style="font-size:13px;font-family:var(--m)">⌘</div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
       <div class="bell" id="bell" onclick="clearNew()">🔔<span class="bdg" id="bdg">0</span></div>
@@ -226,6 +243,7 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
   <div class="tmpl" id="tmpl"></div>
   <div class="reply"><textarea id="reply-text" placeholder="Reply to the planner…"></textarea><button class="send" id="reply-send">SEND</button></div>
 </div>
+<div class="cmdk" id="cmdk"><div class="cmdk-box"><input class="cmdk-in" id="cmdk-in" placeholder="Type a command or ticket #…   (Esc to close)"><div class="cmdk-list" id="cmdk-list"></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
 var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
@@ -396,6 +414,59 @@ function moveStatus(id,st){
     else{toast('move failed');load();}
   }).catch(function(){toast('move failed');load();});
 }
+/* ── similarity (dedup + related) ── */
+function tokens(s){return String(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(function(w){return w.length>2;});}
+function sim(a,b){var A=tokens(a),B=tokens(b);if(!A.length||!B.length)return 0;var sb={};B.forEach(function(w){sb[w]=1;});var seen={},inter=0;A.forEach(function(w){if(sb[w]&&!seen[w]){inter++;seen[w]=1;}});var uni={};A.concat(B).forEach(function(w){uni[w]=1;});return inter/Object.keys(uni).length;}
+function findDupes(items){var p=[];for(var i=0;i<items.length;i++)for(var j=i+1;j<items.length;j++){if(sim(items[i].title,items[j].title)>=0.5)p.push([items[i].id,items[j].id]);}return p;}
+/* ── command palette ── */
+var CMD_SEL=0,CMD_ITEMS=[];
+function cmdItems(q){
+  q=(q||'').toLowerCase();
+  var acts=[{sec:'VIEW'},
+    {lbl:'Go to List',hint:'view',run:function(){setView('list')}},
+    {lbl:'Go to Board',hint:'view',run:function(){setView('board')}},
+    {lbl:'Go to Stats',hint:'view',run:function(){setView('stats')}},
+    {sec:'ACTIONS'},
+    {lbl:'Refresh now',hint:'reload',run:function(){load()}},
+    {lbl:'Toggle full-screen',hint:'window',run:function(){toggleFs()}},
+    {lbl:'Minimise',hint:'window',run:function(){minimise()}},
+    {lbl:'Next theme',hint:'theme',run:function(){cycleTheme()}},
+    {lbl:'Theme: Cyber Void',hint:'theme',run:function(){applyThemeName('void')}}];
+  var items=[],pendingSec=null;
+  acts.forEach(function(a){if(a.sec){pendingSec=a;return;}if(!q||a.lbl.toLowerCase().indexOf(q)>=0){if(pendingSec){items.push(pendingSec);pendingSec=null;}items.push(a);}});
+  var ts=STATE.tickets.filter(function(t){if(!q)return true;return String(t.title).toLowerCase().indexOf(q)>=0||String(t.id).indexOf(q)>=0;}).slice(0,8);
+  if(ts.length){items.push({sec:'TICKETS'});ts.forEach(function(t){items.push({lbl:'#'+t.id+'  '+t.title,hint:t.who,run:function(){openT(t.id);}});});}
+  return items;
+}
+function renderCmd(){
+  CMD_ITEMS=cmdItems(document.getElementById('cmdk-in').value);
+  var sels=CMD_ITEMS.map(function(it,i){return it.sec?-1:i;}).filter(function(i){return i>=0;});
+  if(sels.indexOf(CMD_SEL)<0)CMD_SEL=sels.length?sels[0]:-1;
+  document.getElementById('cmdk-list').innerHTML=CMD_ITEMS.map(function(it,i){
+    if(it.sec)return '<div class="cmdk-sec">// '+it.sec+'</div>';
+    return '<div class="cmdk-it'+(i===CMD_SEL?' sel':'')+'" data-i="'+i+'" onmouseover="CMD_SEL='+i+';markSel()" onclick="runCmd('+i+')"><span class="lbl">'+H(it.lbl)+'</span><span class="hint">'+H(it.hint||'')+'</span></div>';
+  }).join('');
+}
+function markSel(){[].forEach.call(document.querySelectorAll('#cmdk-list .cmdk-it'),function(el){el.classList.toggle('sel',+el.getAttribute('data-i')===CMD_SEL);});}
+function runCmd(i){var it=CMD_ITEMS[i];if(it&&it.run){closeCmd();it.run();}}
+function openCmd(){document.getElementById('cmdk').classList.add('on');var inp=document.getElementById('cmdk-in');inp.value='';CMD_SEL=0;renderCmd();setTimeout(function(){inp.focus()},30);}
+function closeCmd(){document.getElementById('cmdk').classList.remove('on');}
+(function(){
+  var inp=document.getElementById('cmdk-in');
+  if(inp)inp.addEventListener('input',function(){CMD_SEL=0;renderCmd();});
+  document.addEventListener('keydown',function(e){
+    var open=document.getElementById('cmdk').classList.contains('on');
+    if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();open?closeCmd():openCmd();return;}
+    if(!open)return;
+    if(e.key==='Escape'){closeCmd();return;}
+    var sels=CMD_ITEMS.map(function(it,i){return it.sec?-1:i;}).filter(function(i){return i>=0;});
+    if(e.key==='ArrowDown'){e.preventDefault();var p=sels.indexOf(CMD_SEL);CMD_SEL=sels[Math.min(sels.length-1,p+1)]||sels[0];markSel();}
+    else if(e.key==='ArrowUp'){e.preventDefault();var p2=sels.indexOf(CMD_SEL);CMD_SEL=sels[Math.max(0,p2-1)];markSel();}
+    else if(e.key==='Enter'){e.preventDefault();if(CMD_SEL>=0)runCmd(CMD_SEL);}
+  });
+  var ov=document.getElementById('cmdk');
+  if(ov)ov.addEventListener('click',function(e){if(e.target.id==='cmdk')closeCmd();});
+})();
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){
@@ -479,6 +550,7 @@ function listHtml(){
   var h='';
   if(STATE.tab==='all'){
     h+='<div class="sec">// INBOX'+(opens.length?(' · '+opens.length):'')+'</div>';
+    var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+p[0]+' &amp; #'+p[1]+' look similar — possible duplicate</div>';}).join('');
     h+=opens.length?opens.map(rowHtml).join(''):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
     h+='<div class="sec">// SHIPPED · RECENT</div>'+(done.length?done.slice(0,40).map(rowHtml).join(''):'<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>');
   }else{
@@ -536,6 +608,8 @@ function openT(id){
   var pdf=t.pdf?('<a class="pdfbtn" href="'+H(t.pdf)+'" target="_blank" onclick="tg&&tg.openLink&&(event.preventDefault(),tg.openLink(\''+H(t.pdf)+'\'))">📄 open PDF report</a>'):'';
   var thread=(t.thread||[]).map(function(m){return '<div class="tmsg '+(m.author==='office'?'office':'reporter')+'"><div class="a">'+(m.author==='office'?'OFFICE':H(t.who))+' · '+ageS(m.created_at)+'</div>'+H(m.body)+'</div>'}).join('');
   var hist=(t.history||[]).map(function(a){return '<div class="tmsg reporter"><div class="a">'+ageS(a.created_at)+' ago'+(a.actor?(' · '+H(a.actor)):'')+'</div>'+H(a.field)+': '+H(a.old_val||'—')+' → '+H(a.new_val||'—')+'</div>'}).join('');
+  var rel=STATE.tickets.filter(function(o){return o.id!==t.id&&(o.who===t.who||sim(o.title,t.title)>=0.4);}).slice(0,4);
+  var relHtml=rel.length?('<div class="thread"><div class="sec">// RELATED</div>'+rel.map(function(o){var why=o.who===t.who?'same reporter':'similar';return '<div class="rel" onclick="openT('+o.id+')"><span class="tid">#'+o.id+'</span><span class="rt">'+(o.kind==='bug'?'🐛 ':'✨ ')+H(o.title)+'</span><span class="rwhy">'+why+'</span></div>';}).join('')+'</div>'):'';
   var acts='<div class="acts">'+
     '<button class="act hand" onclick="handoff('+id+')">⎘ Hand to Terminal</button>'+
     (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
@@ -550,7 +624,7 @@ function openT(id){
     '<div class="dm">'+meta+'</div>'+shots+pdf+
     '<div class="db">'+(H(t.body)||'(no description)')+'</div>'+acts+
     (thread?('<div class="thread"><div class="sec">// CONVERSATION</div>'+thread+'</div>'):'')+
-    (hist?('<div class="thread"><div class="sec">// HISTORY</div>'+hist+'</div>'):'');
+    (hist?('<div class="thread"><div class="sec">// HISTORY</div>'+hist+'</div>'):'')+relHtml;
   document.getElementById('tmpl').innerHTML=TEMPLATES.map(function(x,i){return '<button onclick="useTmpl('+i+')">'+H(x.slice(0,22))+(x.length>22?'…':'')+'</button>'}).join('');
   document.getElementById('sheet').classList.add('on');
   if(tg){tg.MainButton&&tg.MainButton.hide();tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');tg.BackButton&&(tg.BackButton.show(),tg.BackButton.onClick(closeT))}

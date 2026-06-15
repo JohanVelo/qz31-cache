@@ -166,6 +166,7 @@ var API="https://hrrdohlrfrficrtphcet.supabase.co/functions/v1/velocity-relay";
 var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
 var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"slate"};
+var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
 var THEMES={
  slate:{name:"Slate Indigo",bg:"radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),#0B0E14",v:{"--bg":"#0B0E14","--cell":"#151A23","--line":"rgba(140,150,180,.12)","--line2":"rgba(140,150,180,.20)","--cyan":"#818CF8","--green":"#4ADE80","--amber":"#FBBF24","--red":"#F87171","--violet":"#A78BFA","--txt":"#F1F3F8","--txt2":"#9AA4B8","--txt3":"#5B6679"}},
  gold:{name:"Graphite Gold",bg:"radial-gradient(700px 420px at 50% -12%,rgba(245,165,36,.10),transparent 60%),#121316",v:{"--bg":"#121316","--cell":"#1C1E24","--line":"rgba(160,162,175,.12)","--line2":"rgba(160,162,175,.20)","--cyan":"#F5A524","--green":"#34D399","--amber":"#FBBF24","--red":"#F87171","--violet":"#C4B5FD","--txt":"#F5F5F6","--txt2":"#A8ADB8","--txt3":"#6B7280"}},
@@ -221,6 +222,7 @@ function load(){
       tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');
     }
     render();
+    if(DEEP){var dl=DEEP;DEEP=null;if(find(dl)){openT(dl);}else{toast('ticket #'+dl+' not found');}}
     STATE.first=false;
   }).catch(function(){toast('connection error')});
 }

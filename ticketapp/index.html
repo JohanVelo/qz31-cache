@@ -342,6 +342,7 @@ function openT(id){
   var shots=(t.shots||[]).length?('<div class="shots">'+t.shots.map(function(u){return '<img src="'+H(u)+'" onclick="tg&&tg.openLink&&tg.openLink(\''+H(u)+'\')">'}).join('')+'</div>'):'';
   var pdf=t.pdf?('<a class="pdfbtn" href="'+H(t.pdf)+'" target="_blank" onclick="tg&&tg.openLink&&(event.preventDefault(),tg.openLink(\''+H(t.pdf)+'\'))">📄 open PDF report</a>'):'';
   var thread=(t.thread||[]).map(function(m){return '<div class="tmsg '+(m.author==='office'?'office':'reporter')+'"><div class="a">'+(m.author==='office'?'OFFICE':H(t.who))+' · '+ageS(m.created_at)+'</div>'+H(m.body)+'</div>'}).join('');
+  var hist=(t.history||[]).map(function(a){return '<div class="tmsg reporter"><div class="a">'+ageS(a.created_at)+' ago'+(a.actor?(' · '+H(a.actor)):'')+'</div>'+H(a.field)+': '+H(a.old_val||'—')+' → '+H(a.new_val||'—')+'</div>'}).join('');
   var acts='<div class="acts">'+
     '<button class="act hand" onclick="handoff('+id+')">⎘ Hand to Terminal</button>'+
     (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
@@ -355,7 +356,8 @@ function openT(id){
     '<div class="dt">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div>'+
     '<div class="dm">'+meta+'</div>'+shots+pdf+
     '<div class="db">'+(H(t.body)||'(no description)')+'</div>'+acts+
-    (thread?('<div class="thread"><div class="sec">// CONVERSATION</div>'+thread+'</div>'):'');
+    (thread?('<div class="thread"><div class="sec">// CONVERSATION</div>'+thread+'</div>'):'')+
+    (hist?('<div class="thread"><div class="sec">// HISTORY</div>'+hist+'</div>'):'');
   document.getElementById('tmpl').innerHTML=TEMPLATES.map(function(x,i){return '<button onclick="useTmpl('+i+')">'+H(x.slice(0,22))+(x.length>22?'…':'')+'</button>'}).join('');
   document.getElementById('sheet').classList.add('on');
   if(tg){tg.MainButton&&tg.MainButton.hide();tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');tg.BackButton&&(tg.BackButton.show(),tg.BackButton.onClick(closeT))}

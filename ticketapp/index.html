@@ -64,7 +64,9 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .tag.prog{color:var(--cyan);background:rgba(26,229,255,.12);border:1px solid rgba(26,229,255,.3)}
 .tag.done{color:var(--green);background:rgba(61,255,154,.1);border:1px solid rgba(61,255,154,.25)}
 .tid{font-family:var(--m);font-size:10px;color:var(--txt3);font-weight:700}
-.ttl{font-weight:600;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ttl{flex:1;min-width:0}
+.tl1{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rsnip{font-size:10px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
 .pri{font-family:var(--m);font-size:8px;padding:2px 5px;border-radius:4px;flex:0 0 auto}
 .pri.high{color:var(--red);background:rgba(255,77,94,.14);border:1px solid rgba(255,77,94,.4)}
 .pri.med{color:var(--amber);background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.35)}
@@ -98,6 +100,7 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .act.go{background:rgba(61,255,154,.12);border-color:rgba(61,255,154,.4);color:var(--green)}
 .act.warn{background:rgba(255,176,32,.12);border-color:rgba(255,176,32,.4);color:var(--amber)}
 .act.asn{background:rgba(157,140,255,.12);border-color:rgba(157,140,255,.4);color:var(--violet)}
+.act.hand{background:var(--cyan);border-color:var(--cyan);color:#04070D;font-weight:700}
 .tmpl{margin-top:12px;display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
 .tmpl button{flex:0 0 auto;font-family:var(--m);font-size:10px;color:var(--txt2);background:var(--cell);border:1px solid var(--line);border-radius:14px;padding:6px 10px;white-space:nowrap}
 .reply{flex:0 0 auto;display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line);background:var(--bg)}
@@ -287,7 +290,7 @@ function rowHtml(t){
   var isnew=STATE.newIds.indexOf(t.id)>=0?'<span class="badge" style="color:var(--amber);background:rgba(255,176,32,.12)">NEW</span>':'';
   return '<div class="row" style="border-left-color:'+t.color+'" onclick="openT('+t.id+')">'+
    '<span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+H(t.id)+'</span>'+
-   '<span class="ttl">'+ic+' '+H(t.title)+'</span>'+isnew+pri+stale+thread+asg+
+   '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+stale+thread+asg+
    '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span>'+
    '<span class="meta-r">'+right+'</span></div>';
 }
@@ -327,6 +330,7 @@ function openT(id){
   var pdf=t.pdf?('<a class="pdfbtn" href="'+H(t.pdf)+'" target="_blank" onclick="tg&&tg.openLink&&(event.preventDefault(),tg.openLink(\''+H(t.pdf)+'\'))">📄 open PDF report</a>'):'';
   var thread=(t.thread||[]).map(function(m){return '<div class="tmsg '+(m.author==='office'?'office':'reporter')+'"><div class="a">'+(m.author==='office'?'OFFICE':H(t.who))+' · '+ageS(m.created_at)+'</div>'+H(m.body)+'</div>'}).join('');
   var acts='<div class="acts">'+
+    '<button class="act hand" onclick="handoff('+id+')">⎘ Hand to Terminal</button>'+
     (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
     (t.status!=='done'?'<button class="act go" onclick="setStatus('+id+',\'done\')">✓ Mark done</button>':'')+
     (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+
@@ -366,6 +370,35 @@ function assign(id,who){
     if(res.ok){toast(who?('assigned → '+who):'unassigned');tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');load();setTimeout(function(){openT(id)},500)}else{toast('assign failed')}
   });
 }
+function handoff(id){
+  var t=find(id);if(!t)return;
+  var L=[];
+  L.push("VELOCITY RELAY — TICKET HANDOFF #"+t.id);
+  L.push("Title: "+t.title);
+  L.push("Type: "+(t.kind||"?")+"  |  Status: "+t.status+"  |  Reporter: "+t.who+(t.proj?("  |  Project: "+t.proj):"")+(t.priority?("  |  Priority: "+t.priority):""));
+  if(t.pdf)L.push("PDF report (READ THIS FIRST): "+t.pdf);
+  if(t.shots&&t.shots.length)L.push("Screenshots: "+t.shots.join("  ,  "));
+  L.push("");
+  L.push("DESCRIPTION:");
+  L.push(t.body||"(none)");
+  if(t.thread&&t.thread.length){L.push("");L.push("CONVERSATION SO FAR:");t.thread.forEach(function(m){L.push("- "+(m.author==='office'?'office':t.who)+": "+m.body)});}
+  L.push("");
+  L.push("DO THIS (terminal):");
+  L.push("1) Read the PDF + screenshots linked above.");
+  L.push("2) Reproduce-first on the real data shape (not a memory layer).");
+  L.push("3) Run: research/ticket_triage.py triage("+t.id+")  — pinpoints the suspect file/function.");
+  L.push("4) Fix the blamed frame; keep every edit runnable.");
+  L.push("5) research/smoke_check.py smoke().");
+  L.push("6) publish_plugin.py — ONLY after the other terminal has published (coord-gated).");
+  L.push("7) Resolve ticket #"+t.id+" with resolved_in_version (Telegram echo).");
+  copyText(L.join("\n"));
+  if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
+}
+function copyText(b){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(b).then(function(){toast('📋 handoff copied — paste into a terminal')},function(){legacyCopy(b)});}
+  else legacyCopy(b);
+}
+function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}
 load();
 setInterval(function(){if(!document.getElementById('sheet').classList.contains('on'))load()},45000);
 </script></body></html>

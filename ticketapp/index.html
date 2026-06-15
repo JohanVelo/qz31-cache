@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Ticket Mission Control</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#05070C;--cell:#0D1320;--line:rgba(120,170,220,.12);--line2:rgba(120,170,220,.20);
+ --cyan:#1AE5FF;--green:#3DFF9A;--amber:#FFB020;--red:#FF4D5E;
+ --txt:#EAF3FF;--txt2:#8AA0BE;--txt3:#53678A;--d:'Chakra Petch',sans-serif;--m:'JetBrains Mono',monospace}
+html,body{background:var(--bg)}
+body{font-family:var(--d);color:var(--txt);min-height:100vh;padding:14px 13px 40px;
+ background:radial-gradient(620px 360px at 50% -10%,rgba(26,229,255,.10),transparent 60%),
+ radial-gradient(520px 400px at 100% 4%,rgba(255,176,32,.06),transparent 55%),var(--bg)}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.glyph{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;
+ background:linear-gradient(135deg,var(--cyan),#1AA6FF);color:#04070D;box-shadow:0 0 16px rgba(26,229,255,.5)}
+.wm{font-weight:700;font-size:15px;letter-spacing:1.1px;line-height:1.05}
+.wm small{display:block;font-family:var(--m);font-size:7.5px;letter-spacing:3px;color:var(--txt2);margin-top:2px}
+.opp{margin-left:auto;text-align:right;font-family:var(--m);font-size:9px;color:var(--txt3)}
+.opp .live{color:var(--green)}
+.hud{height:1px;margin:11px 0;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.kc{background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:9px 6px;text-align:center}
+.kc .l{font-family:var(--m);font-size:8px;letter-spacing:1px;color:var(--txt3)}
+.kc .n{font-weight:700;font-size:21px;line-height:1;margin-top:4px}
+.kc.open .n{color:var(--amber)}.kc.openclr .n{color:var(--green)}.kc.done .n{color:var(--green)}
+.kc.rep .n{color:var(--cyan)}.kc.ver .n{font-size:14px;color:var(--cyan);font-family:var(--m)}
+.sec{font-family:var(--m);font-size:9px;letter-spacing:2px;color:var(--txt3);margin:15px 2px 8px;display:flex;align-items:center;gap:9px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;font-family:var(--m);font-size:11px;padding:6px 11px;border-radius:18px;border:1px solid var(--line2);
+ background:var(--cell);color:var(--txt2);white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.chip.on{color:#04070D;background:var(--cyan);border-color:var(--cyan);font-weight:700}
+.chip.on i{display:none}
+.row{display:flex;align-items:center;gap:10px;background:var(--cell);border:1px solid var(--line);border-radius:10px;
+ padding:11px 12px;margin-top:8px;border-left:3px solid var(--line);cursor:pointer;transition:.12s}
+.row:active{transform:scale(.99);border-color:var(--line2)}
+.tag{font-family:var(--m);font-size:8px;letter-spacing:.5px;padding:3px 6px;border-radius:5px;flex:0 0 auto;min-width:58px;text-align:center}
+.tag.new{color:var(--amber);background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.3)}
+.tag.prog{color:var(--cyan);background:rgba(26,229,255,.12);border:1px solid rgba(26,229,255,.3)}
+.tag.done{color:var(--green);background:rgba(61,255,154,.1);border:1px solid rgba(61,255,154,.25)}
+.tid{font-family:var(--m);font-size:10px;color:var(--txt3);font-weight:700;flex:0 0 auto}
+.ttl{font-weight:600;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who{font-family:var(--m);font-size:9px;flex:0 0 auto;display:flex;align-items:center;gap:5px}
+.who i{width:7px;height:7px;border-radius:50%}
+.meta{font-family:var(--m);font-size:9px;color:var(--txt3);flex:0 0 auto;min-width:28px;text-align:right}
+.empty{font-family:var(--m);font-size:12px;color:var(--green);text-align:center;padding:18px;
+ background:var(--cell);border:1px dashed rgba(61,255,154,.25);border-radius:10px;margin-top:8px}
+.rep{display:flex;align-items:center;gap:9px;margin-top:7px;font-family:var(--m);font-size:11px}
+.rep .rn{flex:0 0 120px;display:flex;align-items:center;gap:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rep .rn i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.rep .rb{flex:1;height:7px;background:var(--cell);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.rep .rb i{display:block;height:100%}
+.rep .rc{flex:0 0 auto;color:var(--txt3)}.rep .rc b{color:var(--txt)}
+.foot{font-family:var(--m);font-size:9px;color:var(--txt3);text-align:center;margin-top:18px;line-height:1.6}
+/* detail sheet */
+.sheet{position:fixed;inset:0;background:rgba(2,4,8,.72);backdrop-filter:blur(3px);display:none;
+ align-items:flex-end;z-index:50}
+.sheet.on{display:flex}
+.card{width:100%;background:linear-gradient(180deg,#0B1019,#070A11);border-top:1px solid var(--line2);
+ border-radius:16px 16px 0 0;padding:18px 16px 26px;animation:up .18s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.card .dh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.card .dh .tid{font-size:12px}.card .dt{font-size:16px;font-weight:700;line-height:1.25}
+.card .dm{font-family:var(--m);font-size:11px;color:var(--txt2);margin:9px 0;display:flex;flex-wrap:wrap;gap:8px}
+.card .dm span{background:var(--cell);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.card .db{font-size:13px;color:#C3D2E4;line-height:1.6;white-space:pre-wrap;max-height:42vh;overflow:auto;
+ background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:11px}
+.card .x{margin-top:14px;text-align:center;font-family:var(--m);font-size:12px;color:var(--cyan);
+ border:1px solid var(--line2);border-radius:9px;padding:10px;cursor:pointer}
+</style></head><body>
+<div class="bar">
+ <div class="glyph">🎫</div>
+ <div class="wm">TICKET MISSION CONTROL<small>VELOCITY&nbsp;NEXUS&nbsp;//&nbsp;OPS</small></div>
+ <div class="opp"><span class="live">●</span> snapshot <span id="ts"></span></div>
+</div>
+<div class="hud"></div>
+<div class="kp" id="kp"></div>
+<div class="sec">// FILTER</div>
+<div class="chips" id="chips"></div>
+<div class="sec" id="seclist">// INBOX</div>
+<div id="list"></div>
+<div class="sec">// BY REPORTER</div>
+<div id="reps"></div>
+<div class="foot">handled by Claude-A + Claude-B · tap the menu button to refresh<br>snapshot 22:19 · 0 open · 6 shipped</div>
+<div class="sheet" id="sheet"><div class="card" id="card"></div></div>
+<script>
+var DATA={"generated": "22:19", "opens": [], "done": [{"id": 39, "kind": "feature", "title": "Move Generate Poles button", "body": "Move the generate Poles button out of individual steps to be underneath Generate Span button.  See snip.", "status": "done", "open": false, "prog": false, "done": true, "ver": "2.5.84", "who": "Jaun de Wit", "color": "#9D8CFF", "age": "2h", "age_h": 2.6}, {"id": 38, "kind": "feature", "title": "Move Properties menu", "body": "Can we move the properties menu.  To open and close right underneath the Properties button.  Only move the ones in the red block on attachment. The reest can stay where they are and remian visible.", "status": "done", "open": false, "prog": false, "done": true, "ver": "2.5.83", "who": "Jaun de Wit", "color": "#9D8CFF", "age": "3h", "age_h": 3.1}, {"id": 37, "kind": "bug", "title": "Pon Group Counts updates on changes", "body": "When a Splitter is deleted or added.  the PON details needs to update.  if spliter deleted.  Pon Summary with all its attributes.  PON Zone Boundaries, PON Splitter Points, PON Drop Cables, with counts needs to update in labels to indicate how many splitters are in that PON. first attachment is PON with 14 Splitters.  Second attachment is PON with one less splitter.  Splitter count should update if removed.  And Counts should update if splitter or extra splitters are added.", "status": "done", "open": false, "prog": false, "done": true, "ver": "2.5.82", "who": "Jaun de Wit", "color": "#9D8CFF", "age": "3h", "age_h": 3.2}, {"id": 36, "kind": "feature", "title": "Change Add Splitter to just Splitters", "body": "Can we change the Add Splitter function in the Manual override function to just say Splitters.", "status": "done", "open": false, "prog": false, "done": true, "ver": "2.5.79", "who": "Jaun de Wit", "color": "#9D8CFF", "age": "3h", "age_h": 3.4}, {"id": 35, "kind": "feature", "title": "PON per PON Manual Function", "body": "Add the total number of Splitters in the Zone to the Zone Boundary Label.  Currenlty Zone Boundary gives the Zone Number, Amount of Units in Zone.  Lets Add The Total number of splitters in the label as well.", "status": "done", "open": false, "prog": false, "done": true, "ver": "2.5.77", "who": "Jaun de Wit", "color": "#9D8CFF", "age": "5h", "age_h": 5.4}, {"id": 34, "kind": "bug", "title": "Pon per Pon Manual Functions (Brown Button)", "body": "The PON per PON Manual Function on the Brown button needs to be a persistant numbering.  So when a planner stops and closes the functions.  it currently starts the Zone numbering again from Zone 1.  it needs to continue with the numbering sequenze.  This should be consistant on when the planner stops to do somethingelse or when the project is open again.   Nees persistant and continues numbering on the Zone numbers and should not start from zone 1 again if PON per PON Manual Functions is stated to continue.", "status": "done", "open": false, "prog": false, "done": true, "ver": "2.5.77", "who": "Jaun de Wit", "color": "#9D8CFF", "age": "5h", "age_h": 5.5}], "reporters": [{"name": "Jaun de Wit", "open": 0, "done": 6, "color": "#9D8CFF"}, {"name": "Johan", "open": 0, "done": 0, "color": "#1AE5FF"}], "n_open": 0, "n_done": 6, "n_rep": 2, "latest": "2.5.84"};
+var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
+if(tg){try{tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#05070C');tg.setBackgroundColor&&tg.setBackgroundColor('#05070C');}catch(e){}}
+var filter=null; // reporter name or null
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function kp(){
+ var o=DATA.n_open, openCls=o?'open':'openclr';
+ document.getElementById('ts').textContent=DATA.generated;
+ document.getElementById('kp').innerHTML=
+  '<div class="kc '+openCls+'"><div class="l">OPEN</div><div class="n">'+o+'</div></div>'+
+  '<div class="kc done"><div class="l">SHIPPED</div><div class="n">'+DATA.n_done+'</div></div>'+
+  '<div class="kc rep"><div class="l">REPORTERS</div><div class="n">'+DATA.n_rep+'</div></div>'+
+  '<div class="kc ver"><div class="l">LATEST</div><div class="n">v'+(esc(DATA.latest)||'—')+'</div></div>';
+}
+function chips(){
+ var h='<div class="chip '+(filter===null?'on':'')+'" data-f="">ALL</div>';
+ DATA.reporters.forEach(function(r){
+  h+='<div class="chip '+(filter===r.name?'on':'')+'" data-f="'+esc(r.name)+'">'+
+     '<i style="background:'+r.color+'"></i>'+esc(r.name)+'</div>';});
+ var c=document.getElementById('chips');c.innerHTML=h;
+ [].forEach.call(c.querySelectorAll('.chip'),function(el){
+  el.onclick=function(){filter=el.getAttribute('data-f')||null;tg&&tg.HapticFeedback&&tg.HapticFeedback.selectionChanged();render();};});
+}
+function rowHtml(t){
+ var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
+ var ic=t.kind==='bug'?'🐛':'✨';
+ var right=t.done?('v'+(esc(t.ver)||'?')):esc(t.age);
+ return '<div class="row" data-id="'+t.id+'" style="border-left-color:'+t.color+'">'+
+  '<span class="tag '+tag+'">'+lab+'</span>'+
+  '<span class="tid">#'+esc(t.id)+'</span>'+
+  '<span class="ttl">'+ic+' '+esc(t.title)+'</span>'+
+  '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+esc(t.who)+'</span>'+
+  '<span class="meta">'+right+'</span></div>';
+}
+function list(){
+ var opens=DATA.opens, done=DATA.done;
+ if(filter){opens=opens.filter(function(t){return t.who===filter;});done=done.filter(function(t){return t.who===filter;});}
+ var seclist=document.getElementById('seclist');
+ var L=document.getElementById('list');var h='';
+ if(opens.length){seclist.textContent='// INBOX · '+opens.length;opens.forEach(function(t){h+=rowHtml(t);});}
+ else{seclist.textContent='// INBOX';h+='<div class="empty">✦ ALL CLEAR — nothing waiting</div>';}
+ h+='<div class="sec">// SHIPPED · RECENT</div>';
+ if(done.length){done.forEach(function(t){h+=rowHtml(t);});}
+ else{h+='<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>';}
+ L.innerHTML=h;
+ [].forEach.call(L.querySelectorAll('.row'),function(el){el.onclick=function(){detail(+el.getAttribute('data-id'));};});
+}
+function reps(){
+ var mx=1;DATA.reporters.forEach(function(r){mx=Math.max(mx,r.open+r.done);});
+ var h='';DATA.reporters.forEach(function(r){var tot=r.open+r.done;
+  h+='<div class="rep"><span class="rn"><i style="background:'+r.color+'"></i><span style="color:'+r.color+'">'+esc(r.name)+'</span></span>'+
+     '<span class="rb"><i style="width:'+Math.round(tot/mx*100)+'%;background:'+r.color+'"></i></span>'+
+     '<span class="rc"><b style="color:var(--amber)">'+r.open+'</b> open · <b>'+r.done+'</b> done</span></div>';});
+ if(!h)h='<div class="empty" style="color:var(--txt3);border-color:var(--line)">no reporters</div>';
+ document.getElementById('reps').innerHTML=h;
+}
+function findT(id){var a=DATA.opens.concat(DATA.done);for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
+function detail(id){
+ var t=findT(id);if(!t)return;
+ var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
+ document.getElementById('card').innerHTML=
+  '<div class="dh"><span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+esc(t.id)+'</span></div>'+
+  '<div class="dt">'+(t.kind==='bug'?'🐛 ':'✨ ')+esc(t.title)+'</div>'+
+  '<div class="dm"><span style="color:'+t.color+'">●&nbsp;'+esc(t.who)+'</span>'+
+   '<span>'+esc(t.status)+'</span>'+(t.ver?'<span>v'+esc(t.ver)+'</span>':'')+'<span>'+esc(t.age)+' old</span></div>'+
+  '<div class="db">'+(esc(t.body)||'(no description)')+'</div>'+
+  '<div class="x" id="closex">CLOSE</div>';
+ document.getElementById('sheet').classList.add('on');
+ document.getElementById('closex').onclick=closeSheet;
+ if(tg){tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');tg.BackButton&&(tg.BackButton.show(),tg.BackButton.onClick(closeSheet));}
+}
+function closeSheet(){document.getElementById('sheet').classList.remove('on');if(tg&&tg.BackButton)tg.BackButton.hide();}
+document.getElementById('sheet').onclick=function(e){if(e.target.id==='sheet')closeSheet();};
+function render(){kp();chips();list();reps();}
+render();
+</script></body></html>

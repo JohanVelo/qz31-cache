@@ -168,6 +168,8 @@ function load(){
     STATE.tickets=res.j.tickets||[];
     document.getElementById('app').style.display='flex';
     var now=new Date();document.getElementById('ts').textContent='LIVE '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2)+':'+('0'+now.getSeconds()).slice(-2);
+    var mxId=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
+    if(STATE.first && !STATE.lastSeen){STATE.lastSeen=mxId;try{localStorage.setItem('vr_lastseen',String(mxId))}catch(e){}}
     // new-ticket detection
     STATE.newIds=STATE.tickets.filter(function(t){return t.id>STATE.lastSeen}).map(function(t){return t.id});
     if(!STATE.first && prevMax && STATE.tickets.some(function(t){return t.id>prevMax})){
@@ -222,7 +224,7 @@ function applyFilters(){
 function listHtml(){
   var ts=applyFilters();
   if(!ts.length)return '<div class="sec">// TICKETS</div><div class="empty">✦ nothing matches</div>';
-  var opens=ts.filter(function(t){return !t.done}),done=ts.filter(function(t){return t.done});
+  var opens=ts.filter(function(t){return t.open}),done=ts.filter(function(t){return t.done});
   var h='';
   if(STATE.tab==='all'){
     h+='<div class="sec">// INBOX'+(opens.length?(' · '+opens.length):'')+'</div>';

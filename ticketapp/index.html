@@ -165,7 +165,7 @@ var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 var API="https://hrrdohlrfrficrtphcet.supabase.co/functions/v1/velocity-relay";
 var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
-var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"slate"};
+var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"slate",loading:false,retries:0};
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
 var THEMES={
  slate:{name:"Slate Indigo",bg:"radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),#0B0E14",v:{"--bg":"#0B0E14","--cell":"#151A23","--line":"rgba(140,150,180,.12)","--line2":"rgba(140,150,180,.20)","--cyan":"#818CF8","--green":"#4ADE80","--amber":"#FBBF24","--red":"#F87171","--violet":"#A78BFA","--txt":"#F1F3F8","--txt2":"#9AA4B8","--txt3":"#5B6679"}},
@@ -207,13 +207,22 @@ if(tg){try{tg.ready();tg.expand();tg.enableClosingConfirmation&&tg.enableClosing
  if(tg.MainButton){tg.MainButton.setParams({text:'⟳ REFRESH',color:'#151A23',text_color:'#818CF8'});tg.MainButton.show();tg.MainButton.onClick(function(){load();tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light')})}
 }catch(e){}}
 
+function scheduleRetry(){STATE.retries=Math.min((STATE.retries||0)+1,6);var d=Math.min(1000*Math.pow(2,STATE.retries),60000)+Math.floor(Math.random()*800);setTimeout(load,d);}
+function setConn(s){var dot=document.querySelector('.opp .live'),ts=document.getElementById('ts');if(!ts)return;if(s==='ok'){var n=new Date();ts.textContent='LIVE '+('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);if(dot)dot.style.color='var(--green)';}else if(s==='reconnecting'){ts.textContent='RECONNECTING…';if(dot)dot.style.color='var(--amber)';}else{ts.textContent='OFFLINE — retrying';if(dot)dot.style.color='var(--red)';}}
 function load(){
+  if(STATE.loading)return;
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){setConn('offline');scheduleRetry();return;}
+  STATE.loading=true;
   api('/tickets').then(function(res){
-    if(!res.ok){document.getElementById('app').style.display='none';document.getElementById('deny').style.display='block';return}
+    STATE.loading=false;
+    if(!res.ok){
+      if(res.j&&res.j.error==='unauthorized'){document.getElementById('app').style.display='none';document.getElementById('deny').style.display='block';return;}
+      setConn('reconnecting');scheduleRetry();return;
+    }
+    STATE.retries=0;setConn('ok');
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     STATE.tickets=res.j.tickets||[];
     document.getElementById('app').style.display='flex';
-    var now=new Date();document.getElementById('ts').textContent='LIVE '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2)+':'+('0'+now.getSeconds()).slice(-2);
     var mxId=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     if(STATE.first && !STATE.lastSeen){STATE.lastSeen=mxId;try{localStorage.setItem('vr_lastseen',String(mxId))}catch(e){}}
     // new-ticket detection
@@ -224,8 +233,10 @@ function load(){
     render();
     if(DEEP){var dl=DEEP;DEEP=null;if(find(dl)){openT(dl);}else{toast('ticket #'+dl+' not found');}}
     STATE.first=false;
-  }).catch(function(){toast('connection error')});
+  }).catch(function(){STATE.loading=false;setConn('reconnecting');scheduleRetry();});
 }
+window.onerror=function(){try{toast('hiccup — recovering')}catch(e){}return false;};
+window.addEventListener('unhandledrejection',function(){try{toast('network hiccup — retrying')}catch(e){}});
 function counts(){var o=0,p=0,d=0,reps={};STATE.tickets.forEach(function(t){if(t.open&&!t.prog)o++;if(t.prog)p++;if(t.done)d++;reps[t.who]=1});return{o:o,p:p,d:d,r:Object.keys(reps).length}}
 function animateNum(el,to){var from=0,t0=null;function step(ts){if(!t0)t0=ts;var k=Math.min((ts-t0)/650,1);k=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*k);if(k<1)requestAnimationFrame(step)}requestAnimationFrame(step)}
 function render(){

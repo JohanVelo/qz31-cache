@@ -180,7 +180,8 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
-      <div class="bell" onclick="toggleFs()" title="full screen" style="font-size:14px">⛶</div>
+      <div class="bell" onclick="toggleFs()" title="maximise / restore" style="font-size:14px">⛶</div>
+      <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
       <div class="bell" id="bell" onclick="clearNew()">🔔<span class="bdg" id="bdg">0</span></div>
       <div class="opp" onclick="load()"><span class="live">●</span> <span id="ts">LIVE</span></div>
@@ -241,6 +242,7 @@ function api(p,opt){opt=opt||{};opt.headers=hdrs();return fetch(API+p,opt).then(
 function priClass(p){p=(p||'').toLowerCase();return p.indexOf('high')>=0||p.indexOf('crit')>=0?'high':(p.indexOf('med')>=0?'med':'low')}
 
 function toggleFs(){try{if(!tg)return;if(tg.isFullscreen){tg.exitFullscreen&&tg.exitFullscreen()}else{tg.requestFullscreen&&tg.requestFullscreen()}tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light')}catch(e){}}
+function minimise(){try{if(!tg)return;tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');if(tg.isFullscreen&&tg.exitFullscreen)tg.exitFullscreen();if(tg.close)tg.close();}catch(e){}}
 if(tg){try{tg.ready();tg.expand();tg.enableClosingConfirmation&&tg.enableClosingConfirmation();
  tg.disableVerticalSwipes&&tg.disableVerticalSwipes();
  tg.setHeaderColor&&tg.setHeaderColor('#0B0E14');tg.setBackgroundColor&&tg.setBackgroundColor('#0B0E14');
@@ -277,6 +279,7 @@ function load(){
       tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');
     }
     render();
+    if(STATE.first){try{if(localStorage.getItem('vr_view')==='stats')setView('stats');}catch(e){}}
     if(DEEP){var dl=DEEP;DEEP=null;if(find(dl)){openT(dl);}else{toast('ticket #'+dl+' not found');}}
     STATE.first=false;
   }).catch(function(){STATE.loading=false;setConn('reconnecting');scheduleRetry();});
@@ -317,6 +320,7 @@ function render(){
 }
 function setView(v){
   STATE.view=v;
+  try{localStorage.setItem('vr_view',v)}catch(e){}
   var L=document.getElementById('vL'),S=document.getElementById('vS');
   if(L)L.className=v==='list'?'on':'';if(S)S.className=v==='stats'?'on':'';
   var stats=v==='stats';

@@ -5,13 +5,12 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--bg:#05070C;--cell:#0D1320;--line:rgba(120,170,220,.12);--line2:rgba(120,170,220,.22);
- --cyan:#1AE5FF;--green:#3DFF9A;--amber:#FFB020;--red:#FF4D5E;--violet:#9D8CFF;
- --txt:#EAF3FF;--txt2:#8AA0BE;--txt3:#53678A;--d:'Chakra Petch',sans-serif;--m:'JetBrains Mono',monospace}
+:root{--bg:#0B0E14;--cell:#151A23;--line:rgba(140,150,180,.12);--line2:rgba(140,150,180,.20);
+ --cyan:#818CF8;--green:#4ADE80;--amber:#FBBF24;--red:#F87171;--violet:#A78BFA;
+ --txt:#F1F3F8;--txt2:#9AA4B8;--txt3:#5B6679;--d:'Chakra Petch',sans-serif;--m:'JetBrains Mono',monospace}
 html,body{height:100%;background:var(--bg)}
 body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;height:100vh;overflow:hidden;
- background:radial-gradient(700px 400px at 50% -10%,rgba(26,229,255,.10),transparent 60%),
- radial-gradient(560px 420px at 100% 4%,rgba(255,176,32,.06),transparent 55%),var(--bg)}
+ background:radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),var(--bg)}
 .top{flex:0 0 auto;padding:13px 14px 9px;border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:10px}
 .glyph{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;
@@ -101,7 +100,7 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .act.asn{background:rgba(157,140,255,.12);border-color:rgba(157,140,255,.4);color:var(--violet)}
 .tmpl{margin-top:12px;display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
 .tmpl button{flex:0 0 auto;font-family:var(--m);font-size:10px;color:var(--txt2);background:var(--cell);border:1px solid var(--line);border-radius:14px;padding:6px 10px;white-space:nowrap}
-.reply{flex:0 0 auto;display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line);background:#070A11}
+.reply{flex:0 0 auto;display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line);background:var(--bg)}
 .reply textarea{flex:1;resize:none;height:42px;background:var(--cell);border:1px solid var(--line2);border-radius:10px;
  color:var(--txt);font-family:var(--d);font-size:13px;padding:10px 12px}
 .reply textarea:focus{outline:none;border-color:var(--cyan)}
@@ -117,6 +116,7 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
     <div class="bar">
       <div class="glyph">📡</div>
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
+      <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
       <div class="bell" id="bell" onclick="clearNew()">🔔<span class="bdg" id="bdg">0</span></div>
       <div class="opp" onclick="load()"><span class="live">●</span> <span id="ts">LIVE</span></div>
     </div>
@@ -144,7 +144,23 @@ var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 var API="https://hrrdohlrfrficrtphcet.supabase.co/functions/v1/velocity-relay";
 var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
-var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[]};
+var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"slate"};
+var THEMES={
+ slate:{name:"Slate Indigo",bg:"radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),#0B0E14",v:{"--bg":"#0B0E14","--cell":"#151A23","--line":"rgba(140,150,180,.12)","--line2":"rgba(140,150,180,.20)","--cyan":"#818CF8","--green":"#4ADE80","--amber":"#FBBF24","--red":"#F87171","--violet":"#A78BFA","--txt":"#F1F3F8","--txt2":"#9AA4B8","--txt3":"#5B6679"}},
+ gold:{name:"Graphite Gold",bg:"radial-gradient(700px 420px at 50% -12%,rgba(245,165,36,.10),transparent 60%),#121316",v:{"--bg":"#121316","--cell":"#1C1E24","--line":"rgba(160,162,175,.12)","--line2":"rgba(160,162,175,.20)","--cyan":"#F5A524","--green":"#34D399","--amber":"#FBBF24","--red":"#F87171","--violet":"#C4B5FD","--txt":"#F5F5F6","--txt2":"#A8ADB8","--txt3":"#6B7280"}},
+ nord:{name:"Nord",bg:"radial-gradient(700px 420px at 50% -12%,rgba(136,192,208,.12),transparent 60%),#2E3440",v:{"--bg":"#2E3440","--cell":"#3B4252","--line":"rgba(216,222,233,.13)","--line2":"rgba(216,222,233,.24)","--cyan":"#88C0D0","--green":"#A3BE8C","--amber":"#EBCB8B","--red":"#BF616A","--violet":"#B48EAD","--txt":"#ECEFF4","--txt2":"#D8DEE9","--txt3":"#94A1B5"}},
+ light:{name:"Clean Light",bg:"radial-gradient(700px 420px at 50% -12%,rgba(59,130,246,.07),transparent 60%),#F6F8FB",v:{"--bg":"#F6F8FB","--cell":"#FFFFFF","--line":"rgba(15,23,42,.09)","--line2":"rgba(15,23,42,.15)","--cyan":"#3B82F6","--green":"#16A34A","--amber":"#D97706","--red":"#DC2626","--violet":"#7C3AED","--txt":"#0F172A","--txt2":"#475569","--txt3":"#94A3B8"}},
+ synthwave:{name:"Synthwave",bg:"radial-gradient(680px 420px at 50% -10%,rgba(255,46,151,.18),transparent 55%),radial-gradient(560px 420px at 100% 8%,rgba(54,249,246,.10),transparent 55%),#1A1033",v:{"--bg":"#1A1033","--cell":"#241544","--line":"rgba(255,46,151,.16)","--line2":"rgba(255,46,151,.30)","--cyan":"#FF2E97","--green":"#36F9F6","--amber":"#FFD319","--red":"#FF2E97","--violet":"#B967FF","--txt":"#FDE9FF","--txt2":"#C39BD3","--txt3":"#8A6FB0"}},
+ matrix:{name:"Matrix",bg:"radial-gradient(700px 420px at 50% -12%,rgba(57,255,20,.12),transparent 60%),#050B05",v:{"--bg":"#050B05","--cell":"#0A140A","--line":"rgba(57,255,20,.15)","--line2":"rgba(57,255,20,.28)","--cyan":"#39FF14","--green":"#39FF14","--amber":"#9EFF6E","--red":"#FF5555","--violet":"#7CFF7C","--txt":"#D6FFD6","--txt2":"#6FCF6F","--txt3":"#3E6E3E"}},
+ vaporwave:{name:"Vaporwave",bg:"radial-gradient(640px 420px at 50% -10%,rgba(255,106,213,.16),transparent 55%),radial-gradient(560px 420px at 100% 8%,rgba(140,255,218,.10),transparent 55%),#1B1733",v:{"--bg":"#1B1733","--cell":"#2A2350","--line":"rgba(199,116,232,.16)","--line2":"rgba(199,116,232,.30)","--cyan":"#FF6AD5","--green":"#8CFFDA","--amber":"#FFFB96","--red":"#FF6AD5","--violet":"#C774E8","--txt":"#F5E6FF","--txt2":"#C0A9D6","--txt3":"#8A77A8"}},
+ cyber:{name:"Cyber (original)",bg:"radial-gradient(700px 400px at 50% -10%,rgba(26,229,255,.10),transparent 60%),radial-gradient(560px 420px at 100% 4%,rgba(255,176,32,.06),transparent 55%),#05070C",v:{"--bg":"#05070C","--cell":"#0D1320","--line":"rgba(120,170,220,.12)","--line2":"rgba(120,170,220,.22)","--cyan":"#1AE5FF","--green":"#3DFF9A","--amber":"#FFB020","--red":"#FF4D5E","--violet":"#9D8CFF","--txt":"#EAF3FF","--txt2":"#8AA0BE","--txt3":"#53678A"}},
+ crimson:{name:"Crimson",bg:"radial-gradient(700px 420px at 50% -12%,rgba(255,59,92,.14),transparent 60%),#120608",v:{"--bg":"#120608","--cell":"#1E0A0E","--line":"rgba(255,59,92,.15)","--line2":"rgba(255,59,92,.28)","--cyan":"#FF3B5C","--green":"#4ADE80","--amber":"#FBBF24","--red":"#FF3B5C","--violet":"#FF8FA3","--txt":"#FFF0F2","--txt2":"#C99AA2","--txt3":"#7A5258"}},
+ aurora:{name:"Aurora",bg:"radial-gradient(700px 420px at 50% -12%,rgba(34,211,238,.12),transparent 60%),radial-gradient(560px 420px at 100% 6%,rgba(129,140,248,.08),transparent 55%),#070E18",v:{"--bg":"#070E18","--cell":"#0E2030","--line":"rgba(120,170,220,.12)","--line2":"rgba(120,170,220,.22)","--cyan":"#22D3EE","--green":"#2DD4BF","--amber":"#FBBF24","--red":"#FB7185","--violet":"#818CF8","--txt":"#EAF6FB","--txt2":"#88AEC2","--txt3":"#557388"}}
+};
+var THEME_ORDER=["slate","gold","nord","light","synthwave","matrix","vaporwave","cyber","crimson","aurora"];
+function applyThemeName(n){var t=THEMES[n]||THEMES.slate;var r=document.documentElement;for(var k in t.v)r.style.setProperty(k,t.v[k]);document.body.style.background=t.bg;STATE.theme=n;try{localStorage.setItem("vr_theme",n)}catch(e){}}
+function cycleTheme(){var i=THEME_ORDER.indexOf(STATE.theme||"slate");var n=THEME_ORDER[(i+1)%THEME_ORDER.length];applyThemeName(n);toast("🎨 "+THEMES[n].name);if(typeof tg!=="undefined"&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged()}
+try{applyThemeName(localStorage.getItem("vr_theme")||"slate")}catch(e){applyThemeName("slate")}
 try{STATE.lastSeen=parseInt(localStorage.getItem("vr_lastseen")||"0",10)||0}catch(e){}
 function H(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function ageH(iso){try{return (Date.now()-new Date(iso).getTime())/3.6e6}catch(e){return 0}}

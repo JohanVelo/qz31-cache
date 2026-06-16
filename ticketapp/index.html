@@ -1,6 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,maximum-scale=1">
 <title>Velocity Relay</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0A0A0F"><link rel="apple-touch-icon" href="icon.svg"><link rel="icon" href="icon.svg">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
@@ -237,6 +238,7 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" onclick="toggleFs()" title="maximise / restore" style="font-size:14px">⛶</div>
+      <div class="bell" id="installbtn" onclick="doInstall()" title="install Velocity Relay as an app" style="font-size:15px;display:none">⤓</div>
       <div class="bell" onclick="openCmd()" title="commands (Ctrl/⌘K)" style="font-size:13px;font-family:var(--m)">⌘</div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
@@ -256,7 +258,7 @@ body.dense .kc{padding:6px 6px 7px}
   <div id="board"></div>
   <div id="stats"></div>
 </div>
-<div class="deny" id="deny" style="display:none">⚠ Not authorized.<br>This board is private to the planning office.</div>
+<div class="deny" id="deny" style="display:none">⚠ Not linked yet.<br><br>Open Velocity Relay once <b>inside Telegram</b> (the ♞ button) to link this device — then it opens on its own.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">(private to the planning office)</span></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
   <div class="sh-body" id="sh-body"></div>
@@ -306,7 +308,8 @@ function ageS(iso){var h=ageH(iso);return h<48?(h|0)+'h':((h/24)|0)+'d'}
 var PAL=["#1AE5FF","#3DFF9A","#FFB020","#9D8CFF","#FF6FB5","#2DD4BF","#5B9DFF","#FF4D5E"];
 function color(n){var h=0,s=String(n||'?');for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},1900)}
-function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:''}}
+function devTok(){try{return localStorage.getItem('vr_devtoken')||''}catch(e){return ''}}
+function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:'','X-Device-Token':devTok()}}
 function api(p,opt){opt=opt||{};opt.headers=hdrs();return fetch(API+p,opt).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})}
 function priClass(p){p=(p||'').toLowerCase();return p.indexOf('high')>=0||p.indexOf('crit')>=0?'high':(p.indexOf('med')>=0?'med':'low')}
 function isSnoozed(t){return !!t.snz&&new Date(t.snz).getTime()>Date.now();}
@@ -342,6 +345,7 @@ function load(){
       setConn('reconnecting');scheduleRetry();return;
     }
     STATE.retries=0;setConn('ok');
+    if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     STATE.tickets=res.j.tickets||[];
     document.getElementById('app').style.display='flex';
@@ -559,6 +563,12 @@ function toggleMute(){STATE.muted=!STATE.muted;try{localStorage.setItem('vr_mute
 function toggleDensity(){STATE.dense=!STATE.dense;document.body.classList.toggle('dense',STATE.dense);try{localStorage.setItem('vr_dense',STATE.dense?'1':'0')}catch(e){}toast(STATE.dense?'▤ compact':'▥ comfortable');}
 try{STATE.muted=localStorage.getItem('vr_muted')==='1';STATE.dense=localStorage.getItem('vr_dense')==='1';document.body.classList.toggle('dense',STATE.dense);}catch(e){}
 function parseQuery(q){var ops={status:null,reporter:null,kind:null,is:[],text:''};var text=[];String(q||'').split(/\s+/).forEach(function(tok){if(!tok)return;var m=tok.match(/^([a-z]+):(.+)$/i);if(m){var k=m[1].toLowerCase(),v=m[2].toLowerCase();if(k==='status')ops.status=v;else if(k==='reporter'||k==='who'||k==='by')ops.reporter=v;else if(k==='kind'||k==='type')ops.kind=v;else if(k==='is')ops.is.push(v);else text.push(tok);}else text.push(tok);});ops.text=text.join(' ').toLowerCase();return ops;}
+/* ── PWA: install + service worker (open standalone, not Telegram) ── */
+var _installEvt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_installEvt=e;var b=document.getElementById('installbtn');if(b)b.style.display='';});
+window.addEventListener('appinstalled',function(){var b=document.getElementById('installbtn');if(b)b.style.display='none';toast('✓ Velocity Relay installed');});
+function doInstall(){try{if(_installEvt){_installEvt.prompt();_installEvt.userChoice.then(function(){_installEvt=null;});}else{toast('Open the browser ⋮ menu → Install / Add to Home screen');}}catch(e){}}
+if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}}
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){

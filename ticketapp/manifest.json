@@ -1,0 +1,14 @@
+{
+  "name": "Velocity Relay",
+  "short_name": "Relay",
+  "description": "Velocity Relay — ticket mission control.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0A0A0F",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

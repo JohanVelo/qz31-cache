@@ -284,7 +284,7 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" onclick="toggleFs()" title="maximise / restore" style="font-size:14px">⛶</div>
-      <div class="bell" id="installbtn" onclick="doInstall()" title="install Velocity Relay as an app" style="font-size:15px;display:none">⤓</div>
+      <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app" style="font-size:15px">⤓</div>
       <div class="bell" onclick="openCmd()" title="commands (Ctrl/⌘K)" style="font-size:13px;font-family:var(--m)">⌘</div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
@@ -668,6 +668,8 @@ var _installEvt=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_installEvt=e;var b=document.getElementById('installbtn');if(b)b.style.display='';});
 window.addEventListener('appinstalled',function(){var b=document.getElementById('installbtn');if(b)b.style.display='none';toast('✓ Velocity Relay installed');});
 function doInstall(){try{if(_installEvt){_installEvt.prompt();_installEvt.userChoice.then(function(){_installEvt=null;});}else{toast('Open the browser ⋮ menu → Install / Add to Home screen');}}catch(e){}}
+/* smart install: inside Telegram → open the standalone PWA (carries the login); in a browser → native install */
+function smartInstall(){try{if(typeof tg!=='undefined'&&tg&&tg.initData){openStandalone();}else{doInstall();}}catch(e){doInstall();}}
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}}
 function openStandalone(){var tk=devTok();if(!tk){toast('open in Telegram first to link this device');return;}var url='https://johanvelo.github.io/qz31-cache/ticketapp/index.html?devtoken='+encodeURIComponent(tk);try{if(typeof tg!=='undefined'&&tg&&tg.openLink){tg.openLink(url);}else{window.open(url,'_blank');}toast('opening in your browser — then Install it');}catch(e){window.open(url,'_blank');}}
 function buildFeed(){

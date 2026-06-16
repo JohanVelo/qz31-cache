@@ -360,9 +360,12 @@ body.dense .kc{padding:6px 6px 7px}
  <div class="help-row"><span>Focus search</span><kbd>/</kbd></div>
  <div class="help-row"><span>List · Board · Stats</span><kbd>1 · 2 · 3</kbd></div>
  <div class="help-row"><span>Refresh</span><kbd>R</kbd></div>
+ <div class="help-row"><span>Select mode (bulk)</span><kbd>S</kbd></div>
+ <div class="help-row"><span>Team access (admin)</span><kbd>G</kbd></div>
+ <div class="help-row"><span>Command palette</span><kbd>⌘/Ctrl K</kbd></div>
  <div class="help-row"><span>Next theme</span><kbd>T</kbd></div>
- <div class="help-row"><span>Full-screen</span><kbd>F</kbd></div>
  <div class="help-row"><span>Export CSV</span><kbd>E</kbd></div>
+ <div class="help-row"><span>Close panel</span><kbd>Esc</kbd></div>
  <div class="help-row"><span>This help</span><kbd>?</kbd></div>
  <div class="help-x">Esc or click outside to close</div></div></div>
 <div class="toast" id="toast"></div>
@@ -490,7 +493,7 @@ function render(){
   var ch='<div class="chip '+(STATE.kind==='all'&&STATE.reporter===null?'on':'')+'" onclick="setKind(\'all\');setRep(null)">ALL</div>'+
          '<div class="chip '+(STATE.kind==='bug'?'on':'')+'" onclick="setKind(\'bug\')">🐛 BUGS</div>'+
          '<div class="chip '+(STATE.kind==='feature'?'on':'')+'" onclick="setKind(\'feature\')">✨ FEAT</div>'+
-         ((STATE.me&&STATE.me.name)?('<div class="chip mine'+(STATE.mineOnly?' on':'')+'" onclick="toggleMine()">◆ Mine</div>'):'');
+         ((STATE.me&&STATE.me.name)?(function(){var _myn=STATE.me.name;var mineN=STATE.tickets.filter(function(t){return t.assignee===_myn&&!t.done;}).length;return '<div class="chip mine'+(STATE.mineOnly?' on':'')+'" onclick="toggleMine()">◆ Mine'+(mineN?(' '+mineN):'')+'</div>';})():'');
   Object.keys(reps).forEach(function(n){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+n.replace(/'/g,"\\'")+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
   document.getElementById('chips').innerHTML=ch;
   // new alert
@@ -647,7 +650,7 @@ document.addEventListener('keydown',function(e){
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   var cmdOpen=document.getElementById('cmdk').classList.contains('on');
   var helpOpen=document.getElementById('help').classList.contains('on');
-  if(e.key==='Escape'){if(helpOpen)closeHelp();return;}
+  if(e.key==='Escape'){if(helpOpen){closeHelp();return;}var to=document.getElementById('teamovl');if(to&&to.style.display!=='none'){closeTeam();return;}var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on')){closeT();return;}if(STATE.selMode){exitSel();return;}return;}
   if(cmdOpen)return;
   if(helpOpen&&e.key!=='?')return;
   switch(e.key){
@@ -656,6 +659,8 @@ document.addEventListener('keydown',function(e){
     case '2':setView('board');break;
     case '3':setView('stats');break;
     case 'r':case 'R':load();break;
+    case 's':case 'S':toggleSelMode();break;
+    case 'g':case 'G':if(STATE.me&&(STATE.me.role==='owner'||STATE.me.role==='admin'))openTeam();break;
     case 't':case 'T':cycleTheme();break;
     case 'f':case 'F':toggleFs();break;
     case 'e':case 'E':exportCSV();break;

@@ -202,6 +202,14 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
  color:var(--txt);font-family:var(--m);font-size:12px;padding:9px 14px;border-radius:10px;z-index:99;opacity:0;transition:.2s}
 .toast.on{opacity:1}
+/* one-tap "enable desktop alerts" banner (shows only until granted/dismissed) */
+.alertbar{display:none;align-items:center;gap:11px;margin:11px 0 2px;padding:10px 14px;border-radius:11px;background:linear-gradient(90deg,rgba(34,211,238,.10),rgba(45,212,191,.05));border:1px solid rgba(34,211,238,.38)}
+.alertbar.on{display:flex}
+.alertbar .ab-ic{font-size:17px;line-height:1}
+.alertbar .ab-tx{flex:1;font-size:13px;line-height:1.35;color:var(--txt)}
+.alertbar .ab-tx b{color:#22D3EE}
+.alertbar button{font-family:var(--m);font-size:12px;font-weight:700;cursor:pointer;border-radius:9px;padding:7px 14px;border:1px solid #22D3EE;background:#22D3EE;color:#04121a;white-space:nowrap}
+.alertbar button.ab-x{background:transparent;color:#8aa6b8;border-color:var(--line2)}
 /* fullscreen safe-area + deluxe responsive layout */
 body.fs .top{padding-top:calc(13px + var(--safe-top,0px))}
 @media(min-width:760px){
@@ -369,6 +377,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="chips" id="chips"></div>
     <div class="alert" id="alert" onclick="clearNew()"></div>
   </div>
+  <div class="alertbar" id="alertbar"><span class="ab-ic">🔔</span><span class="ab-tx"><b>Turn on desktop alerts</b> — get a popup the instant a ticket lands, even when Relay is minimized.</span><button onclick="enableAlertsFromBanner()">Enable</button><button class="ab-x" onclick="dismissAlertBar()">Later</button></div>
   <div class="list" id="list"></div>
   <div id="board"></div>
   <div id="stats"></div>
@@ -785,6 +794,12 @@ function pushSubscribe(){try{if(!('serviceWorker' in navigator)||!('PushManager'
  }).catch(function(){});}catch(e){}}
 /* if already granted on load, refresh the push subscription silently */
 try{if('Notification' in window&&Notification.permission==='granted'){setTimeout(pushSubscribe,1500);}}catch(e){}
+/* one-tap desktop-alerts banner — surfaces the (otherwise Ctrl+K-buried) enable step */
+function alertsSupported(){try{return ('Notification' in window)&&('serviceWorker' in navigator)&&('PushManager' in window);}catch(e){return false;}}
+function refreshAlertBar(){try{var el=document.getElementById('alertbar');if(!el)return;var dis=false;try{dis=localStorage.getItem('vr_alertbar_dismissed')==='1';}catch(e){}el.classList.toggle('on', alertsSupported()&&Notification.permission!=='granted'&&!dis&&!!devTok());}catch(e){}}
+function enableAlertsFromBanner(){try{notifEnable();setTimeout(refreshAlertBar,800);setTimeout(refreshAlertBar,2500);}catch(e){}}
+function dismissAlertBar(){try{localStorage.setItem('vr_alertbar_dismissed','1');}catch(e){}refreshAlertBar();}
+try{setTimeout(refreshAlertBar,2200);}catch(e){}
 function pushNotif(title,body,tag){try{if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}
 function toggleNotif(){STATE.notifOff=!STATE.notifOff;try{localStorage.setItem('vr_notifoff',STATE.notifOff?'1':'0')}catch(e){}if(!STATE.notifOff)notifEnable();toast(STATE.notifOff?'🔕 notifications muted':'🔔 notifications on');}
 function parseQuery(q){var ops={status:null,reporter:null,kind:null,is:[],text:''};var text=[];String(q||'').split(/\s+/).forEach(function(tok){if(!tok)return;var m=tok.match(/^([a-z]+):(.+)$/i);if(m){var k=m[1].toLowerCase(),v=m[2].toLowerCase();if(k==='status')ops.status=v;else if(k==='reporter'||k==='who'||k==='by')ops.reporter=v;else if(k==='kind'||k==='type')ops.kind=v;else if(k==='is')ops.is.push(v);else text.push(tok);}else text.push(tok);});ops.text=text.join(' ').toLowerCase();return ops;}

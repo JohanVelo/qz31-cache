@@ -152,6 +152,18 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .chip.mine.on{border-color:var(--cyan)!important;color:var(--cyan)!important}
 .sprio{margin-top:11px;font-family:var(--m);font-size:11px;letter-spacing:.5px;color:var(--txt2);text-align:center}
 .sprio b{font-size:13px}
+.selbox{flex:0 0 auto;width:19px;height:19px;border-radius:5px;border:1.5px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);background:transparent;font-size:12px;font-weight:800;margin-right:2px}
+.selbox.on{background:var(--cyan);border-color:var(--cyan)}
+.row.selrow{background:rgba(34,211,238,.07);border-left-color:var(--cyan)!important}
+#selbtn.on{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:80;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 20px);
+ background:var(--cell);border:1px solid var(--line2);border-radius:13px;padding:9px 12px;box-shadow:0 18px 44px rgba(0,0,0,.5);flex-wrap:wrap;justify-content:center}
+.selcount{font-family:var(--m);font-size:11px;letter-spacing:1px;color:var(--cyan);white-space:nowrap}
+.selacts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.selacts button,.selacts select{font-family:var(--m);font-size:11px;border:1px solid var(--line2);background:var(--bg);color:var(--txt2);border-radius:8px;padding:7px 10px;cursor:pointer}
+.selacts button.go{border-color:var(--green);color:var(--green)}
+.selacts button.ph{border-color:var(--red,#FF2E55);color:var(--red,#FF2E55)}
+.selacts button.pm{border-color:var(--amber);color:var(--amber)}
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
  color:var(--txt);font-family:var(--m);font-size:12px;padding:9px 14px;border-radius:10px;z-index:99;opacity:0;transition:.2s}
 .toast.on{opacity:1}
@@ -311,6 +323,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="tabs" id="tabs"></div>
     <div class="tools">
       <input class="search" id="q" placeholder="search tickets…" oninput="STATE.q=this.value;render()">
+      <button class="sortbtn" id="selbtn" onclick="toggleSelMode()" title="select multiple">☑ Select</button>
       <button class="sortbtn" id="sortbtn" onclick="cycleSort()">↕ newest</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -319,6 +332,18 @@ body.dense .kc{padding:6px 6px 7px}
   <div class="list" id="list"></div>
   <div id="board"></div>
   <div id="stats"></div>
+</div>
+<div class="selbar" id="selbar" style="display:none">
+  <span class="selcount" id="selcount">0 selected</span>
+  <div class="selacts">
+    <button onclick="bulkStatus('in_progress')">▸ In&nbsp;prog</button>
+    <button class="go" onclick="bulkStatus('done')">✓ Done</button>
+    <button class="ph" onclick="bulkPriority('high')">⚑ High</button>
+    <button class="pm" onclick="bulkPriority('med')">Med</button>
+    <button onclick="bulkPriority('low')">Low</button>
+    <select id="bulkasn" onchange="bulkAssign(this.value);this.selectedIndex=0"><option value="__">Assign…</option></select>
+    <button onclick="exitSel()">Cancel</button>
+  </div>
 </div>
 <div class="deny" id="deny" style="display:none">⚠ Not linked yet.<br><br>Open Velocity Relay once <b>inside Telegram</b> (the ♞ button) to link this device — then it opens on its own.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">(private to the planning office)</span></div>
 <div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
@@ -346,7 +371,7 @@ var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 var API="https://hrrdohlrfrficrtphcet.supabase.co/functions/v1/velocity-relay";
 var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
-var STATE={tickets:[],team:[],mineOnly:false,tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
+var STATE={tickets:[],team:[],mineOnly:false,selMode:false,sel:{},tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
 /* bridge: a device token passed in the URL (from Telegram → standalone browser) is stored locally */
 try{var _dt=(new URLSearchParams(location.search)).get("devtoken");if(_dt){localStorage.setItem("vr_devtoken",_dt);history.replaceState(null,"",location.pathname);}}catch(e){}
@@ -845,7 +870,9 @@ function rowHtml(t){
   var stale=(!t.done && ageH(t.created)>48)?'<span class="stale" title="open >2 days">⚠</span>':'';
   var asg=t.assignee?('<span class="asg">'+H(t.assignee)+'</span>'):'';
   var isnew=STATE.newIds.indexOf(t.id)>=0?'<span class="badge" style="color:var(--amber);background:rgba(255,176,32,.12)">NEW</span>':'';
-  return '<div class="row" style="border-left-color:'+t.color+'" onclick="openT('+t.id+')">'+
+  var seld=STATE.selMode&&STATE.sel[t.id];
+  var selbox=STATE.selMode?('<span class="selbox'+(seld?' on':'')+'">'+(seld?'✓':'')+'</span>'):'';
+  return '<div class="row'+(seld?' selrow':'')+'" style="border-left-color:'+t.color+'" onclick="rowClick(event,'+t.id+')">'+selbox+
    '<span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+H(t.id)+'</span>'+
    '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+stale+thread+asg+
    '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span>'+
@@ -944,6 +971,17 @@ function setPriority(id,p){
   });
 }
 function toggleMine(){STATE.mineOnly=!STATE.mineOnly;render();}
+/* ── bulk select + actions ── */
+function selIds(){return Object.keys(STATE.sel).filter(function(k){return STATE.sel[k];}).map(function(k){return parseInt(k,10);});}
+function toggleSelMode(){STATE.selMode=!STATE.selMode;STATE.sel={};var b=document.getElementById('selbtn');if(b){b.classList.toggle('on',STATE.selMode);b.textContent=STATE.selMode?'✕ Done':'☑ Select';}updateSelBar();render();}
+function exitSel(){if(!STATE.selMode)return;toggleSelMode();}
+function rowClick(ev,id){if(STATE.selMode){STATE.sel[id]=!STATE.sel[id];updateSelBar();render();}else{openT(id);}}
+function updateSelBar(){var bar=document.getElementById('selbar');if(!bar)return;var n=selIds().length;bar.style.display=STATE.selMode?'flex':'none';var c=document.getElementById('selcount');if(c)c.textContent=n+' selected';
+ var sel=document.getElementById('bulkasn');if(sel&&sel.options.length<=1){(STATE.team||[]).forEach(function(mm){var o=document.createElement('option');o.value=mm.name;o.textContent='→ '+mm.name;sel.appendChild(o);});var u=document.createElement('option');u.value='';u.textContent='→ unassign';sel.appendChild(u);}}
+function bulkRun(fn,label){var ids=selIds();if(!ids.length){toast('select tickets first');return;}toast(label+' '+ids.length+'…');Promise.all(ids.map(fn)).then(function(){tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');STATE.sel={};updateSelBar();load();});}
+function bulkStatus(st){bulkRun(function(id){return api('/status',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,status:st})});},'→ '+st);if(st==='done')confetti();}
+function bulkPriority(p){bulkRun(function(id){return api('/priority',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,priority:p})});},'priority '+p);}
+function bulkAssign(who){if(who==='__')return;bulkRun(function(id){return api('/assign',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,assignee:who})});},who?('assign → '+who):'unassign');}
 function handoff(id){
   var t=find(id);if(!t)return;
   var L=[];

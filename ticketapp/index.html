@@ -704,7 +704,10 @@ window.addEventListener('appinstalled',function(){var b=document.getElementById(
 function doInstall(){try{if(_installEvt){_installEvt.prompt();_installEvt.userChoice.then(function(){_installEvt=null;});}else{toast('Open the browser ⋮ menu → Install / Add to Home screen');}}catch(e){}}
 /* smart install: inside Telegram → open the standalone PWA (carries the login); in a browser → native install */
 function smartInstall(){try{if(typeof tg!=='undefined'&&tg&&tg.initData){openStandalone();}else{doInstall();}}catch(e){doInstall();}}
-if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}}
+if('serviceWorker' in navigator){try{
+  navigator.serviceWorker.register('sw.js').then(function(reg){try{reg.update();}catch(e){}setInterval(function(){try{reg.update();}catch(e){}},120000);}).catch(function(){});
+  var _vrReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_vrReloaded)return;_vrReloaded=true;location.reload();});
+}catch(e){}}
 function openStandalone(){var tk=devTok();if(!tk){toast('open in Telegram first to link this device');return;}var url='https://johanvelo.github.io/qz31-cache/ticketapp/index.html?devtoken='+encodeURIComponent(tk);try{if(typeof tg!=='undefined'&&tg&&tg.openLink){tg.openLink(url);}else{window.open(url,'_blank');}toast('opening in your browser — then Install it');}catch(e){window.open(url,'_blank');}}
 function buildFeed(){
   var ev=[];

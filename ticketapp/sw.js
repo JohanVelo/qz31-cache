@@ -1,9 +1,25 @@
-// Velocity Relay service worker — pass-through + Web Push.
-// Does NOT cache the app shell (updates always fresh). It DOES handle push so
-// notifications arrive even when the app/tab is fully closed.
+// Velocity Relay service worker — network-first shell + Web Push.
+// Network-first on navigation so the app is ALWAYS the latest build (no stale UI);
+// falls back to the last good copy only when offline. Push works app-closed.
+var SHELL = 'vr-shell-v1';
 self.addEventListener('install', function (e) { self.skipWaiting(); });
 self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim()); });
-self.addEventListener('fetch', function (e) { /* pass-through: let the network handle it */ });
+
+self.addEventListener('fetch', function (e) {
+  var req = e.request;
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req, { cache: 'no-store' }).then(function (resp) {
+        try { var c = resp.clone(); caches.open(SHELL).then(function (cache) { cache.put('shell', c); }); } catch (_) {}
+        return resp;
+      }).catch(function () {
+        return caches.open(SHELL).then(function (cache) { return cache.match('shell'); });
+      })
+    );
+    return;
+  }
+  /* everything else: pass-through to the network */
+});
 
 self.addEventListener('push', function (e) {
   var d = {};

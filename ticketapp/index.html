@@ -418,6 +418,10 @@ try{STATE.lastSeen=parseInt(localStorage.getItem("vr_lastseen")||"0",10)||0}catc
 function H(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function ageH(iso){try{return (Date.now()-new Date(iso).getTime())/3.6e6}catch(e){return 0}}
 function ageS(iso){var h=ageH(iso);return h<48?(h|0)+'h':((h/24)|0)+'d'}
+/* SA public holidays (weekday ones matter; weekends already skipped). 2026-2027. */
+var ZA_HOLIDAYS={'2026-01-01':1,'2026-03-21':1,'2026-04-03':1,'2026-04-06':1,'2026-04-27':1,'2026-05-01':1,'2026-06-16':1,'2026-08-09':1,'2026-08-10':1,'2026-09-24':1,'2026-12-16':1,'2026-12-25':1,'2026-12-26':1,'2027-01-01':1,'2027-03-21':1,'2027-03-22':1,'2027-03-26':1,'2027-03-29':1,'2027-04-27':1,'2027-05-01':1,'2027-06-16':1,'2027-08-09':1,'2027-09-24':1,'2027-12-16':1,'2027-12-25':1,'2027-12-26':1,'2027-12-27':1};
+/* whole working days elapsed since iso (skips Sat/Sun + SA public holidays) */
+function workingDaysSince(iso){try{var s=new Date(iso);if(isNaN(s))return 0;var d=new Date(s.getFullYear(),s.getMonth(),s.getDate());var n=new Date();var end=new Date(n.getFullYear(),n.getMonth(),n.getDate());var c=0,g=0;while(d<end&&g++<800){d.setDate(d.getDate()+1);var w=d.getDay();if(w===0||w===6)continue;var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);if(ZA_HOLIDAYS[k])continue;c++;}return c;}catch(e){return 0;}}
 var PAL=["#1AE5FF","#3DFF9A","#FFB020","#9D8CFF","#FF6FB5","#2DD4BF","#5B9DFF","#FF4D5E"];
 function color(n){var h=0,s=String(n||'?');for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},1900)}
@@ -795,7 +799,7 @@ function renderStats(){
   var open=ts.filter(function(t){return t.open&&!t.prog;});
   var prog=ts.filter(function(t){return t.prog;});
   var done=ts.filter(function(t){return t.done;});
-  var overdue=ts.filter(function(t){return t.open&&ageH(t.created)>48;});
+  var overdue=ts.filter(function(t){return t.open&&workingDaysSince(t.created)>=2;});
   var openAll=ts.filter(function(t){return t.open;});
   var byRep={};openAll.forEach(function(t){byRep[t.who]=(byRep[t.who]||0)+1;});
   var reps=Object.keys(byRep).map(function(n){return {name:n,n:byRep[n],color:color(n)};}).sort(function(a,b){return b.n-a.n;});
@@ -860,7 +864,7 @@ function applyFilters(){
     if(STATE.kind!=='all'&&t.kind!==STATE.kind)return false;
     if(STATE.mineOnly){var _mn=(STATE.me&&STATE.me.name)||'';if(t.assignee!==_mn)return false;}
     if(STATE.smart==='high'&&priClass(t.priority)!=='high')return false;
-    if(STATE.smart==='overdue'&&!(t.open&&ageH(t.created)>48))return false;
+    if(STATE.smart==='overdue'&&!(t.open&&workingDaysSince(t.created)>=2))return false;
     if(STATE.smart==='due'&&!(t.due&&!t.done))return false;
     if(STATE.reporter&&t.who!==STATE.reporter)return false;
     if(ops.status&&String(t.status).toLowerCase().indexOf(ops.status)<0)return false;
@@ -871,7 +875,7 @@ function applyFilters(){
       if(v==='pinned'&&!isPinned(t.id))return false;
       if(v==='open'&&!t.open)return false;
       if(v==='done'&&!t.done)return false;
-      if((v==='overdue'||v==='stale')&&!(t.open&&ageH(t.created)>48))return false;
+      if((v==='overdue'||v==='stale')&&!(t.open&&workingDaysSince(t.created)>=2))return false;
       if(v==='bug'&&t.kind!=='bug')return false;
     }
     if(ops.text){var _hay=(t.title+' '+t.body+' '+t.who+' '+(t.assignee||'')+' #'+t.id+' '+(t.thread||[]).map(function(m){return m.body;}).join(' ')).toLowerCase();if(_hay.indexOf(ops.text)<0)return false;}
@@ -903,10 +907,10 @@ function listHtml(){
 function rowHtml(t){
   var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
   var ic=t.kind==='bug'?'🐛':'✨',right=t.done?('v'+(H(t.ver)||'?')):ageS(t.created);
-  var ageStyle='';if(!t.done){var _ah=ageH(t.created);if(_ah>72)ageStyle=' style="color:var(--red);font-weight:600"';else if(_ah>24)ageStyle=' style="color:var(--amber)"';}
+  var ageStyle='';if(!t.done){var _wd=workingDaysSince(t.created);if(_wd>=3)ageStyle=' style="color:var(--red);font-weight:600"';else if(_wd>=1)ageStyle=' style="color:var(--amber)"';}
   var thread=t.thread&&t.thread.length?('<span class="badge">💬 '+t.thread.length+'</span>'):'';
   var pri=priClass(t.priority)?('<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>'):'';
-  var stale=(!t.done && ageH(t.created)>48)?'<span class="stale" title="open >2 days">⚠</span>':'';
+  var stale=(!t.done && workingDaysSince(t.created)>=2)?'<span class="stale" title="open >2 working days (weekends + SA holidays excluded)">⚠</span>':'';
   var asg=t.assignee?('<span class="asg">'+H(t.assignee)+'</span>'):'';
   var _rdi=(!t.done)?dueInfo(t.due):null;var dueb=_rdi?('<span class="due'+(_rdi.overdue?' over':'')+'">📅 '+_rdi.txt+'</span>'):'';
   var isnew=STATE.newIds.indexOf(t.id)>=0?'<span class="badge" style="color:var(--amber);background:rgba(255,176,32,.12)">NEW</span>':'';
@@ -925,7 +929,7 @@ function insightsHtml(){
   var avg='—';
   if(doneT.length){var s=0;doneT.forEach(function(t){s+=(new Date(t.resolved)-new Date(t.created))/3.6e6});var a=s/doneT.length;avg=a<48?a.toFixed(1)+'h':(a/24).toFixed(1)+'d';}
   var weekAgo=Date.now()-7*864e5;var wk=ts.filter(function(t){return new Date(t.created).getTime()>weekAgo}).length;
-  var stale=ts.filter(function(t){return !t.done&&ageH(t.created)>48}).length;
+  var stale=ts.filter(function(t){return !t.done&&workingDaysSince(t.created)>=2}).length;
   // 7-day created sparkline
   var bins=[0,0,0,0,0,0,0];ts.forEach(function(t){var d=Math.floor((Date.now()-new Date(t.created).getTime())/864e5);if(d>=0&&d<7)bins[6-d]++});
   var mx=Math.max.apply(null,bins)||1;var blk='▁▂▃▄▅▆▇';var spark=bins.map(function(v){return blk[Math.min(6,Math.round(v/mx*6))]}).join('');

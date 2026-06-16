@@ -408,7 +408,8 @@ function load(){
     var _oldStatus={};STATE.tickets.forEach(function(t){_oldStatus[t.id]=t.status;});
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     STATE.tickets=res.j.tickets||[];
-    if(typeof res.j.pending_count!=='undefined'){if(STATE.me)STATE.me.pending_count=res.j.pending_count;updateTeamBadge(res.j.pending_count);}
+    if(typeof res.j.pending_count!=='undefined'){var _prevPend=(STATE.me&&STATE.me.pending_count)||0;if(STATE.me)STATE.me.pending_count=res.j.pending_count;updateTeamBadge(res.j.pending_count);
+      if(!STATE.first && res.j.pending_count>_prevPend){beep();var _vis2=(typeof document!=='undefined'&&document.visibilityState==='visible');if(_vis2)accessCard(res.j.pending_count-_prevPend);}}
     try{localStorage.setItem('vr_lastdata',JSON.stringify(STATE.tickets));}catch(e){}
     document.getElementById('app').style.display='flex';
     var mxId=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
@@ -650,6 +651,23 @@ function arriveCard(t){try{
   c.addEventListener('mouseenter',function(){clearTimeout(to);});
   c.addEventListener('mouseleave',function(){clearTimeout(to);to=setTimeout(dismiss,2600);});
   while(wrap.children.length>4)wrap.removeChild(wrap.lastChild);
+}catch(e){}}
+function accessCard(n){try{
+  var wrap=document.getElementById('arrive');
+  if(!wrap){wrap=document.createElement('div');wrap.className='arrive';wrap.id='arrive';document.body.appendChild(wrap);}
+  var ac='#22D3EE';
+  var c=document.createElement('div');c.className='acard';c.style.setProperty('--ac',ac);c.style.setProperty('--acg',_rgba(ac,.2));
+  c.innerHTML='<div class="aglow"></div><div class="ax">✕</div>'
+    +'<div class="aeye"><span class="adot"></span>Access request</div>'
+    +'<div class="atitle"><span>👤</span><span>'+(n>1?(n+' people want'):'Someone wants')+' to use Velocity Relay</span></div>'
+    +'<div class="ameta"><i></i>tap to review in Team</div>'
+    +'<div class="abar"></div>';
+  var done=false,to;var dismiss=function(){if(done)return;done=true;c.classList.add('out');setTimeout(function(){c.remove();},360);};
+  c.onclick=function(ev){var cl=(ev.target&&ev.target.className)||'';dismiss();if(cl!=='ax')openTeam();};
+  wrap.insertBefore(c,wrap.firstChild);
+  to=setTimeout(dismiss,7000);
+  c.addEventListener('mouseenter',function(){clearTimeout(to);});
+  c.addEventListener('mouseleave',function(){clearTimeout(to);to=setTimeout(dismiss,2600);});
 }catch(e){}}
 function toggleMute(){STATE.muted=!STATE.muted;try{localStorage.setItem('vr_muted',STATE.muted?'1':'0')}catch(e){}toast(STATE.muted?'🔇 sound off':'🔔 sound on');}
 function toggleDensity(){STATE.dense=!STATE.dense;document.body.classList.toggle('dense',STATE.dense);try{localStorage.setItem('vr_dense',STATE.dense?'1':'0')}catch(e){}toast(STATE.dense?'▤ compact':'▥ comfortable');}

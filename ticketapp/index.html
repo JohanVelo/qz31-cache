@@ -327,6 +327,7 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
+      <div class="bell" onclick="openQR()" title="get Relay on your phone (scan QR)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v0M17 21h4M21 17v4"/></svg></div>
       <div class="bell" onclick="openCmd()" title="commands / search (Ctrl/⌘K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.2"/><path d="M20 20l-4.2-4.2"/></svg></div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a3 3 0 0 0 3-3 8 8 0 0 0-8-7z"/><circle cx="7.5" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.7" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></svg></div>
       <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5.5 5.5 0 0 0-4-5.3"/></svg><span class="bdg" id="teambdg" style="display:none">0</span></div>
@@ -361,8 +362,10 @@ body.dense .kc{padding:6px 6px 7px}
   </div>
 </div>
 <div class="deny" id="deny" style="display:none">⚠ Not linked yet.<br><br>Open Velocity Relay once <b>inside Telegram</b> (the ♞ button) to link this device — then it opens on its own.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">(private to the planning office)</span></div>
+<div class="deny" id="signup" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:8px">🛰</div><b style="color:var(--txt);font-size:18px">Join Velocity Relay</b><br><br><div style="max-width:300px;margin:0 auto"><input id="signupname" maxlength="40" placeholder="Your name" style="width:100%;background:var(--cell);border:1px solid var(--line2);border-radius:9px;padding:12px;color:var(--txt);font-family:var(--d);font-size:15px;text-align:center"><button onclick="doSignup()" style="width:100%;margin-top:10px;background:var(--cyan);color:var(--bg);border:none;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer">Request access</button></div><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3);line-height:1.7">Tip: <b>Add to Home Screen</b> to install the app.<br>The office approves you, then you're in.</span></div>
 <div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
 <div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who opens Relay inside Telegram appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
+<div class="ovl" id="qrovl" style="display:none" onclick="if(event.target===this)closeQR()"><div class="teambox" style="max-width:420px"><div class="teamhd">GET RELAY ON YOUR PHONE<span class="tx" onclick="closeQR()">✕</span></div><div style="padding:18px;text-align:center"><img id="qrimg" alt="QR" style="width:300px;max-width:78vw;border-radius:10px;background:#fff;padding:8px"><div style="font-family:var(--m);font-size:12px;color:var(--txt2);margin-top:12px;line-height:1.7">Scan with your phone camera →<br>then <b>Add to Home Screen</b> → tap 🔔 Allow.</div></div></div></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
   <div class="sh-body" id="sh-body"></div>
@@ -1068,14 +1071,20 @@ function copyText(b){
 }
 function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}
 /* ── access gating (team members) ── */
-function showOnly(which){document.getElementById('app').style.display=which==='app'?'flex':'none';document.getElementById('deny').style.display=which==='deny'?'block':'none';var p=document.getElementById('pending');if(p)p.style.display=which==='pending'?'block':'none';}
+function showOnly(which){['app','deny','signup','pending'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=(id===which)?(id==='app'?'flex':'block'):'none';});}
+function doSignup(){var inp=document.getElementById('signupname');var name=(inp&&inp.value||'').trim();if(name.length<2){toast('enter your name');return;}
+  api('/signup',{method:'POST',body:JSON.stringify({name:name})}).then(function(res){
+    if(res.ok&&res.j&&res.j.token){try{localStorage.setItem('vr_devtoken',res.j.token)}catch(e){}STATE.me={auth:true,active:false,name:name,role:'member'};var pn=document.getElementById('pendname');if(pn)pn.textContent=name;showOnly('pending');
+      if(!STATE._pendPoll){STATE._pendPoll=setInterval(function(){api('/me').then(function(r){if(r.j&&r.j.active){clearInterval(STATE._pendPoll);STATE._pendPoll=null;STATE.me=r.j;applyMe();showOnly('app');load();}})},10000);}
+    }else{toast('signup failed');}
+  }).catch(function(){toast('signup failed')});}
 function updateTeamBadge(n){var b=document.getElementById('teambdg');if(!b)return;n=n||0;if(n>0){b.textContent=n>9?'9+':n;b.style.display='';}else{b.style.display='none';}}
 function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';updateTeamBadge(me.pending_count);if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
  try{if((new URLSearchParams(location.search)).get('team')==='1'&&(me.role==='owner'||me.role==='admin')){history.replaceState(null,'',location.pathname);setTimeout(function(){openTeam();},600);}}catch(e){}}
 function boot(){
   api('/me').then(function(res){
     var me=res.j||{};STATE.me=me;
-    if(!me.auth){showOnly('deny');return;}
+    if(!me.auth){showOnly('signup');return;}
     if(!me.active){var pn=document.getElementById('pendname');if(pn)pn.textContent=me.name||'You';showOnly('pending');
       if(!STATE._pendPoll){STATE._pendPoll=setInterval(function(){api('/me').then(function(r){if(r.j&&r.j.active){clearInterval(STATE._pendPoll);STATE._pendPoll=null;STATE.me=r.j;applyMe();showOnly('app');load();}})},15000);}
       return;}
@@ -1083,6 +1092,9 @@ function boot(){
     applyMe();showOnly('app');load();
   }).catch(function(){showOnly('app');load();});
 }
+/* ── invite QR (scan -> create profile -> request access) ── */
+function openQR(){var url='https://johanvelo.github.io/qz31-cache/ticketapp/';var img=document.getElementById('qrimg');if(img)img.removeAttribute('src');document.getElementById('qrovl').style.display='flex';api('/qr?u='+encodeURIComponent(url)).then(function(r){if(r.j&&r.j.dataurl&&img)img.src=r.j.dataurl;}).catch(function(){toast('QR failed')});}
+function closeQR(){document.getElementById('qrovl').style.display='none';}
 /* ── Team admin panel (owner/admin) ── */
 function openTeam(){document.getElementById('teamovl').style.display='flex';renderTeamList();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');}
 function closeTeam(){document.getElementById('teamovl').style.display='none';}

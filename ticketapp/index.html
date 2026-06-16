@@ -117,6 +117,25 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .reply .send{flex:0 0 auto;background:linear-gradient(135deg,var(--cyan),#1AA6FF);color:#04070D;font-weight:700;
  border:none;border-radius:10px;padding:0 16px;font-family:var(--m);font-size:12px}
 .deny{padding:60px 24px;text-align:center;font-family:var(--m);color:var(--amber)}
+.meid{font-family:var(--m);font-size:11px;color:var(--txt2);margin-left:8px;padding:3px 8px;border:1px solid var(--line2);border-radius:6px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:8vh 14px}
+.teambox{width:100%;max-width:520px;background:var(--cell);border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.teamhd{font-family:var(--d);font-weight:700;letter-spacing:.06em;font-size:14px;padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;color:var(--txt)}
+.teamhd .tx{cursor:pointer;color:var(--txt3);font-size:16px}
+.teamlist{max-height:56vh;overflow:auto;padding:8px}
+.tmrow{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:9px}
+.tmrow+.tmrow{border-top:1px solid var(--line)}
+.tmname{flex:1;min-width:0;font-size:14px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tmname small{display:block;font-family:var(--m);font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
+.tok{font-family:var(--m);font-size:11px;color:var(--green)}
+.tpend{font-family:var(--m);font-size:11px;color:var(--amber)}
+.tmact{display:flex;gap:6px;align-items:center}
+.tbtn{font-family:var(--m);font-size:11px;border:1px solid var(--line2);background:transparent;color:var(--txt2);border-radius:7px;padding:6px 10px;cursor:pointer}
+.tbtn.tappr{border-color:var(--green);color:var(--green)}
+.tbtn.tdeact{border-color:var(--amber);color:var(--amber)}
+.tbtn.trm{border-color:var(--line2);color:var(--txt3);padding:6px 8px}
+.teamft{font-family:var(--m);font-size:11px;color:var(--txt3);padding:11px 16px;border-top:1px solid var(--line);line-height:1.5}
+.tmuted{font-family:var(--m);font-size:12px;color:var(--txt3);text-align:center;padding:26px 16px;line-height:1.6}
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
  color:var(--txt);font-family:var(--m);font-size:12px;padding:9px 14px;border-radius:10px;z-index:99;opacity:0;transition:.2s}
 .toast.on{opacity:1}
@@ -247,7 +266,9 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="bell" onclick="openCmd()" title="commands (Ctrl/⌘K)" style="font-size:13px;font-family:var(--m)">⌘</div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
+      <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="font-size:14px;display:none">👥</div>
       <div class="bell" id="bell" onclick="bellClick()" title="notifications / clear new">🔔<span class="bdg" id="bdg">0</span></div>
+      <div class="meid" id="mewho" title="signed in"></div>
       <div class="opp" onclick="load()"><span class="live">●</span> <span id="ts">LIVE</span></div>
     </div>
     <div class="kp" id="kp"></div>
@@ -264,6 +285,8 @@ body.dense .kc{padding:6px 6px 7px}
   <div id="stats"></div>
 </div>
 <div class="deny" id="deny" style="display:none">⚠ Not linked yet.<br><br>Open Velocity Relay once <b>inside Telegram</b> (the ♞ button) to link this device — then it opens on its own.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">(private to the planning office)</span></div>
+<div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
+<div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who opens Relay inside Telegram appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
   <div class="sh-body" id="sh-body"></div>
@@ -348,7 +371,7 @@ function load(){
   api('/tickets').then(function(res){
     STATE.loading=false;
     if(!res.ok){
-      if(res.j&&res.j.error==='unauthorized'){document.getElementById('app').style.display='none';document.getElementById('deny').style.display='block';return;}
+      if(res.j&&res.j.error==='unauthorized'){boot();return;}
       setConn('reconnecting');scheduleRetry();return;
     }
     STATE.retries=0;setConn('ok');
@@ -830,6 +853,37 @@ function copyText(b){
   else legacyCopy(b);
 }
 function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}
-load();
-setInterval(function(){if(!document.getElementById('sheet').classList.contains('on'))load()},45000);
+/* ── access gating (team members) ── */
+function showOnly(which){document.getElementById('app').style.display=which==='app'?'flex':'none';document.getElementById('deny').style.display=which==='deny'?'block':'none';var p=document.getElementById('pending');if(p)p.style.display=which==='pending'?'block':'none';}
+function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}}
+function boot(){
+  api('/me').then(function(res){
+    var me=res.j||{};STATE.me=me;
+    if(!me.auth){showOnly('deny');return;}
+    if(!me.active){var pn=document.getElementById('pendname');if(pn)pn.textContent=me.name||'You';showOnly('pending');
+      if(!STATE._pendPoll){STATE._pendPoll=setInterval(function(){api('/me').then(function(r){if(r.j&&r.j.active){clearInterval(STATE._pendPoll);STATE._pendPoll=null;STATE.me=r.j;applyMe();showOnly('app');load();}})},15000);}
+      return;}
+    if(STATE._pendPoll){clearInterval(STATE._pendPoll);STATE._pendPoll=null;}
+    applyMe();showOnly('app');load();
+  }).catch(function(){showOnly('app');load();});
+}
+/* ── Team admin panel (owner/admin) ── */
+function openTeam(){document.getElementById('teamovl').style.display='flex';renderTeamList();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');}
+function closeTeam(){document.getElementById('teamovl').style.display='none';}
+function renderTeamList(){var box=document.getElementById('teamlist');box.innerHTML='<div class="tmuted">loading…</div>';
+  api('/members').then(function(res){
+    if(!res.ok){box.innerHTML='<div class="tmuted">not allowed</div>';return;}
+    var ms=(res.j&&res.j.members)||[];
+    if(!ms.length){box.innerHTML='<div class="tmuted">No one yet.<br>Share Relay with the team — when they open it inside Telegram they\'ll appear here for you to approve.</div>';return;}
+    ms.sort(function(a,b){return (a.active?1:0)-(b.active?1:0)||(b.telegram_id-a.telegram_id);});
+    box.innerHTML=ms.map(function(m){
+      var st=m.active?'<span class="tok">● active</span>':'<span class="tpend">● pending</span>';
+      var act=m.active?'<button class="tbtn tdeact" onclick="memberSet(\''+m.telegram_id+'\',{active:false})">Deactivate</button>':'<button class="tbtn tappr" onclick="memberSet(\''+m.telegram_id+'\',{active:true})">Approve</button>';
+      return '<div class="tmrow"><div class="tmname">'+H(m.name||m.telegram_id)+'<small>'+H(m.role||'member')+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet(\''+m.telegram_id+'\',{remove:true})">✕</button></div></div>';
+    }).join('');
+  });
+}
+function memberSet(tid,patch){patch.telegram_id=tid;api('/member-set',{method:'POST',body:JSON.stringify(patch)}).then(function(res){if(res.ok){toast(patch.remove?'removed':(patch.active?'✓ approved':'deactivated'));if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');renderTeamList();}else toast('failed');});}
+boot();
+setInterval(function(){if(document.getElementById('app').style.display!=='none'&&!document.getElementById('sheet').classList.contains('on'))load()},45000);
 </script></body></html>

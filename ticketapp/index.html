@@ -147,7 +147,7 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .ctll{font-family:var(--m);font-size:10px;letter-spacing:1.5px;color:var(--txt3);min-width:64px}
 .asnsel{flex:1;min-width:150px;background:var(--cell);color:var(--txt);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;font-family:var(--d);font-size:13px;cursor:pointer}
 .pbtn.on.high{border-color:var(--red)!important;color:var(--red)!important}
-.pbtn.on.medium{border-color:var(--amber)!important;color:var(--amber)!important}
+.pbtn.on.med{border-color:var(--amber)!important;color:var(--amber)!important}
 .pbtn.on.low{border-color:var(--txt3)!important;color:var(--txt)!important}
 .chip.mine.on{border-color:var(--cyan)!important;color:var(--cyan)!important}
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
@@ -297,10 +297,8 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
-      <div class="bell" onclick="toggleFs()" title="maximise / restore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M8 20H6a2 2 0 0 1-2-2v-2M16 20h2a2 2 0 0 0 2-2v-2"/></svg></div>
       <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
       <div class="bell" onclick="openCmd()" title="commands / search (Ctrl/⌘K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.2"/><path d="M20 20l-4.2-4.2"/></svg></div>
-      <div class="bell" onclick="minimise()" title="minimise — back to Telegram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14h12"/></svg></div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a3 3 0 0 0 3-3 8 8 0 0 0-8-7z"/><circle cx="7.5" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.7" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></svg></div>
       <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5.5 5.5 0 0 0-4-5.3"/></svg><span class="bdg" id="teambdg" style="display:none">0</span></div>
       <div class="bell" id="bell" onclick="bellClick()" title="notifications / clear new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5"/><path d="M13.7 19.5a2 2 0 0 1-3.4 0"/></svg><span class="bdg" id="bdg">0</span></div>
@@ -377,7 +375,8 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 function devTok(){try{return localStorage.getItem('vr_devtoken')||''}catch(e){return ''}}
 function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:'','X-Device-Token':devTok()}}
 function api(p,opt){opt=opt||{};opt.headers=hdrs();return fetch(API+p,opt).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})}
-function priClass(p){p=(p||'').toLowerCase();return p.indexOf('high')>=0||p.indexOf('crit')>=0?'high':(p.indexOf('med')>=0?'med':'low')}
+function priClass(p){p=(''+(p==null?'':p)).toLowerCase();if(p==='')return '';if(p==='3')return 'high';if(p==='2')return 'med';if(p==='1')return 'low';if(p.indexOf('high')>=0||p.indexOf('crit')>=0)return 'high';if(p.indexOf('med')>=0)return 'med';if(p.indexOf('low')>=0)return 'low';return ''}
+function priLabel(p){var c=priClass(p);return c?c.toUpperCase():''}
 function isSnoozed(t){return !!t.snz&&new Date(t.snz).getTime()>Date.now();}
 function snooze(id,days){var until=new Date(Date.now()+days*864e5).toISOString();api('/snooze',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,until:until})}).then(function(res){if(res.ok){toast('😴 snoozed '+days+'d');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');closeT();load();}else{toast('snooze failed')}});}
 function unsnooze(id){api('/snooze',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,until:null})}).then(function(res){if(res.ok){toast('⏰ woke up');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');load();setTimeout(function(){openT(id);},400);}else{toast('failed')}});}
@@ -505,7 +504,7 @@ function renderBoard(){
 }
 function bCard(t){
   var ic=t.kind==='bug'?'🐛':'✨';
-  var pri=t.priority?'<span class="pri '+priClass(t.priority)+'">'+H(String(t.priority).toUpperCase().slice(0,4))+'</span>':'';
+  var pri=priClass(t.priority)?'<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>':'';
   var asg=t.assignee?'<span class="asg">'+H(t.assignee)+'</span>':'';
   return '<div class="bcard" draggable="true" ondragstart="bStart(event,'+t.id+')" ondragend="bEnd(event)" onclick="openT('+t.id+')" style="border-left-color:'+t.color+'">'+
     '<div class="bctop"><span class="tid">#'+H(t.id)+'</span>'+pri+asg+'</div>'+
@@ -605,7 +604,7 @@ function togglePinEv(e,id){e.stopPropagation();togglePin(id);}
 function exportCSV(){
   var ts=STATE.tickets.slice().sort(function(a,b){return b.id-a.id;});
   var rows=[['id','status','kind','priority','title','reporter','assignee','version','created']];
-  ts.forEach(function(t){rows.push([t.id,t.status,t.kind,t.priority||'',t.title,t.who,t.assignee||'',t.ver||'',t.created]);});
+  ts.forEach(function(t){rows.push([t.id,t.status,t.kind,priLabel(t.priority),t.title,t.who,t.assignee||'',t.ver||'',t.created]);});
   var csv=rows.map(function(r){return r.map(function(c){c=String(c==null?'':c);return /[",\n]/.test(c)?('"'+c.replace(/"/g,'""')+'"'):c;}).join(',');}).join('\n');
   try{var blob=new Blob([csv],{type:'text/csv'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='velocity-relay-tickets.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},2000);toast('📄 CSV exported ('+ts.length+')');}catch(e){toast('export failed');}
 }
@@ -651,7 +650,7 @@ function arriveCard(t){try{
   c.innerHTML='<div class="aglow"></div><div class="ax">✕</div>'
     +'<div class="aeye"><span class="adot"></span>New ticket · #'+H(t.id)+'</div>'
     +'<div class="atitle"><span>'+icon+'</span><span>'+H(t.title||'(no title)')+'</span></div>'
-    +'<div class="ameta"><i></i>'+H(t.who||'someone')+(t.priority?(' · '+H(t.priority)):'')+'</div>'
+    +'<div class="ameta"><i></i>'+H(t.who||'someone')+(priClass(t.priority)?(' · '+priLabel(t.priority)):'')+'</div>'
     +'<div class="abar"></div>';
   var done=false,to;var dismiss=function(){if(done)return;done=true;c.classList.add('out');setTimeout(function(){c.remove();},360);};
   c.onclick=function(ev){var cl=(ev.target&&ev.target.className)||'';dismiss();if(cl!=='ax')openT(t.id);};
@@ -712,7 +711,7 @@ function buildFeed(){
   STATE.tickets.forEach(function(t){
     (t.history||[]).forEach(function(h){ev.push({when:new Date(h.created_at).getTime()||0,text:'#'+t.id+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
     (t.thread||[]).forEach(function(m){if(m.author==='office')ev.push({when:new Date(m.created_at).getTime()||0,text:'office replied on #'+t.id,sub:H(String(m.body)).slice(0,44),color:'var(--violet)'});});
-    ev.push({when:new Date(t.created).getTime()||0,text:'#'+t.id+' new · <b>'+H(t.who)+'</b>'+(t.priority?' · <span style="color:var(--red,#FF2E55)">'+H(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(t.priority&&priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
+    ev.push({when:new Date(t.created).getTime()||0,text:'#'+t.id+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
   });
   ev.sort(function(a,b){return b.when-a.when;});
   return ev;
@@ -818,7 +817,7 @@ function rowHtml(t){
   var ic=t.kind==='bug'?'🐛':'✨',right=t.done?('v'+(H(t.ver)||'?')):ageS(t.created);
   var ageStyle='';if(!t.done){var _ah=ageH(t.created);if(_ah>72)ageStyle=' style="color:var(--red);font-weight:600"';else if(_ah>24)ageStyle=' style="color:var(--amber)"';}
   var thread=t.thread&&t.thread.length?('<span class="badge">💬 '+t.thread.length+'</span>'):'';
-  var pri=t.priority?('<span class="pri '+priClass(t.priority)+'">'+H(String(t.priority).toUpperCase().slice(0,4))+'</span>'):'';
+  var pri=priClass(t.priority)?('<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>'):'';
   var stale=(!t.done && ageH(t.created)>48)?'<span class="stale" title="open >2 days">⚠</span>':'';
   var asg=t.assignee?('<span class="asg">'+H(t.assignee)+'</span>'):'';
   var isnew=STATE.newIds.indexOf(t.id)>=0?'<span class="badge" style="color:var(--amber);background:rgba(255,176,32,.12)">NEW</span>':'';
@@ -859,7 +858,7 @@ function openT(id){
   var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
   document.getElementById('sh-id').textContent='#'+id+(t.assignee?(' · @'+H(t.assignee)):'');
   var meta='<span style="color:'+t.color+'">●&nbsp;'+H(t.who)+'</span><span>'+H(t.status)+'</span>';
-  if(t.priority)meta+='<span>prio '+H(t.priority)+'</span>';
+  if(priClass(t.priority))meta+='<span>prio '+priLabel(t.priority)+'</span>';
   if(t.ver)meta+='<span>v'+H(t.ver)+'</span>';if(t.pv)meta+='<span>from v'+H(t.pv)+'</span>';
   if(t.proj)meta+='<span>'+H(t.proj)+'</span>';meta+='<span>'+ageS(t.created)+' old</span>';
   var shots=(t.shots||[]).length?('<div class="shots">'+t.shots.map(function(u){return '<img src="'+H(u)+'" onclick="tg&&tg.openLink&&tg.openLink(\''+H(u)+'\')">'}).join('')+'</div>'):'';
@@ -868,9 +867,9 @@ function openT(id){
   var hist=(t.history||[]).map(function(a){return '<div class="tmsg reporter"><div class="a">'+ageS(a.created_at)+' ago'+(a.actor?(' · '+H(a.actor)):'')+'</div>'+H(a.field)+': '+H(a.old_val||'—')+' → '+H(a.new_val||'—')+'</div>'}).join('');
   var rel=STATE.tickets.filter(function(o){return o.id!==t.id&&(o.who===t.who||sim(o.title,t.title)>=0.4);}).slice(0,4);
   var relHtml=rel.length?('<div class="thread"><div class="sec">// RELATED</div>'+rel.map(function(o){var why=o.who===t.who?'same reporter':'similar';return '<div class="rel" onclick="openT('+o.id+')"><span class="tid">#'+o.id+'</span><span class="rt">'+(o.kind==='bug'?'🐛 ':'✨ ')+H(o.title)+'</span><span class="rwhy">'+why+'</span></div>';}).join('')+'</div>'):'';
-  var _pr=String(t.priority||'').toLowerCase();
-  var pbtn=function(v,lab){return '<button class="act pbtn'+(_pr.indexOf(v)>=0?' on '+v:'')+'" onclick="setPriority('+id+',\''+v+'\')">'+lab+'</button>';};
-  var prioCtl='<div class="ctlrow"><span class="ctll">PRIORITY</span>'+pbtn('high','⚑ High')+pbtn('medium','Med')+pbtn('low','Low')+(_pr?'<button class="act" onclick="setPriority('+id+',\'\')">clear</button>':'')+'</div>';
+  var _pr=priClass(t.priority);
+  var pbtn=function(v,lab){return '<button class="act pbtn'+(_pr===v?' on '+v:'')+'" onclick="setPriority('+id+',\''+v+'\')">'+lab+'</button>';};
+  var prioCtl='<div class="ctlrow"><span class="ctll">PRIORITY</span>'+pbtn('high','⚑ High')+pbtn('med','Med')+pbtn('low','Low')+(_pr?'<button class="act" onclick="setPriority('+id+',\'\')">clear</button>':'')+'</div>';
   var asnOpts='<option value="">— unassigned —</option>'+(STATE.team||[]).map(function(mm){return '<option value="'+H(mm.name)+'"'+(t.assignee===mm.name?' selected':'')+'>'+H(mm.name)+(mm.username?(' (@'+H(mm.username)+')'):'')+'</option>';}).join('');
   var asnCtl='<div class="ctlrow"><span class="ctll">ASSIGNEE</span><select class="asnsel" onchange="assign('+id+',this.value)">'+asnOpts+'</select></div>';
   var acts='<div class="acts">'+
@@ -926,7 +925,7 @@ function handoff(id){
   var L=[];
   L.push("VELOCITY RELAY — TICKET HANDOFF #"+t.id);
   L.push("Title: "+t.title);
-  L.push("Type: "+(t.kind||"?")+"  |  Status: "+t.status+"  |  Reporter: "+t.who+(t.proj?("  |  Project: "+t.proj):"")+(t.priority?("  |  Priority: "+t.priority):""));
+  L.push("Type: "+(t.kind||"?")+"  |  Status: "+t.status+"  |  Reporter: "+t.who+(t.proj?("  |  Project: "+t.proj):"")+(priClass(t.priority)?("  |  Priority: "+priLabel(t.priority)):""));
   if(t.pdf)L.push("PDF report (READ THIS FIRST): "+t.pdf);
   if(t.shots&&t.shots.length)L.push("Screenshots: "+t.shots.join("  ,  "));
   L.push("");

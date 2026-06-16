@@ -242,7 +242,7 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="bell" onclick="openCmd()" title="commands (Ctrl/⌘K)" style="font-size:13px;font-family:var(--m)">⌘</div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
-      <div class="bell" id="bell" onclick="clearNew()">🔔<span class="bdg" id="bdg">0</span></div>
+      <div class="bell" id="bell" onclick="bellClick()" title="notifications / clear new">🔔<span class="bdg" id="bdg">0</span></div>
       <div class="opp" onclick="load()"><span class="live">●</span> <span id="ts">LIVE</span></div>
     </div>
     <div class="kp" id="kp"></div>
@@ -348,21 +348,27 @@ function load(){
     }
     STATE.retries=0;setConn('ok');
     if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
+    var _oldStatus={};STATE.tickets.forEach(function(t){_oldStatus[t.id]=t.status;});
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     STATE.tickets=res.j.tickets||[];
+    try{localStorage.setItem('vr_lastdata',JSON.stringify(STATE.tickets));}catch(e){}
     document.getElementById('app').style.display='flex';
     var mxId=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     if(STATE.first && !STATE.lastSeen){STATE.lastSeen=mxId;try{localStorage.setItem('vr_lastseen',String(mxId))}catch(e){}}
     // new-ticket detection
     STATE.newIds=STATE.tickets.filter(function(t){return t.id>STATE.lastSeen}).map(function(t){return t.id});
-    if(!STATE.first && prevMax && STATE.tickets.some(function(t){return t.id>prevMax})){
-      tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');beep();nflash();toast('🆕 new ticket');
+    if(!STATE.first && prevMax){
+      var _fresh=STATE.tickets.filter(function(t){return t.id>prevMax;});
+      if(_fresh.length){tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');beep();nflash();toast('🆕 new ticket');if('Notification' in window&&Notification.permission==='default')notifEnable();_fresh.forEach(function(t){pushNotif('🆕 New ticket #'+t.id,(t.who?(t.who+' · '):'')+t.title,'new-'+t.id);});}
+      STATE.tickets.forEach(function(t){if(_oldStatus[t.id]&&_oldStatus[t.id]!=='done'&&t.done){pushNotif('✅ Ticket #'+t.id+' shipped',t.title,'done-'+t.id);}});
     }
     render();
     if(STATE.first){try{if(localStorage.getItem('vr_view')==='stats')setView('stats');}catch(e){}}
     if(DEEP){var dl=DEEP;DEEP=null;if(find(dl)){openT(dl);}else{toast('ticket #'+dl+' not found');}}
     STATE.first=false;
-  }).catch(function(){STATE.loading=false;setConn('reconnecting');scheduleRetry();});
+  }).catch(function(){STATE.loading=false;
+    if(!STATE.tickets.length){try{var _c=JSON.parse(localStorage.getItem('vr_lastdata')||'[]');if(_c&&_c.length){STATE.tickets=_c;document.getElementById('app').style.display='flex';render();toast('📴 offline — showing last saved');}}catch(e){}}
+    setConn('reconnecting');scheduleRetry();});
 }
 window.onerror=function(){try{toast('hiccup — recovering')}catch(e){}return false;};
 window.addEventListener('unhandledrejection',function(){try{toast('network hiccup — retrying')}catch(e){}});
@@ -476,6 +482,8 @@ function cmdItems(q){
     {lbl:'Theme: Cyber Void',hint:'theme',run:function(){applyThemeName('void')}},
     {sec:'TOOLS'},
     {lbl:'Open as app (standalone, no Telegram)',hint:'install',run:function(){openStandalone()}},
+    {lbl:'Enable notifications',hint:'alerts',run:function(){notifEnable()}},
+    {lbl:'Mute / unmute notifications',hint:'alerts',run:function(){toggleNotif()}},
     {lbl:'Install app',hint:'pwa',run:function(){doInstall()}},
     {lbl:'Export CSV',hint:'download',run:function(){exportCSV()}},
     {lbl:'Theme: Match Telegram (auto)',hint:'theme',run:function(){applyThemeName('auto')}},
@@ -565,7 +573,10 @@ function beep(){if(STATE.muted)return;try{var AC=window.AudioContext||window.web
 function nflash(){try{var f=document.createElement('div');f.className='nflash';document.body.appendChild(f);setTimeout(function(){f.remove();},1600);}catch(e){}}
 function toggleMute(){STATE.muted=!STATE.muted;try{localStorage.setItem('vr_muted',STATE.muted?'1':'0')}catch(e){}toast(STATE.muted?'🔇 sound off':'🔔 sound on');}
 function toggleDensity(){STATE.dense=!STATE.dense;document.body.classList.toggle('dense',STATE.dense);try{localStorage.setItem('vr_dense',STATE.dense?'1':'0')}catch(e){}toast(STATE.dense?'▤ compact':'▥ comfortable');}
-try{STATE.muted=localStorage.getItem('vr_muted')==='1';STATE.dense=localStorage.getItem('vr_dense')==='1';document.body.classList.toggle('dense',STATE.dense);}catch(e){}
+try{STATE.muted=localStorage.getItem('vr_muted')==='1';STATE.dense=localStorage.getItem('vr_dense')==='1';STATE.notifOff=localStorage.getItem('vr_notifoff')==='1';document.body.classList.toggle('dense',STATE.dense);}catch(e){}
+function notifEnable(){try{if('Notification' in window){Notification.requestPermission().then(function(p){toast(p==='granted'?'🔔 notifications on':'notifications blocked in browser settings');});}else toast('notifications not supported here');}catch(e){}}
+function pushNotif(title,body,tag){try{if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}
+function toggleNotif(){STATE.notifOff=!STATE.notifOff;try{localStorage.setItem('vr_notifoff',STATE.notifOff?'1':'0')}catch(e){}if(!STATE.notifOff)notifEnable();toast(STATE.notifOff?'🔕 notifications muted':'🔔 notifications on');}
 function parseQuery(q){var ops={status:null,reporter:null,kind:null,is:[],text:''};var text=[];String(q||'').split(/\s+/).forEach(function(tok){if(!tok)return;var m=tok.match(/^([a-z]+):(.+)$/i);if(m){var k=m[1].toLowerCase(),v=m[2].toLowerCase();if(k==='status')ops.status=v;else if(k==='reporter'||k==='who'||k==='by')ops.reporter=v;else if(k==='kind'||k==='type')ops.kind=v;else if(k==='is')ops.is.push(v);else text.push(tok);}else text.push(tok);});ops.text=text.join(' ').toLowerCase();return ops;}
 /* ── PWA: install + service worker (open standalone, not Telegram) ── */
 var _installEvt=null;
@@ -717,6 +728,7 @@ function setKind(k){STATE.kind=k;render()}
 function setRep(n){STATE.reporter=n;render()}
 function cycleSort(){var i=SORTS.map(function(s){return s[0]}).indexOf(STATE.sort);var nx=SORTS[(i+1)%SORTS.length];STATE.sort=nx[0];document.getElementById('sortbtn').textContent=nx[1];render()}
 function clearNew(){var mx=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);STATE.lastSeen=mx;try{localStorage.setItem('vr_lastseen',String(mx))}catch(e){}STATE.newIds=[];render()}
+function bellClick(){if('Notification' in window&&Notification.permission!=='granted'){notifEnable();}else{clearNew();}}
 function find(id){for(var i=0;i<STATE.tickets.length;i++)if(STATE.tickets[i].id===id)return STATE.tickets[i];return null}
 function openT(id){
   var t=find(id);if(!t)return;STATE.cur=id;

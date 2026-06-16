@@ -295,7 +295,7 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="bell" onclick="openCmd()" title="commands / search (Ctrl/⌘K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.2"/><path d="M20 20l-4.2-4.2"/></svg></div>
       <div class="bell" onclick="minimise()" title="minimise — back to Telegram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14h12"/></svg></div>
       <div class="bell" id="palette" onclick="cycleTheme()" title="theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a3 3 0 0 0 3-3 8 8 0 0 0-8-7z"/><circle cx="7.5" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.7" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></svg></div>
-      <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5.5 5.5 0 0 0-4-5.3"/></svg></div>
+      <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5.5 5.5 0 0 0-4-5.3"/></svg><span class="bdg" id="teambdg" style="display:none">0</span></div>
       <div class="bell" id="bell" onclick="bellClick()" title="notifications / clear new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5"/><path d="M13.7 19.5a2 2 0 0 1-3.4 0"/></svg><span class="bdg" id="bdg">0</span></div>
       <div class="meid" id="mewho" title="signed in"></div>
       <div class="opp" onclick="load()"><span class="live">●</span> <span id="ts">LIVE</span></div>
@@ -408,6 +408,7 @@ function load(){
     var _oldStatus={};STATE.tickets.forEach(function(t){_oldStatus[t.id]=t.status;});
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     STATE.tickets=res.j.tickets||[];
+    if(typeof res.j.pending_count!=='undefined'){if(STATE.me)STATE.me.pending_count=res.j.pending_count;updateTeamBadge(res.j.pending_count);}
     try{localStorage.setItem('vr_lastdata',JSON.stringify(STATE.tickets));}catch(e){}
     document.getElementById('app').style.display='flex';
     var mxId=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
@@ -787,6 +788,7 @@ function listHtml(){
 function rowHtml(t){
   var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
   var ic=t.kind==='bug'?'🐛':'✨',right=t.done?('v'+(H(t.ver)||'?')):ageS(t.created);
+  var ageStyle='';if(!t.done){var _ah=ageH(t.created);if(_ah>72)ageStyle=' style="color:var(--red);font-weight:600"';else if(_ah>24)ageStyle=' style="color:var(--amber)"';}
   var thread=t.thread&&t.thread.length?('<span class="badge">💬 '+t.thread.length+'</span>'):'';
   var pri=t.priority?('<span class="pri '+priClass(t.priority)+'">'+H(String(t.priority).toUpperCase().slice(0,4))+'</span>'):'';
   var stale=(!t.done && ageH(t.created)>48)?'<span class="stale" title="open >2 days">⚠</span>':'';
@@ -797,7 +799,7 @@ function rowHtml(t){
    '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+stale+thread+asg+
    '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span>'+
    '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+t.id+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
-   '<span class="meta-r">'+right+'</span></div>';
+   '<span class="meta-r"'+ageStyle+'>'+right+'</span></div>';
 }
 function insightsHtml(){
   var ts=STATE.tickets;if(!ts.length)return'';
@@ -908,7 +910,8 @@ function copyText(b){
 function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}
 /* ── access gating (team members) ── */
 function showOnly(which){document.getElementById('app').style.display=which==='app'?'flex':'none';document.getElementById('deny').style.display=which==='deny'?'block':'none';var p=document.getElementById('pending');if(p)p.style.display=which==='pending'?'block':'none';}
-function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
+function updateTeamBadge(n){var b=document.getElementById('teambdg');if(!b)return;n=n||0;if(n>0){b.textContent=n>9?'9+':n;b.style.display='';}else{b.style.display='none';}}
+function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';updateTeamBadge(me.pending_count);if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
  try{if((new URLSearchParams(location.search)).get('team')==='1'&&(me.role==='owner'||me.role==='admin')){history.replaceState(null,'',location.pathname);setTimeout(function(){openTeam();},600);}}catch(e){}}
 function boot(){
   api('/me').then(function(res){
@@ -933,6 +936,8 @@ function renderTeamList(){var box=document.getElementById('teamlist');box.innerH
     box.innerHTML=ms.map(function(m){
       var st=m.active?'<span class="tok">● active</span>':'<span class="tpend">● pending</span>';
       var act=m.active?'<button class="tbtn tdeact" onclick="memberSet(\''+m.telegram_id+'\',{active:false})">Deactivate</button>':'<button class="tbtn tappr" onclick="memberSet(\''+m.telegram_id+'\',{active:true})">Approve</button>';
+      var roleBtn=(m.active&&m.role!=='owner')?(m.role==='admin'?'<button class="tbtn" title="demote to member" onclick="memberSet(\''+m.telegram_id+'\',{role:\'member\'})">↓ member</button>':'<button class="tbtn" title="promote to admin (can approve others)" onclick="memberSet(\''+m.telegram_id+'\',{role:\'admin\'})">↑ admin</button>'):'';
+      act=roleBtn+act;
       var sub=(m.username?('@'+H(m.username)):('id '+H(m.telegram_id)))+' · '+H(m.role||'member');
       return '<div class="tmrow"><div class="tmname">'+H(m.name||m.username||m.telegram_id)+'<small>'+sub+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet(\''+m.telegram_id+'\',{remove:true})">✕</button></div></div>';
     }).join('');
@@ -940,5 +945,8 @@ function renderTeamList(){var box=document.getElementById('teamlist');box.innerH
 }
 function memberSet(tid,patch){patch.telegram_id=tid;api('/member-set',{method:'POST',body:JSON.stringify(patch)}).then(function(res){if(res.ok){toast(patch.remove?'removed':(patch.active?'✓ approved':'deactivated'));if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');renderTeamList();}else toast('failed');});}
 boot();
-setInterval(function(){if(document.getElementById('app').style.display!=='none'&&!document.getElementById('sheet').classList.contains('on'))load()},45000);
+setInterval(function(){if(document.getElementById('app').style.display!=='none'&&!document.getElementById('sheet').classList.contains('on'))load()},25000);
+/* feel live: refresh the moment the app regains focus / becomes visible */
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&document.getElementById('app').style.display!=='none')load();});
+window.addEventListener('focus',function(){if(document.getElementById('app').style.display!=='none')load();});
 </script></body></html>

@@ -908,7 +908,8 @@ function copyText(b){
 function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}
 /* ── access gating (team members) ── */
 function showOnly(which){document.getElementById('app').style.display=which==='app'?'flex':'none';document.getElementById('deny').style.display=which==='deny'?'block':'none';var p=document.getElementById('pending');if(p)p.style.display=which==='pending'?'block':'none';}
-function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}}
+function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
+ try{if((new URLSearchParams(location.search)).get('team')==='1'&&(me.role==='owner'||me.role==='admin')){history.replaceState(null,'',location.pathname);setTimeout(function(){openTeam();},600);}}catch(e){}}
 function boot(){
   api('/me').then(function(res){
     var me=res.j||{};STATE.me=me;

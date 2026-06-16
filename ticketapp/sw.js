@@ -15,7 +15,7 @@ self.addEventListener('push', function (e) {
     renotify: true,
     icon: 'icon-192.png',
     badge: 'icon-192.png',
-    data: { ticket_id: d.ticket_id || null, url: './index.html' + (d.ticket_id ? ('?t=' + d.ticket_id) : '') },
+    data: { ticket_id: d.ticket_id || null, url: d.url || ('./index.html' + (d.ticket_id ? ('?t=' + d.ticket_id) : '')) },
     vibrate: [60, 30, 60]
   };
   e.waitUntil(self.registration.showNotification(title, opts));

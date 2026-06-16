@@ -284,6 +284,8 @@ var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
 var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
+/* bridge: a device token passed in the URL (from Telegram → standalone browser) is stored locally */
+try{var _dt=(new URLSearchParams(location.search)).get("devtoken");if(_dt){localStorage.setItem("vr_devtoken",_dt);history.replaceState(null,"",location.pathname);}}catch(e){}
 var THEMES={
  void:{name:"Cyber Void",bg:"radial-gradient(900px 520px at 50% -16%,rgba(34,211,238,.08),transparent 60%),radial-gradient(500px 360px at 96% 4%,rgba(255,46,85,.05),transparent 55%),#0A0A0F",v:{"--bg":"#0A0A0F","--cell":"#13131B","--line":"rgba(34,211,238,.12)","--line2":"rgba(34,211,238,.22)","--cyan":"#22D3EE","--green":"#3DFF9A","--amber":"#F59E0B","--red":"#FF2E55","--violet":"#A78BFA","--txt":"#E8E8F0","--txt2":"#A9A9BD","--txt3":"#6D6D82"}},
  slate:{name:"Slate Indigo",bg:"radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),#0B0E14",v:{"--bg":"#0B0E14","--cell":"#151A23","--line":"rgba(140,150,180,.12)","--line2":"rgba(140,150,180,.20)","--cyan":"#818CF8","--green":"#4ADE80","--amber":"#FBBF24","--red":"#F87171","--violet":"#A78BFA","--txt":"#F1F3F8","--txt2":"#9AA4B8","--txt3":"#5B6679"}},
@@ -473,6 +475,8 @@ function cmdItems(q){
     {lbl:'Next theme',hint:'theme',run:function(){cycleTheme()}},
     {lbl:'Theme: Cyber Void',hint:'theme',run:function(){applyThemeName('void')}},
     {sec:'TOOLS'},
+    {lbl:'Open as app (standalone, no Telegram)',hint:'install',run:function(){openStandalone()}},
+    {lbl:'Install app',hint:'pwa',run:function(){doInstall()}},
     {lbl:'Export CSV',hint:'download',run:function(){exportCSV()}},
     {lbl:'Theme: Match Telegram (auto)',hint:'theme',run:function(){applyThemeName('auto')}},
     {lbl:'Toggle compact density',hint:'view',run:function(){toggleDensity()}},
@@ -569,6 +573,7 @@ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_in
 window.addEventListener('appinstalled',function(){var b=document.getElementById('installbtn');if(b)b.style.display='none';toast('✓ Velocity Relay installed');});
 function doInstall(){try{if(_installEvt){_installEvt.prompt();_installEvt.userChoice.then(function(){_installEvt=null;});}else{toast('Open the browser ⋮ menu → Install / Add to Home screen');}}catch(e){}}
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}}
+function openStandalone(){var tk=devTok();if(!tk){toast('open in Telegram first to link this device');return;}var url='https://johanvelo.github.io/qz31-cache/ticketapp/index.html?devtoken='+encodeURIComponent(tk);try{if(typeof tg!=='undefined'&&tg&&tg.openLink){tg.openLink(url);}else{window.open(url,'_blank');}toast('opening in your browser — then Install it');}catch(e){window.open(url,'_blank');}}
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){

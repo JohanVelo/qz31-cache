@@ -757,6 +757,13 @@ window.addEventListener('appinstalled',function(){var b=document.getElementById(
 function doInstall(){try{if(_installEvt){_installEvt.prompt();_installEvt.userChoice.then(function(){_installEvt=null;});}else{toast('Open the browser ⋮ menu → Install / Add to Home screen');}}catch(e){}}
 /* smart install: inside Telegram → open the standalone PWA (carries the login); in a browser → native install */
 function smartInstall(){try{if(typeof tg!=='undefined'&&tg&&tg.initData){openStandalone();}else{doInstall();}}catch(e){doInstall();}}
+/* global error trap — silent client crashes (any device) flow to relay_client_errors */
+var _vrLastErr=0;
+function _vrLogErr(msg,stack){try{var now=Date.now();if(now-_vrLastErr<3000)return;_vrLastErr=now;
+  api('/clientlog',{method:'POST',body:JSON.stringify({msg:String(msg||'').slice(0,300),stack:String(stack||'').slice(0,1200),ua:navigator.userAgent,page:location.href})}).catch(function(){});
+}catch(e){}}
+window.addEventListener('error',function(e){_vrLogErr(e.message,(e.error&&e.error.stack)||'');});
+window.addEventListener('unhandledrejection',function(e){var r=e.reason;_vrLogErr((r&&r.message)||String(r),(r&&r.stack)||'');});
 if('serviceWorker' in navigator){try{
   navigator.serviceWorker.register('sw.js').then(function(reg){try{reg.update();}catch(e){}setInterval(function(){try{reg.update();}catch(e){}},120000);}).catch(function(){});
   var _vrReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_vrReloaded)return;_vrReloaded=true;location.reload();});

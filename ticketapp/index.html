@@ -154,6 +154,13 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .chip .vx{margin-left:6px;opacity:.55;font-size:9px}
 .chip .vx:hover{opacity:1;color:var(--red,#FF2E55)}
 .chip.addv{border-style:dashed;color:var(--txt3)}
+.actrow{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)}
+.actrow:last-child{border-bottom:none}
+.actrow .ai{flex:0 0 auto;width:22px;text-align:center;font-size:13px;opacity:.9}
+.actrow .ac{flex:1;min-width:0;font-size:13px;color:var(--txt2);line-height:1.4}
+.actrow .ac .aw{color:var(--txt);font-weight:600}
+.actrow .ac b{color:var(--txt)}
+.actrow .at{font-family:var(--m);font-size:9.5px;color:var(--txt3);margin-top:2px;letter-spacing:.5px}
 .sprio{margin-top:11px;font-family:var(--m);font-size:11px;letter-spacing:.5px;color:var(--txt2);text-align:center}
 .sprio b{font-size:13px}
 .selbox{flex:0 0 auto;width:19px;height:19px;border-radius:5px;border:1.5px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);background:transparent;font-size:12px;font-weight:800;margin-right:2px}
@@ -947,12 +954,19 @@ function openT(id){
     (t.status!=='done'?'<button class="act go" onclick="setStatus('+id+',\'done\')">✓ Mark done</button>':'')+
     (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+
     (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>'+asnCtl+prioCtl;
+  var actl=(t.activity||[]).map(function(a){
+    var ic=a.action==='status'?'🔄':a.action==='priority'?'⚑':a.action==='assignee'?'👤':a.action==='reply'?'💬':'•';
+    var lab2=a.action==='status'?('moved to <b>'+H(a.detail)+'</b>'):a.action==='priority'?('set priority <b>'+H(a.detail)+'</b>'):a.action==='assignee'?('assigned <b>'+H(a.detail)+'</b>'):a.action==='reply'?('replied · '+H(a.detail)):(H(a.action)+' '+H(a.detail));
+    return '<div class="actrow"><span class="ai">'+ic+'</span><div class="ac"><span class="aw">'+H(a.actor||'someone')+'</span> '+lab2+'<div class="at">'+ageS(a.at)+' ago</div></div></div>';
+  }).join('');
+  var actHtml=actl?('<div class="thread"><div class="sec">// ACTIVITY</div>'+actl+'</div>'):'';
   document.getElementById('sh-body').innerHTML=
     '<div class="tag '+tag+'" style="display:inline-block;margin-bottom:8px">'+lab+'</div>'+
     '<div class="dt">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div>'+
     '<div class="dm">'+meta+'</div>'+shots+pdf+
     '<div class="db">'+(H(t.body)||'(no description)')+'</div>'+acts+
     (thread?('<div class="thread"><div class="sec">// CONVERSATION</div>'+thread+'</div>'):'')+
+    actHtml+
     (hist?('<div class="thread"><div class="sec">// HISTORY</div>'+hist+'</div>'):'')+relHtml;
   document.getElementById('tmpl').innerHTML=TEMPLATES.map(function(x,i){return '<button onclick="useTmpl('+i+')">'+H(x.slice(0,22))+(x.length>22?'…':'')+'</button>'}).join('');
   document.getElementById('sheet').classList.add('on');

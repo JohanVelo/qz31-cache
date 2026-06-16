@@ -4,11 +4,11 @@
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0A0A0F"><link rel="apple-touch-icon" href="icon.svg"><link rel="icon" href="icon.svg">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--bg:#0B0E14;--cell:#151A23;--line:rgba(140,150,180,.12);--line2:rgba(140,150,180,.20);
  --cyan:#818CF8;--green:#4ADE80;--amber:#FBBF24;--red:#F87171;--violet:#A78BFA;
- --txt:#F1F3F8;--txt2:#9AA4B8;--txt3:#5B6679;--d:'Chakra Petch',sans-serif;--m:'JetBrains Mono',monospace}
+ --txt:#F1F3F8;--txt2:#9AA4B8;--txt3:#5B6679;--d:'Space Grotesk','Inter',sans-serif;--m:'JetBrains Mono',monospace}
 html,body{height:100%;background:var(--bg)}
 body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;height:100vh;overflow:hidden;
  background:radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),var(--bg)}
@@ -123,25 +123,25 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 /* fullscreen safe-area + deluxe responsive layout */
 body.fs .top{padding-top:calc(13px + var(--safe-top,0px))}
 @media(min-width:760px){
- .top,.list{max-width:940px;margin-left:auto;margin-right:auto;width:100%}
- .top{padding:18px 24px 12px}.list{padding:16px 24px 48px}
+ .top,.list{max-width:1680px;margin-left:auto;margin-right:auto;width:100%}
+ .top{padding:18px 32px 12px}.list{padding:16px 32px 48px}
  .wm{font-size:18px}.wm small{font-size:8.5px;letter-spacing:3.5px}
  .glyph{width:40px;height:40px;font-size:19px}
  .kc{padding:10px 8px}.kc .n{font-size:24px}.kc .l{font-size:9px}
  .row{padding:13px 16px}.ttl{font-size:14px}
  .ins .gr{grid-template-columns:repeat(4,1fr)}
- .sh-top,.sh-body,.tmpl,.reply{max-width:940px;margin-left:auto;margin-right:auto;width:100%}
+ .sh-top,.sh-body,.tmpl,.reply{max-width:1100px;margin-left:auto;margin-right:auto;width:100%}
  .dt{font-size:22px}
 }
 @media(min-width:1180px){
- .top,.list,.sh-top,.sh-body,.tmpl,.reply{max-width:1080px}
+ .top,.list{max-width:1680px}
  .kc .n{font-size:27px}.wm{font-size:20px}
 }
 /* ── Cyber-Void skin (only when theme=void) ── */
 body.vr-void::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
  background:repeating-linear-gradient(90deg,rgba(109,109,130,.045) 0 1px,transparent 1px 46px),repeating-linear-gradient(rgba(109,109,130,.045) 0 1px,transparent 1px 46px);
  mask-image:radial-gradient(circle at 50% 20%,black,transparent 88%)}
-body.vr-void .wm{font-family:'Space Mono',monospace;letter-spacing:1px}
+body.vr-void .wm{font-family:'Space Grotesk',sans-serif;letter-spacing:.5px}
 body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
 /* view toggle */
 .vtoggle{display:flex;gap:3px;background:var(--cell);border:1px solid var(--line);border-radius:8px;padding:3px;margin-left:6px}
@@ -175,7 +175,7 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
 @keyframes tick{0%{transform:translateX(60%)}100%{transform:translateX(-100%)}}
 /* board view */
 #board{flex:1 1 auto;overflow-y:auto;padding:12px 14px 40px;display:none}
-.bcols{display:grid;grid-template-columns:1fr;gap:12px;max-width:1080px;margin:0 auto}
+.bcols{display:grid;grid-template-columns:1fr;gap:12px;max-width:1680px;margin:0 auto}
 @media(min-width:620px){.bcols{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:980px){.bcols{grid-template-columns:repeat(4,1fr)}}
 .bcol{background:linear-gradient(180deg,rgba(255,255,255,.015),transparent);border:1px solid var(--line);border-radius:11px;padding:11px;min-height:140px;transition:.12s}
@@ -229,6 +229,12 @@ body.vr-void #app,body.vr-void .sheet{position:relative;z-index:1}
 body.dense .row{padding:7px 11px;margin-top:6px}
 body.dense .rsnip{display:none}
 body.dense .kc{padding:6px 6px 7px}
+/* fill width: multi-column ticket rows on wide screens */
+.rowgrid{display:block}
+@media(min-width:1080px){.rowgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rowgrid>.row{margin-top:0}}
+@media(min-width:1560px){.rowgrid{grid-template-columns:1fr 1fr 1fr}}
+/* HUD shape: angled right corners on cards/tiles/rows (keeps left accent stripe intact) */
+.row,.kc,.empty,.scard,.bcard,.skpi,.ins,.dupe{clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%)}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -679,14 +685,14 @@ function listHtml(){
   var h='';
   if(STATE.tab==='all'){
     var pinned=STATE.tickets.filter(function(t){return isPinned(t.id);});
-    if(pinned.length)h+='<div class="sec">// 📌 PINNED · '+pinned.length+'</div>'+pinned.map(rowHtml).join('');
+    if(pinned.length)h+='<div class="sec">// 📌 PINNED · '+pinned.length+'</div><div class="rowgrid">'+pinned.map(rowHtml).join('')+'</div>';
     h+='<div class="sec">// INBOX'+(opens.length?(' · '+opens.length):'')+'</div>';
     var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+p[0]+' &amp; #'+p[1]+' look similar — possible duplicate</div>';}).join('');
-    h+=opens.length?opens.map(rowHtml).join(''):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
-    if(snoozed.length)h+='<div class="sec">// SNOOZED · '+snoozed.length+'</div>'+snoozed.map(snoozeRow).join('');
-    h+='<div class="sec">// SHIPPED · RECENT</div>'+(done.length?done.slice(0,40).map(rowHtml).join(''):'<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>');
+    h+=opens.length?('<div class="rowgrid">'+opens.map(rowHtml).join('')+'</div>'):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
+    if(snoozed.length)h+='<div class="sec">// SNOOZED · '+snoozed.length+'</div><div class="rowgrid">'+snoozed.map(snoozeRow).join('')+'</div>';
+    h+='<div class="sec">// SHIPPED · RECENT</div>'+(done.length?('<div class="rowgrid">'+done.slice(0,40).map(rowHtml).join('')+'</div>'):'<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>');
   }else{
-    h+='<div class="sec">// '+STATE.tab.toUpperCase()+' · '+ts.length+'</div>'+ts.map(rowHtml).join('');
+    h+='<div class="sec">// '+STATE.tab.toUpperCase()+' · '+ts.length+'</div><div class="rowgrid">'+ts.map(rowHtml).join('')+'</div>';
   }
   return h;
 }

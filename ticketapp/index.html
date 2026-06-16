@@ -143,6 +143,13 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .tbtn.trm{border-color:var(--line2);color:var(--txt3);padding:6px 8px}
 .teamft{font-family:var(--m);font-size:11px;color:var(--txt3);padding:11px 16px;border-top:1px solid var(--line);line-height:1.5}
 .tmuted{font-family:var(--m);font-size:12px;color:var(--txt3);text-align:center;padding:26px 16px;line-height:1.6}
+.ctlrow{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.ctll{font-family:var(--m);font-size:10px;letter-spacing:1.5px;color:var(--txt3);min-width:64px}
+.asnsel{flex:1;min-width:150px;background:var(--cell);color:var(--txt);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;font-family:var(--d);font-size:13px;cursor:pointer}
+.pbtn.on.high{border-color:var(--red)!important;color:var(--red)!important}
+.pbtn.on.medium{border-color:var(--amber)!important;color:var(--amber)!important}
+.pbtn.on.low{border-color:var(--txt3)!important;color:var(--txt)!important}
+.chip.mine.on{border-color:var(--cyan)!important;color:var(--cyan)!important}
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
  color:var(--txt);font-family:var(--m);font-size:12px;padding:9px 14px;border-radius:10px;z-index:99;opacity:0;transition:.2s}
 .toast.on{opacity:1}
@@ -339,7 +346,7 @@ var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 var API="https://hrrdohlrfrficrtphcet.supabase.co/functions/v1/velocity-relay";
 var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
-var STATE={tickets:[],tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
+var STATE={tickets:[],team:[],mineOnly:false,tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
 /* bridge: a device token passed in the URL (from Telegram → standalone browser) is stored locally */
 try{var _dt=(new URLSearchParams(location.search)).get("devtoken");if(_dt){localStorage.setItem("vr_devtoken",_dt);history.replaceState(null,"",location.pathname);}}catch(e){}
@@ -408,6 +415,7 @@ function load(){
     var _oldStatus={};STATE.tickets.forEach(function(t){_oldStatus[t.id]=t.status;});
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     STATE.tickets=res.j.tickets||[];
+    if(res.j.team)STATE.team=res.j.team;
     if(typeof res.j.pending_count!=='undefined'){var _prevPend=(STATE.me&&STATE.me.pending_count)||0;if(STATE.me)STATE.me.pending_count=res.j.pending_count;updateTeamBadge(res.j.pending_count);
       if(!STATE.first && res.j.pending_count>_prevPend){beep();var _vis2=(typeof document!=='undefined'&&document.visibilityState==='visible');if(_vis2)accessCard(res.j.pending_count-_prevPend);}}
     try{localStorage.setItem('vr_lastdata',JSON.stringify(STATE.tickets));}catch(e){}
@@ -455,7 +463,8 @@ function render(){
   var reps={};STATE.tickets.forEach(function(t){reps[t.who]=t.color});
   var ch='<div class="chip '+(STATE.kind==='all'&&STATE.reporter===null?'on':'')+'" onclick="setKind(\'all\');setRep(null)">ALL</div>'+
          '<div class="chip '+(STATE.kind==='bug'?'on':'')+'" onclick="setKind(\'bug\')">🐛 BUGS</div>'+
-         '<div class="chip '+(STATE.kind==='feature'?'on':'')+'" onclick="setKind(\'feature\')">✨ FEAT</div>';
+         '<div class="chip '+(STATE.kind==='feature'?'on':'')+'" onclick="setKind(\'feature\')">✨ FEAT</div>'+
+         ((STATE.me&&STATE.me.name)?('<div class="chip mine'+(STATE.mineOnly?' on':'')+'" onclick="toggleMine()">◆ Mine</div>'):'');
   Object.keys(reps).forEach(function(n){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+n.replace(/'/g,"\\'")+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
   document.getElementById('chips').innerHTML=ch;
   // new alert
@@ -765,6 +774,7 @@ function applyFilters(){
     if(STATE.tab==='prog'&&!t.prog)return false;
     if(STATE.tab==='done'&&!t.done)return false;
     if(STATE.kind!=='all'&&t.kind!==STATE.kind)return false;
+    if(STATE.mineOnly){var _mn=(STATE.me&&STATE.me.name)||'';if(t.assignee!==_mn)return false;}
     if(STATE.reporter&&t.who!==STATE.reporter)return false;
     if(ops.status&&String(t.status).toLowerCase().indexOf(ops.status)<0)return false;
     if(ops.reporter&&String(t.who).toLowerCase().indexOf(ops.reporter)<0)return false;
@@ -858,6 +868,11 @@ function openT(id){
   var hist=(t.history||[]).map(function(a){return '<div class="tmsg reporter"><div class="a">'+ageS(a.created_at)+' ago'+(a.actor?(' · '+H(a.actor)):'')+'</div>'+H(a.field)+': '+H(a.old_val||'—')+' → '+H(a.new_val||'—')+'</div>'}).join('');
   var rel=STATE.tickets.filter(function(o){return o.id!==t.id&&(o.who===t.who||sim(o.title,t.title)>=0.4);}).slice(0,4);
   var relHtml=rel.length?('<div class="thread"><div class="sec">// RELATED</div>'+rel.map(function(o){var why=o.who===t.who?'same reporter':'similar';return '<div class="rel" onclick="openT('+o.id+')"><span class="tid">#'+o.id+'</span><span class="rt">'+(o.kind==='bug'?'🐛 ':'✨ ')+H(o.title)+'</span><span class="rwhy">'+why+'</span></div>';}).join('')+'</div>'):'';
+  var _pr=String(t.priority||'').toLowerCase();
+  var pbtn=function(v,lab){return '<button class="act pbtn'+(_pr.indexOf(v)>=0?' on '+v:'')+'" onclick="setPriority('+id+',\''+v+'\')">'+lab+'</button>';};
+  var prioCtl='<div class="ctlrow"><span class="ctll">PRIORITY</span>'+pbtn('high','⚑ High')+pbtn('medium','Med')+pbtn('low','Low')+(_pr?'<button class="act" onclick="setPriority('+id+',\'\')">clear</button>':'')+'</div>';
+  var asnOpts='<option value="">— unassigned —</option>'+(STATE.team||[]).map(function(mm){return '<option value="'+H(mm.name)+'"'+(t.assignee===mm.name?' selected':'')+'>'+H(mm.name)+(mm.username?(' (@'+H(mm.username)+')'):'')+'</option>';}).join('');
+  var asnCtl='<div class="ctlrow"><span class="ctll">ASSIGNEE</span><select class="asnsel" onchange="assign('+id+',this.value)">'+asnOpts+'</select></div>';
   var acts='<div class="acts">'+
     '<button class="act hand" onclick="handoff('+id+')">⎘ Hand to Terminal</button>'+
     '<button class="act" onclick="togglePin('+id+')">'+(isPinned(id)?'★ Unpin':'☆ Pin')+'</button>'+
@@ -865,10 +880,7 @@ function openT(id){
     (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
     (t.status!=='done'?'<button class="act go" onclick="setStatus('+id+',\'done\')">✓ Mark done</button>':'')+
     (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+
-    '<button class="act asn" onclick="assign('+id+',\'A\')">→ A</button>'+
-    '<button class="act asn" onclick="assign('+id+',\'B\')">→ B</button>'+
-    (t.assignee?'<button class="act" onclick="assign('+id+',\'\')">unassign</button>':'')+
-    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>';
+    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>'+asnCtl+prioCtl;
   document.getElementById('sh-body').innerHTML=
     '<div class="tag '+tag+'" style="display:inline-block;margin-bottom:8px">'+lab+'</div>'+
     '<div class="dt">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div>'+
@@ -903,6 +915,12 @@ function assign(id,who){
     if(res.ok){toast(who?('assigned → '+who):'unassigned');tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');load();setTimeout(function(){openT(id)},500)}else{toast('assign failed')}
   });
 }
+function setPriority(id,p){
+  api('/priority',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,priority:p})}).then(function(res){
+    if(res.ok){toast(p?('priority: '+p):'priority cleared');tg&&tg.HapticFeedback&&tg.HapticFeedback.selectionChanged&&tg.HapticFeedback.selectionChanged();load();setTimeout(function(){openT(id)},420)}else{toast('failed')}
+  });
+}
+function toggleMine(){STATE.mineOnly=!STATE.mineOnly;render();}
 function handoff(id){
   var t=find(id);if(!t)return;
   var L=[];

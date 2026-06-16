@@ -150,6 +150,10 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .pbtn.on.med{border-color:var(--amber)!important;color:var(--amber)!important}
 .pbtn.on.low{border-color:var(--txt3)!important;color:var(--txt)!important}
 .chip.mine.on{border-color:var(--cyan)!important;color:var(--cyan)!important}
+.chip.vw.on{border-color:var(--violet)!important;color:var(--violet)!important}
+.chip .vx{margin-left:6px;opacity:.55;font-size:9px}
+.chip .vx:hover{opacity:1;color:var(--red,#FF2E55)}
+.chip.addv{border-style:dashed;color:var(--txt3)}
 .sprio{margin-top:11px;font-family:var(--m);font-size:11px;letter-spacing:.5px;color:var(--txt2);text-align:center}
 .sprio b{font-size:13px}
 .selbox{flex:0 0 auto;width:19px;height:19px;border-radius:5px;border:1.5px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);background:transparent;font-size:12px;font-weight:800;margin-right:2px}
@@ -374,7 +378,8 @@ var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 var API="https://hrrdohlrfrficrtphcet.supabase.co/functions/v1/velocity-relay";
 var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
-var STATE={tickets:[],team:[],mineOnly:false,selMode:false,sel:{},tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
+var STATE={tickets:[],team:[],mineOnly:false,smart:null,views:[],selMode:false,sel:{},tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
+try{STATE.views=JSON.parse(localStorage.getItem('vr_views')||'[]')||[];}catch(e){STATE.views=[];}
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
 /* bridge: a device token passed in the URL (from Telegram → standalone browser) is stored locally */
 try{var _dt=(new URLSearchParams(location.search)).get("devtoken");if(_dt){localStorage.setItem("vr_devtoken",_dt);history.replaceState(null,"",location.pathname);}}catch(e){}
@@ -493,7 +498,11 @@ function render(){
   var ch='<div class="chip '+(STATE.kind==='all'&&STATE.reporter===null?'on':'')+'" onclick="setKind(\'all\');setRep(null)">ALL</div>'+
          '<div class="chip '+(STATE.kind==='bug'?'on':'')+'" onclick="setKind(\'bug\')">🐛 BUGS</div>'+
          '<div class="chip '+(STATE.kind==='feature'?'on':'')+'" onclick="setKind(\'feature\')">✨ FEAT</div>'+
-         ((STATE.me&&STATE.me.name)?(function(){var _myn=STATE.me.name;var mineN=STATE.tickets.filter(function(t){return t.assignee===_myn&&!t.done;}).length;return '<div class="chip mine'+(STATE.mineOnly?' on':'')+'" onclick="toggleMine()">◆ Mine'+(mineN?(' '+mineN):'')+'</div>';})():'');
+         ((STATE.me&&STATE.me.name)?(function(){var _myn=STATE.me.name;var mineN=STATE.tickets.filter(function(t){return t.assignee===_myn&&!t.done;}).length;return '<div class="chip mine'+(STATE.mineOnly?' on':'')+'" onclick="toggleMine()">◆ Mine'+(mineN?(' '+mineN):'')+'</div>';})():'')+
+         '<div class="chip sm'+(STATE.smart==='high'?' on':'')+'" onclick="setSmart(\'high\')">⚑ High</div>'+
+         '<div class="chip sm'+(STATE.smart==='overdue'?' on':'')+'" onclick="setSmart(\'overdue\')">⚠ Overdue</div>';
+  STATE.views.forEach(function(v,i){ch+='<div class="chip vw'+(viewActive(v)?' on':'')+'" onclick="applyView('+i+')">⭐ '+H(v.name)+'<span class="vx" onclick="delView(event,'+i+')">✕</span></div>';});
+  ch+='<div class="chip addv" onclick="saveView()" title="save the current filter as a view">＋ Save view</div>';
   Object.keys(reps).forEach(function(n){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+n.replace(/'/g,"\\'")+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
   document.getElementById('chips').innerHTML=ch;
   // new alert
@@ -828,6 +837,8 @@ function applyFilters(){
     if(STATE.tab==='done'&&!t.done)return false;
     if(STATE.kind!=='all'&&t.kind!==STATE.kind)return false;
     if(STATE.mineOnly){var _mn=(STATE.me&&STATE.me.name)||'';if(t.assignee!==_mn)return false;}
+    if(STATE.smart==='high'&&priClass(t.priority)!=='high')return false;
+    if(STATE.smart==='overdue'&&!(t.open&&ageH(t.created)>48))return false;
     if(STATE.reporter&&t.who!==STATE.reporter)return false;
     if(ops.status&&String(t.status).toLowerCase().indexOf(ops.status)<0)return false;
     if(ops.reporter&&String(t.who).toLowerCase().indexOf(ops.reporter)<0)return false;
@@ -976,6 +987,15 @@ function setPriority(id,p){
   });
 }
 function toggleMine(){STATE.mineOnly=!STATE.mineOnly;render();}
+/* ── smart filters + saved views ── */
+function setSmart(v){STATE.smart=STATE.smart===v?null:v;render();}
+function viewActive(v){return STATE.tab===(v.tab||'all')&&STATE.kind===(v.kind||'all')&&(STATE.reporter||null)===(v.reporter||null)&&!!STATE.mineOnly===!!v.mineOnly&&(STATE.smart||null)===(v.smart||null);}
+function curViewName(){var p=[];if(STATE.kind!=='all')p.push(STATE.kind==='bug'?'bugs':'feat');if(STATE.smart)p.push(STATE.smart);if(STATE.mineOnly)p.push('mine');if(STATE.tab!=='all')p.push(STATE.tab);if(STATE.reporter)p.push(STATE.reporter);return p.join(' · ')||'all';}
+function saveView(){var v={name:curViewName(),tab:STATE.tab,kind:STATE.kind,reporter:STATE.reporter,mineOnly:STATE.mineOnly,smart:STATE.smart};
+  if(STATE.views.some(function(x){return x.name===v.name;})){toast('view already saved');return;}
+  STATE.views.push(v);try{localStorage.setItem('vr_views',JSON.stringify(STATE.views));}catch(e){}toast('⭐ saved: '+v.name);if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');render();}
+function applyView(i){var v=STATE.views[i];if(!v)return;STATE.tab=v.tab||'all';STATE.kind=v.kind||'all';STATE.reporter=v.reporter||null;STATE.mineOnly=!!v.mineOnly;STATE.smart=v.smart||null;render();}
+function delView(e,i){e.stopPropagation();STATE.views.splice(i,1);try{localStorage.setItem('vr_views',JSON.stringify(STATE.views));}catch(e){}toast('view removed');render();}
 /* ── bulk select + actions ── */
 function selIds(){return Object.keys(STATE.sel).filter(function(k){return STATE.sel[k];}).map(function(k){return parseInt(k,10);});}
 function toggleSelMode(){STATE.selMode=!STATE.selMode;STATE.sel={};var b=document.getElementById('selbtn');if(b){b.classList.toggle('on',STATE.selMode);b.textContent=STATE.selMode?'✕ Done':'☑ Select';}updateSelBar();render();}

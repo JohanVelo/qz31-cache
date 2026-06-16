@@ -231,8 +231,7 @@ body.dense .rsnip{display:none}
 body.dense .kc{padding:6px 6px 7px}
 /* fill width: multi-column ticket rows on wide screens */
 .rowgrid{display:block}
-@media(min-width:1080px){.rowgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rowgrid>.row{margin-top:0}}
-@media(min-width:1560px){.rowgrid{grid-template-columns:1fr 1fr 1fr}}
+@media(min-width:1080px){.rowgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rowgrid>.row{margin-top:0;min-width:0}}
 /* HUD shape: angled right corners on cards/tiles/rows (keeps left accent stripe intact) */
 .row,.kc,.empty,.scard,.bcard,.skpi,.ins,.dupe{clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%)}
 </style></head><body>

@@ -151,6 +151,18 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .tbtn.trm{border-color:var(--line2);color:var(--txt3);padding:6px 8px}
 .teamft{font-family:var(--m);font-size:11px;color:var(--txt3);padding:11px 16px;border-top:1px solid var(--line);line-height:1.5}
 .tmuted{font-family:var(--m);font-size:12px;color:var(--txt3);text-align:center;padding:26px 16px;line-height:1.6}
+.nothd-act{font-family:var(--m);font-size:11px;color:var(--cyan);cursor:pointer;margin-right:14px;letter-spacing:.04em}
+.nothd-act:hover{text-decoration:underline}
+.notrow{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:background .12s,border-color .12s}
+.notrow:hover{background:var(--cell2,rgba(255,255,255,.03));border-color:var(--line)}
+.notrow.unread{background:rgba(34,211,238,.06)}
+.noti{flex:0 0 auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--bg2,rgba(255,255,255,.04));border:1px solid var(--line)}
+.notc{flex:1 1 auto;min-width:0}
+.nottx{font-family:var(--m);font-size:12.5px;color:var(--txt);line-height:1.45;word-break:break-word}
+.notsub{font-family:var(--m);font-size:10px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nott{font-family:var(--m);font-size:9.5px;color:var(--txt3);margin-top:3px}
+.notdot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--cyan);margin-top:10px;box-shadow:0 0 6px var(--cyan)}
+.notdot.off{background:transparent;box-shadow:none}
 .ctlrow{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
 .ctll{font-family:var(--m);font-size:10px;letter-spacing:1.5px;color:var(--txt3);min-width:64px}
 .asnsel{flex:1;min-width:150px;background:var(--cell);color:var(--txt);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;font-family:var(--d);font-size:13px;cursor:pointer}
@@ -378,6 +390,7 @@ body.dense .kc{padding:6px 6px 7px}
 <div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
 <div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who opens Relay inside Telegram appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
 <div class="ovl" id="qrovl" style="display:none" onclick="if(event.target===this)closeQR()"><div class="teambox" style="max-width:420px"><div class="teamhd">GET RELAY ON YOUR PHONE<span class="tx" onclick="closeQR()">✕</span></div><div style="padding:18px;text-align:center"><img id="qrimg" alt="QR" style="width:300px;max-width:78vw;border-radius:10px;background:#fff;padding:8px"><div style="font-family:var(--m);font-size:12px;color:var(--txt2);margin-top:12px;line-height:1.7">Scan with your phone camera →<br>then <b>Add to Home Screen</b> → tap 🔔 Allow.</div></div></div></div>
+<div class="ovl" id="notifovl" style="display:none" onclick="if(event.target===this)closeNotif()"><div class="teambox"><div class="teamhd">🔔 NOTIFICATIONS<span style="display:flex;align-items:center"><span class="nothd-act" id="notmarkall" onclick="markNotifAllRead()">✓ mark all read</span><span class="tx" onclick="closeNotif()">✕</span></span></div><div class="teamlist" id="notiflist"></div><div class="teamft">Every ticket arrival, status change, reply and shipped notice lands here — newest first. Tap a row to open the ticket.</div></div></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
   <div class="sh-body" id="sh-body"></div>
@@ -406,6 +419,7 @@ var SORTS=[["new","↕ newest"],["prio","↕ priority"],["age","↕ oldest"]];
 var TEMPLATES=["Fixed — please update to the latest version.","Building this now.","Need more info — can you share steps or a screenshot?","Can't reproduce — is it still happening?","Shipped ✅"];
 var STATE={tickets:[],team:[],mineOnly:false,smart:null,views:[],selMode:false,sel:{},tab:"all",q:"",kind:"all",sort:"new",reporter:null,cur:null,first:true,lastSeen:0,newIds:[],theme:"void",view:"list",loading:false,retries:0};
 try{STATE.views=JSON.parse(localStorage.getItem('vr_views')||'[]')||[];}catch(e){STATE.views=[];}
+try{STATE.notifSeen=Number(localStorage.getItem('vr_notifseen')||0)||0;}catch(e){STATE.notifSeen=0;}
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
 /* bridge: a device token passed in the URL (from Telegram → standalone browser) is stored locally */
 try{var _dt=(new URLSearchParams(location.search)).get("devtoken");if(_dt){localStorage.setItem("vr_devtoken",_dt);history.replaceState(null,"",location.pathname);}}catch(e){}
@@ -538,8 +552,10 @@ function render(){
   document.getElementById('chips').innerHTML=ch;
   // new alert
   var al=document.getElementById('alert');
-  if(STATE.newIds.length){al.classList.add('on');al.innerHTML='🔔 '+STATE.newIds.length+' NEW since you last looked — tap to clear';document.getElementById('bell').classList.add('has');document.getElementById('bdg').textContent=STATE.newIds.length;}
-  else{al.classList.remove('on');document.getElementById('bell').classList.remove('has');}
+  if(STATE.newIds.length){al.classList.add('on');al.innerHTML='🔔 '+STATE.newIds.length+' NEW since you last looked — tap to clear';}
+  else{al.classList.remove('on');}
+  var _un=unreadCount();var _bell=document.getElementById('bell');var _bdg=document.getElementById('bdg');
+  if(_un>0){_bell.classList.add('has');_bdg.textContent=_un>99?'99+':_un;}else{_bell.classList.remove('has');}
   document.getElementById('list').innerHTML=listHtml();
   buildTicker();
   if(STATE.view==='board')renderBoard();
@@ -690,7 +706,7 @@ document.addEventListener('keydown',function(e){
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   var cmdOpen=document.getElementById('cmdk').classList.contains('on');
   var helpOpen=document.getElementById('help').classList.contains('on');
-  if(e.key==='Escape'){if(helpOpen){closeHelp();return;}var to=document.getElementById('teamovl');if(to&&to.style.display!=='none'){closeTeam();return;}var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on')){closeT();return;}if(STATE.selMode){exitSel();return;}return;}
+  if(e.key==='Escape'){if(helpOpen){closeHelp();return;}var no=document.getElementById('notifovl');if(no&&no.style.display!=='none'){closeNotif();return;}var to=document.getElementById('teamovl');if(to&&to.style.display!=='none'){closeTeam();return;}var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on')){closeT();return;}if(STATE.selMode){exitSel();return;}return;}
   if(cmdOpen)return;
   if(helpOpen&&e.key!=='?')return;
   switch(e.key){
@@ -791,9 +807,9 @@ function openStandalone(){var tk=devTok();if(!tk){toast('open in Telegram first 
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){
-    (t.history||[]).forEach(function(h){ev.push({when:new Date(h.created_at).getTime()||0,text:'#'+t.id+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
-    (t.thread||[]).forEach(function(m){if(m.author==='office')ev.push({when:new Date(m.created_at).getTime()||0,text:'office replied on #'+t.id,sub:H(String(m.body)).slice(0,44),color:'var(--violet)'});});
-    ev.push({when:new Date(t.created).getTime()||0,text:'#'+t.id+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
+    (t.history||[]).forEach(function(h){ev.push({id:t.id,icon:h.field==='shipped'?'🚀':h.field==='priority'?'⚑':h.field==='assignee'?'👤':'🔄',when:new Date(h.created_at).getTime()||0,text:'#'+t.id+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
+    (t.thread||[]).forEach(function(m){if(m.author==='office')ev.push({id:t.id,icon:'💬',when:new Date(m.created_at).getTime()||0,text:'office replied on #'+t.id,sub:H(String(m.body)).slice(0,44),color:'var(--violet)'});});
+    ev.push({id:t.id,icon:'🆕',when:new Date(t.created).getTime()||0,text:'#'+t.id+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
   });
   ev.sort(function(a,b){return b.when-a.when;});
   return ev;
@@ -960,7 +976,29 @@ function setKind(k){STATE.kind=k;render()}
 function setRep(n){STATE.reporter=n;render()}
 function cycleSort(){var i=SORTS.map(function(s){return s[0]}).indexOf(STATE.sort);var nx=SORTS[(i+1)%SORTS.length];STATE.sort=nx[0];document.getElementById('sortbtn').textContent=nx[1];render()}
 function clearNew(){var mx=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);STATE.lastSeen=mx;try{localStorage.setItem('vr_lastseen',String(mx))}catch(e){}STATE.newIds=[];render()}
-function bellClick(){if('Notification' in window&&Notification.permission!=='granted'){notifEnable();}else{clearNew();}}
+function bellClick(){openNotif();}
+function unreadCount(){var s=STATE.notifSeen||0;return buildFeed().filter(function(f){return f.when>s;}).length;}
+function notifRel(ms){if(!ms)return'';var d=Date.now()-ms;if(d<0)d=0;var m=Math.floor(d/6e4);if(m<1)return'just now';if(m<60)return m+'m ago';var h=Math.floor(m/60);if(h<24)return h+'h ago';var dy=Math.floor(h/24);if(dy<30)return dy+'d ago';return Math.floor(dy/30)+'mo ago';}
+function renderNotif(){
+  var box=document.getElementById('notiflist');if(!box)return;
+  var seen=STATE.notifSeen||0;
+  var feed=buildFeed().slice(0,80);
+  if(!feed.length){box.innerHTML='<div class="tmuted">✨ All quiet — no activity yet.</div>';return;}
+  box.innerHTML=feed.map(function(f){
+    var un=f.when>seen;
+    return '<div class="notrow'+(un?' unread':'')+'" onclick="notifGo('+(f.id||0)+')">'+
+      '<span class="noti">'+(f.icon||'•')+'</span>'+
+      '<div class="notc"><div class="nottx">'+f.text+'</div>'+(f.sub?('<div class="notsub">'+f.sub+'</div>'):'')+'<div class="nott">'+notifRel(f.when)+'</div></div>'+
+      '<span class="notdot'+(un?'':' off')+'"></span></div>';
+  }).join('');
+}
+function _notifMaxWhen(){return buildFeed().reduce(function(m,f){return Math.max(m,f.when||0);},0);}
+function markNotifAllRead(){STATE.notifSeen=_notifMaxWhen();try{localStorage.setItem('vr_notifseen',String(STATE.notifSeen));}catch(e){}renderNotif();render();if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');}
+function openNotif(){var o=document.getElementById('notifovl');o.style.display='flex';renderNotif();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');
+  // opening = "I've seen it": mark read after the list paints, and also clear the new-ticket banner
+  setTimeout(function(){STATE.notifSeen=_notifMaxWhen();try{localStorage.setItem('vr_notifseen',String(STATE.notifSeen));}catch(e){}clearNew();},900);}
+function closeNotif(){document.getElementById('notifovl').style.display='none';}
+function notifGo(id){closeNotif();if(id)openT(id);}
 function find(id){for(var i=0;i<STATE.tickets.length;i++)if(STATE.tickets[i].id===id)return STATE.tickets[i];return null}
 function openT(id){
   var t=find(id);if(!t)return;STATE.cur=id;

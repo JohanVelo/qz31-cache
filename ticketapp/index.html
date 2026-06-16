@@ -154,6 +154,15 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .chip .vx{margin-left:6px;opacity:.55;font-size:9px}
 .chip .vx:hover{opacity:1;color:var(--red,#FF2E55)}
 .chip.addv{border-style:dashed;color:var(--txt3)}
+.newbtn{border-color:var(--cyan)!important;color:var(--cyan)!important;font-weight:700}
+.nkind{display:flex;gap:8px;margin-bottom:12px}
+.nk{flex:1;font-family:var(--d);font-size:14px;border:1px solid var(--line2);background:var(--bg);color:var(--txt2);border-radius:9px;padding:10px;cursor:pointer}
+.nk.on{border-color:var(--cyan);color:var(--cyan);background:rgba(34,211,238,.08)}
+.nfield{width:100%;background:var(--cell);border:1px solid var(--line2);border-radius:9px;padding:11px;color:var(--txt);font-family:var(--d);font-size:14px;margin-bottom:10px;box-sizing:border-box}
+textarea.nfield{resize:vertical;line-height:1.5}
+.nshot{display:block;font-family:var(--m);font-size:12px;color:var(--txt2);border:1px dashed var(--line2);border-radius:9px;padding:11px;text-align:center;cursor:pointer;margin-bottom:12px}
+.nsubmit{width:100%;background:var(--cyan);color:var(--bg);border:none;border-radius:9px;padding:13px;font-weight:700;font-size:15px;cursor:pointer}
+.nsubmit:disabled{opacity:.6}
 .actrow{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)}
 .actrow:last-child{border-bottom:none}
 .actrow .ai{flex:0 0 auto;width:22px;text-align:center;font-size:13px;opacity:.9}
@@ -339,6 +348,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="tabs" id="tabs"></div>
     <div class="tools">
       <input class="search" id="q" placeholder="search tickets…" oninput="STATE.q=this.value;render()">
+      <button class="sortbtn newbtn" onclick="openNew()" title="report a problem / new ticket">➕ New</button>
       <button class="sortbtn" id="selbtn" onclick="toggleSelMode()" title="select multiple">☑ Select</button>
       <button class="sortbtn" id="sortbtn" onclick="cycleSort()">↕ newest</button>
     </div>
@@ -366,6 +376,13 @@ body.dense .kc{padding:6px 6px 7px}
 <div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
 <div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who opens Relay inside Telegram appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
 <div class="ovl" id="qrovl" style="display:none" onclick="if(event.target===this)closeQR()"><div class="teambox" style="max-width:420px"><div class="teamhd">GET RELAY ON YOUR PHONE<span class="tx" onclick="closeQR()">✕</span></div><div style="padding:18px;text-align:center"><img id="qrimg" alt="QR" style="width:300px;max-width:78vw;border-radius:10px;background:#fff;padding:8px"><div style="font-family:var(--m);font-size:12px;color:var(--txt2);margin-top:12px;line-height:1.7">Scan with your phone camera →<br>then <b>Add to Home Screen</b> → tap 🔔 Allow.</div></div></div></div>
+<div class="ovl" id="newovl" style="display:none" onclick="if(event.target===this)closeNew()"><div class="teambox" style="max-width:480px"><div class="teamhd">REPORT A PROBLEM<span class="tx" onclick="closeNew()">✕</span></div><div style="padding:16px">
+  <div class="nkind"><button id="nkbug" class="nk on" onclick="setNK('bug')">🐛 Bug</button><button id="nkfeat" class="nk" onclick="setNK('feature')">✨ Feature</button></div>
+  <input id="ntitle" maxlength="140" placeholder="Short title (what's wrong?)" class="nfield">
+  <textarea id="nbody" maxlength="4000" rows="5" placeholder="Describe it — what you did, what happened, what you expected. Where in the app?" class="nfield"></textarea>
+  <label class="nshot"><input type="file" id="nshot" accept="image/*" style="display:none" onchange="_nShotPick(this)"><span id="nshotlbl">📎 Attach screenshot (optional)</span></label>
+  <button id="nsend" onclick="submitNew()" class="nsubmit">Send ticket</button>
+</div></div></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
   <div class="sh-body" id="sh-body"></div>
@@ -1105,6 +1122,19 @@ function boot(){
     applyMe();showOnly('app');load();
   }).catch(function(){showOnly('app');load();});
 }
+/* ── new ticket (file from inside Relay — no Telegram) ── */
+var _nKind='bug',_nShot=null;
+function openNew(){_nKind='bug';_nShot=null;setNK('bug');var t=document.getElementById('ntitle'),b=document.getElementById('nbody'),l=document.getElementById('nshotlbl');if(t)t.value='';if(b)b.value='';if(l)l.textContent='📎 Attach screenshot (optional)';document.getElementById('newovl').style.display='flex';if(t)setTimeout(function(){t.focus();},80);}
+function closeNew(){document.getElementById('newovl').style.display='none';}
+function setNK(k){_nKind=k;var a=document.getElementById('nkbug'),f=document.getElementById('nkfeat');if(a)a.classList.toggle('on',k==='bug');if(f)f.classList.toggle('on',k==='feature');}
+function _nShotPick(inp){var f=inp.files&&inp.files[0];if(!f){return;}var r=new FileReader();r.onload=function(){_nShot=r.result;document.getElementById('nshotlbl').textContent='📎 '+f.name+' ✓';};r.readAsDataURL(f);}
+function submitNew(){var title=(document.getElementById('ntitle').value||'').trim();if(title.length<3){toast('add a short title');return;}
+  var body=(document.getElementById('nbody').value||'').trim();var btn=document.getElementById('nsend');btn.disabled=true;btn.textContent='Sending…';
+  api('/new-ticket',{method:'POST',body:JSON.stringify({kind:_nKind,title:title,body:body,shot:_nShot})}).then(function(res){
+    btn.disabled=false;btn.textContent='Send ticket';
+    if(res.ok&&res.j&&res.j.id){toast('✅ ticket #'+res.j.id+' sent');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');closeNew();load();}
+    else{toast((res.j&&res.j.error)||'send failed');}
+  }).catch(function(){btn.disabled=false;btn.textContent='Send ticket';toast('send failed')});}
 /* ── invite QR (scan -> create profile -> request access) ── */
 function openQR(){var url='https://johanvelo.github.io/qz31-cache/ticketapp/';var img=document.getElementById('qrimg');if(img)img.removeAttribute('src');document.getElementById('qrovl').style.display='flex';api('/qr?u='+encodeURIComponent(url)).then(function(r){if(r.j&&r.j.dataurl&&img)img.src=r.j.dataurl;}).catch(function(){toast('QR failed')});}
 function closeQR(){document.getElementById('qrovl').style.display='none';}

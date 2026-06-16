@@ -161,6 +161,10 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .actrow .ac .aw{color:var(--txt);font-weight:600}
 .actrow .ac b{color:var(--txt)}
 .actrow .at{font-family:var(--m);font-size:9.5px;color:var(--txt3);margin-top:2px;letter-spacing:.5px}
+.due{font-family:var(--m);font-size:9px;letter-spacing:.3px;padding:2px 6px;border-radius:6px;border:1px solid var(--line2);color:var(--txt2);white-space:nowrap;flex:0 0 auto}
+.due.over{border-color:var(--red,#FF2E55);color:var(--red,#FF2E55)}
+.duenow{font-family:var(--m);font-size:11px;color:var(--txt2);margin-left:4px}
+.duenow.over{color:var(--red,#FF2E55)}
 .sprio{margin-top:11px;font-family:var(--m);font-size:11px;letter-spacing:.5px;color:var(--txt2);text-align:center}
 .sprio b{font-size:13px}
 .selbox{flex:0 0 auto;width:19px;height:19px;border-radius:5px;border:1.5px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);background:transparent;font-size:12px;font-weight:800;margin-right:2px}
@@ -507,7 +511,8 @@ function render(){
          '<div class="chip '+(STATE.kind==='feature'?'on':'')+'" onclick="setKind(\'feature\')">✨ FEAT</div>'+
          ((STATE.me&&STATE.me.name)?(function(){var _myn=STATE.me.name;var mineN=STATE.tickets.filter(function(t){return t.assignee===_myn&&!t.done;}).length;return '<div class="chip mine'+(STATE.mineOnly?' on':'')+'" onclick="toggleMine()">◆ Mine'+(mineN?(' '+mineN):'')+'</div>';})():'')+
          '<div class="chip sm'+(STATE.smart==='high'?' on':'')+'" onclick="setSmart(\'high\')">⚑ High</div>'+
-         '<div class="chip sm'+(STATE.smart==='overdue'?' on':'')+'" onclick="setSmart(\'overdue\')">⚠ Overdue</div>';
+         '<div class="chip sm'+(STATE.smart==='overdue'?' on':'')+'" onclick="setSmart(\'overdue\')">⚠ Overdue</div>'+
+         '<div class="chip sm'+(STATE.smart==='due'?' on':'')+'" onclick="setSmart(\'due\')">📅 Due</div>';
   STATE.views.forEach(function(v,i){ch+='<div class="chip vw'+(viewActive(v)?' on':'')+'" onclick="applyView('+i+')">⭐ '+H(v.name)+'<span class="vx" onclick="delView(event,'+i+')">✕</span></div>';});
   ch+='<div class="chip addv" onclick="saveView()" title="save the current filter as a view">＋ Save view</div>';
   Object.keys(reps).forEach(function(n){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+n.replace(/'/g,"\\'")+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
@@ -846,6 +851,7 @@ function applyFilters(){
     if(STATE.mineOnly){var _mn=(STATE.me&&STATE.me.name)||'';if(t.assignee!==_mn)return false;}
     if(STATE.smart==='high'&&priClass(t.priority)!=='high')return false;
     if(STATE.smart==='overdue'&&!(t.open&&ageH(t.created)>48))return false;
+    if(STATE.smart==='due'&&!(t.due&&!t.done))return false;
     if(STATE.reporter&&t.who!==STATE.reporter)return false;
     if(ops.status&&String(t.status).toLowerCase().indexOf(ops.status)<0)return false;
     if(ops.reporter&&String(t.who).toLowerCase().indexOf(ops.reporter)<0)return false;
@@ -858,7 +864,7 @@ function applyFilters(){
       if((v==='overdue'||v==='stale')&&!(t.open&&ageH(t.created)>48))return false;
       if(v==='bug'&&t.kind!=='bug')return false;
     }
-    if(ops.text&&(String(t.title).toLowerCase().indexOf(ops.text)<0 && String(t.body).toLowerCase().indexOf(ops.text)<0 && String(t.id).indexOf(ops.text)<0))return false;
+    if(ops.text){var _hay=(t.title+' '+t.body+' '+t.who+' '+(t.assignee||'')+' #'+t.id+' '+(t.thread||[]).map(function(m){return m.body;}).join(' ')).toLowerCase();if(_hay.indexOf(ops.text)<0)return false;}
     return true;
   }).sort(function(a,b){
     if(STATE.sort==='age')return ageH(b.created)-ageH(a.created);
@@ -892,12 +898,13 @@ function rowHtml(t){
   var pri=priClass(t.priority)?('<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>'):'';
   var stale=(!t.done && ageH(t.created)>48)?'<span class="stale" title="open >2 days">⚠</span>':'';
   var asg=t.assignee?('<span class="asg">'+H(t.assignee)+'</span>'):'';
+  var _rdi=(!t.done)?dueInfo(t.due):null;var dueb=_rdi?('<span class="due'+(_rdi.overdue?' over':'')+'">📅 '+_rdi.txt+'</span>'):'';
   var isnew=STATE.newIds.indexOf(t.id)>=0?'<span class="badge" style="color:var(--amber);background:rgba(255,176,32,.12)">NEW</span>':'';
   var seld=STATE.selMode&&STATE.sel[t.id];
   var selbox=STATE.selMode?('<span class="selbox'+(seld?' on':'')+'">'+(seld?'✓':'')+'</span>'):'';
   return '<div class="row'+(seld?' selrow':'')+'" style="border-left-color:'+t.color+'" onclick="rowClick(event,'+t.id+')">'+selbox+
    '<span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+H(t.id)+'</span>'+
-   '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+stale+thread+asg+
+   '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+dueb+stale+thread+asg+
    '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span>'+
    '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+t.id+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
    '<span class="meta-r"'+ageStyle+'>'+right+'</span></div>';
@@ -933,6 +940,7 @@ function openT(id){
   document.getElementById('sh-id').textContent='#'+id+(t.assignee?(' · @'+H(t.assignee)):'');
   var meta='<span style="color:'+t.color+'">●&nbsp;'+H(t.who)+'</span><span>'+H(t.status)+'</span>';
   if(priClass(t.priority))meta+='<span>prio '+priLabel(t.priority)+'</span>';
+  if(t.due&&!t.done){var _mdi=dueInfo(t.due);if(_mdi)meta+='<span'+(_mdi.overdue?' style="color:var(--red,#FF2E55)"':'')+'>📅 '+_mdi.txt+'</span>';}
   if(t.ver)meta+='<span>v'+H(t.ver)+'</span>';if(t.pv)meta+='<span>from v'+H(t.pv)+'</span>';
   if(t.proj)meta+='<span>'+H(t.proj)+'</span>';meta+='<span>'+ageS(t.created)+' old</span>';
   var shots=(t.shots||[]).length?('<div class="shots">'+t.shots.map(function(u){return '<img src="'+H(u)+'" onclick="tg&&tg.openLink&&tg.openLink(\''+H(u)+'\')">'}).join('')+'</div>'):'';
@@ -944,6 +952,8 @@ function openT(id){
   var _pr=priClass(t.priority);
   var pbtn=function(v,lab){return '<button class="act pbtn'+(_pr===v?' on '+v:'')+'" onclick="setPriority('+id+',\''+v+'\')">'+lab+'</button>';};
   var prioCtl='<div class="ctlrow"><span class="ctll">PRIORITY</span>'+pbtn('high','⚑ High')+pbtn('med','Med')+pbtn('low','Low')+(_pr?'<button class="act" onclick="setPriority('+id+',\'\')">clear</button>':'')+'</div>';
+  var _di=dueInfo(t.due);
+  var dueCtl='<div class="ctlrow"><span class="ctll">DUE</span><button class="act" onclick="setDue('+id+',0)">Today</button><button class="act" onclick="setDue('+id+',1)">+1d</button><button class="act" onclick="setDue('+id+',3)">+3d</button><button class="act" onclick="setDue('+id+',7)">+1w</button>'+(t.due?'<button class="act" onclick="setDue('+id+',null)">clear</button><span class="duenow'+(_di&&_di.overdue?' over':'')+'">'+(_di?_di.txt:'')+'</span>':'')+'</div>';
   var asnOpts='<option value="">— unassigned —</option>'+(STATE.team||[]).map(function(mm){return '<option value="'+H(mm.name)+'"'+(t.assignee===mm.name?' selected':'')+'>'+H(mm.name)+(mm.username?(' (@'+H(mm.username)+')'):'')+'</option>';}).join('');
   var asnCtl='<div class="ctlrow"><span class="ctll">ASSIGNEE</span><select class="asnsel" onchange="assign('+id+',this.value)">'+asnOpts+'</select></div>';
   var acts='<div class="acts">'+
@@ -953,7 +963,7 @@ function openT(id){
     (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
     (t.status!=='done'?'<button class="act go" onclick="setStatus('+id+',\'done\')">✓ Mark done</button>':'')+
     (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+
-    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>'+asnCtl+prioCtl;
+    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>'+asnCtl+prioCtl+dueCtl;
   var actl=(t.activity||[]).map(function(a){
     var ic=a.action==='status'?'🔄':a.action==='priority'?'⚑':a.action==='assignee'?'👤':a.action==='reply'?'💬':'•';
     var lab2=a.action==='status'?('moved to <b>'+H(a.detail)+'</b>'):a.action==='priority'?('set priority <b>'+H(a.detail)+'</b>'):a.action==='assignee'?('assigned <b>'+H(a.detail)+'</b>'):a.action==='reply'?('replied · '+H(a.detail)):(H(a.action)+' '+H(a.detail));
@@ -1000,6 +1010,12 @@ function setPriority(id,p){
     if(res.ok){toast(p?('priority: '+p):'priority cleared');tg&&tg.HapticFeedback&&tg.HapticFeedback.selectionChanged&&tg.HapticFeedback.selectionChanged();load();setTimeout(function(){openT(id)},420)}else{toast('failed')}
   });
 }
+function setDue(id,days){var d=null;if(days!=null){var dt=new Date(Date.now()+days*864e5);dt.setHours(23,59,0,0);d=dt.toISOString();}
+  api('/due',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,due:d})}).then(function(res){
+    if(res.ok){toast(days==null?'due cleared':'📅 due set');tg&&tg.HapticFeedback&&tg.HapticFeedback.selectionChanged&&tg.HapticFeedback.selectionChanged();load();setTimeout(function(){openT(id)},420)}else{toast('failed')}
+  });
+}
+function dueInfo(iso){if(!iso)return null;var ms=new Date(iso).getTime()-Date.now();var days=ms/864e5;if(ms<-864e5)return {overdue:true,txt:'overdue '+Math.round(-days)+'d'};if(ms<0)return {overdue:true,txt:'due today'};if(days<1)return {overdue:false,txt:'due today'};return {overdue:false,txt:'due '+Math.round(days)+'d'};}
 function toggleMine(){STATE.mineOnly=!STATE.mineOnly;render();}
 /* ── smart filters + saved views ── */
 function setSmart(v){STATE.smart=STATE.smart===v?null:v;render();}

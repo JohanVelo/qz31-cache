@@ -579,7 +579,20 @@ function nflash(){try{var f=document.createElement('div');f.className='nflash';d
 function toggleMute(){STATE.muted=!STATE.muted;try{localStorage.setItem('vr_muted',STATE.muted?'1':'0')}catch(e){}toast(STATE.muted?'🔇 sound off':'🔔 sound on');}
 function toggleDensity(){STATE.dense=!STATE.dense;document.body.classList.toggle('dense',STATE.dense);try{localStorage.setItem('vr_dense',STATE.dense?'1':'0')}catch(e){}toast(STATE.dense?'▤ compact':'▥ comfortable');}
 try{STATE.muted=localStorage.getItem('vr_muted')==='1';STATE.dense=localStorage.getItem('vr_dense')==='1';STATE.notifOff=localStorage.getItem('vr_notifoff')==='1';document.body.classList.toggle('dense',STATE.dense);}catch(e){}
-function notifEnable(){try{if('Notification' in window){Notification.requestPermission().then(function(p){toast(p==='granted'?'🔔 notifications on':'notifications blocked in browser settings');});}else toast('notifications not supported here');}catch(e){}}
+function notifEnable(){try{if('Notification' in window){Notification.requestPermission().then(function(p){toast(p==='granted'?'🔔 notifications on':'notifications blocked in browser settings');if(p==='granted')pushSubscribe();});}else toast('notifications not supported here');}catch(e){}}
+function _u8(b64){var pad='='.repeat((4-b64.length%4)%4);var s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(s);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
+function pushSubscribe(){try{if(!('serviceWorker' in navigator)||!('PushManager' in window))return;if(!devTok()){return;}/* push only meaningful for the linked owner */
+ navigator.serviceWorker.ready.then(function(reg){
+  api('/vapid').then(function(r){var key=r&&r.j&&r.j.key;if(!key){return;}
+   reg.pushManager.getSubscription().then(function(existing){
+    function send(sub){api('/subscribe',{method:'POST',body:JSON.stringify({subscription:sub})}).then(function(rr){if(rr.ok)toast('🔔 background alerts on');}).catch(function(){});}
+    if(existing){send(existing);return;}
+    reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_u8(key)}).then(send).catch(function(e){/* push subscribe blocked */});
+   });
+  }).catch(function(){});
+ }).catch(function(){});}catch(e){}}
+/* if already granted on load, refresh the push subscription silently */
+try{if('Notification' in window&&Notification.permission==='granted'){setTimeout(pushSubscribe,1500);}}catch(e){}
 function pushNotif(title,body,tag){try{if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}
 function toggleNotif(){STATE.notifOff=!STATE.notifOff;try{localStorage.setItem('vr_notifoff',STATE.notifOff?'1':'0')}catch(e){}if(!STATE.notifOff)notifEnable();toast(STATE.notifOff?'🔕 notifications muted':'🔔 notifications on');}
 function parseQuery(q){var ops={status:null,reporter:null,kind:null,is:[],text:''};var text=[];String(q||'').split(/\s+/).forEach(function(tok){if(!tok)return;var m=tok.match(/^([a-z]+):(.+)$/i);if(m){var k=m[1].toLowerCase(),v=m[2].toLowerCase();if(k==='status')ops.status=v;else if(k==='reporter'||k==='who'||k==='by')ops.reporter=v;else if(k==='kind'||k==='type')ops.kind=v;else if(k==='is')ops.is.push(v);else text.push(tok);}else text.push(tok);});ops.text=text.join(' ').toLowerCase();return ops;}

@@ -21,7 +21,14 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .wm small{display:block;font-family:var(--m);font-size:7.5px;letter-spacing:3px;color:var(--txt2);margin-top:2px}
 .opp{margin-left:auto;text-align:right;font-family:var(--m);font-size:9px;color:var(--txt3);cursor:pointer}
 .opp .live{color:var(--green)}
-.bell{position:relative;font-size:16px;margin-left:6px;cursor:pointer}
+.bell{position:relative;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;margin-left:7px;cursor:pointer;
+ border-radius:10px;border:1px solid var(--line);color:var(--txt2);background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0));
+ transition:color .16s ease,border-color .16s ease,background .16s ease,transform .12s ease;flex:0 0 auto;margin-left:0}
+.bell:hover{color:var(--txt);border-color:var(--line2);background:var(--cell);transform:translateY(-1px)}
+.bell:active{transform:translateY(0) scale(.95)}
+.bell svg{width:18px;height:18px;display:block}
+.bell#bell:hover{color:var(--amber);border-color:var(--amber)}
+.bell#teambtn:hover{color:var(--cyan);border-color:var(--cyan)}
 .bell .bdg{position:absolute;top:-6px;right:-7px;background:var(--amber);color:#04070D;font-family:var(--m);
  font-size:8px;font-weight:700;border-radius:8px;padding:1px 4px;min-width:14px;text-align:center;display:none}
 .bell.has .bdg{display:block}
@@ -283,13 +290,13 @@ body.dense .kc{padding:6px 6px 7px}
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
       <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
       <div class="ticker" id="ticker"></div>
-      <div class="bell" onclick="toggleFs()" title="maximise / restore" style="font-size:14px">⛶</div>
-      <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app" style="font-size:15px">⤓</div>
-      <div class="bell" onclick="openCmd()" title="commands (Ctrl/⌘K)" style="font-size:13px;font-family:var(--m)">⌘</div>
-      <div class="bell" onclick="minimise()" title="minimise — back to Telegram" style="font-size:17px;line-height:.6">⎯</div>
-      <div class="bell" id="palette" onclick="cycleTheme()" title="theme" style="font-size:15px">🎨</div>
-      <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="font-size:14px;display:none">👥</div>
-      <div class="bell" id="bell" onclick="bellClick()" title="notifications / clear new">🔔<span class="bdg" id="bdg">0</span></div>
+      <div class="bell" onclick="toggleFs()" title="maximise / restore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M8 20H6a2 2 0 0 1-2-2v-2M16 20h2a2 2 0 0 0 2-2v-2"/></svg></div>
+      <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
+      <div class="bell" onclick="openCmd()" title="commands / search (Ctrl/⌘K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.2"/><path d="M20 20l-4.2-4.2"/></svg></div>
+      <div class="bell" onclick="minimise()" title="minimise — back to Telegram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14h12"/></svg></div>
+      <div class="bell" id="palette" onclick="cycleTheme()" title="theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a3 3 0 0 0 3-3 8 8 0 0 0-8-7z"/><circle cx="7.5" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.7" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></svg></div>
+      <div class="bell" id="teambtn" onclick="openTeam()" title="Team — manage who can access" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5.5 5.5 0 0 0-4-5.3"/></svg></div>
+      <div class="bell" id="bell" onclick="bellClick()" title="notifications / clear new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5"/><path d="M13.7 19.5a2 2 0 0 1-3.4 0"/></svg><span class="bdg" id="bdg">0</span></div>
       <div class="meid" id="mewho" title="signed in"></div>
       <div class="opp" onclick="load()"><span class="live">●</span> <span id="ts">LIVE</span></div>
     </div>

@@ -150,6 +150,8 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .pbtn.on.med{border-color:var(--amber)!important;color:var(--amber)!important}
 .pbtn.on.low{border-color:var(--txt3)!important;color:var(--txt)!important}
 .chip.mine.on{border-color:var(--cyan)!important;color:var(--cyan)!important}
+.sprio{margin-top:11px;font-family:var(--m);font-size:11px;letter-spacing:.5px;color:var(--txt2);text-align:center}
+.sprio b{font-size:13px}
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
  color:var(--txt);font-family:var(--m);font-size:12px;padding:9px 14px;border-radius:10px;z-index:99;opacity:0;transition:.2s}
 .toast.on{opacity:1}
@@ -750,6 +752,18 @@ function renderStats(){
   ts.forEach(function(t){var d=Math.floor((Date.now()-new Date(t.created).getTime())/864e5);if(d>=0&&d<14)bins[13-d]++;});
   var mxb=Math.max.apply(null,bins)||1;
   var spark=bins.map(function(v){return '<div style="height:'+Math.max(4,Math.round(v/mxb*100))+'%"></div>';}).join('');
+  // velocity: shipped 7d/14d, fastest, shipped-per-day trend
+  var _now=Date.now();
+  var shipped7=done.filter(function(t){return t.resolved&&(_now-new Date(t.resolved).getTime())<7*864e5;}).length;
+  var shipped14=done.filter(function(t){return t.resolved&&(_now-new Date(t.resolved).getTime())<14*864e5;}).length;
+  var fastest='—';if(dr.length){var _mn=Infinity;dr.forEach(function(t){var hh=(new Date(t.resolved)-new Date(t.created))/3.6e6;if(hh>=0&&hh<_mn)_mn=hh;});if(_mn!==Infinity)fastest=_mn<48?_mn.toFixed(1)+'h':(_mn/24).toFixed(1)+'d';}
+  var sbins=[];for(var _i=0;_i<14;_i++)sbins.push(0);
+  done.forEach(function(t){if(!t.resolved)return;var d=Math.floor((_now-new Date(t.resolved).getTime())/864e5);if(d>=0&&d<14)sbins[13-d]++;});
+  var smx=Math.max.apply(null,sbins)||1;
+  var shipspark=sbins.map(function(v){return '<div style="height:'+Math.max(4,Math.round(v/smx*100))+'%;background:var(--green)"></div>';}).join('');
+  // open priority breakdown
+  var ph=0,pm=0,pl=0;openAll.forEach(function(t){var c=priClass(t.priority);if(c==='high')ph++;else if(c==='med')pm++;else if(c==='low')pl++;});
+  var prioRow='<div class="sprio">⚑ <b style="color:var(--red,#FF2E55)">'+ph+'</b> high · <b style="color:var(--amber)">'+pm+'</b> med · <b>'+pl+'</b> low · '+(openAll.length-ph-pm-pl)+' unset</div>';
   var rt={};ts.forEach(function(t){var d=rt[t.who]||(rt[t.who]={o:0,d:0,color:t.color});if(t.open)d.o++;else if(t.done)d.d++;});
   var rtArr=Object.keys(rt).map(function(n){return {name:n,o:rt[n].o,d:rt[n].d,color:rt[n].color};}).sort(function(a,b){return (b.o+b.d)-(a.o+a.d);});
   var mxt=Math.max.apply(null,rtArr.map(function(r){return r.o+r.d;}).concat([1]));
@@ -763,9 +777,16 @@ function renderStats(){
       '<div class="skpi prog"><div class="n">'+prog.length+'</div><div class="l">IN-PROGRESS</div></div>'+
       '<div class="skpi ship"><div class="n">'+done.length+'</div><div class="l">SHIPPED</div></div>'+
       '<div class="skpi over"><div class="n">'+overdue.length+'</div><div class="l">⚠ OVERDUE &gt;2D</div></div>'+
+    '</div>'+prioRow+'</div>'+
+    '<div class="scard"><div class="slab">// VELOCITY</div><div class="skpis">'+
+      '<div class="skpi ship"><div class="n">'+shipped7+'</div><div class="l">SHIPPED · 7D</div></div>'+
+      '<div class="skpi ship"><div class="n">'+shipped14+'</div><div class="l">SHIPPED · 14D</div></div>'+
+      '<div class="skpi"><div class="n">'+avg+'</div><div class="l">AVG TO SHIP</div></div>'+
+      '<div class="skpi"><div class="n">'+fastest+'</div><div class="l">FASTEST</div></div>'+
     '</div></div>'+
     '<div class="scard"><div class="slab">// LIVE ACTIVITY</div>'+feedHtml+'</div>'+
-    '<div class="scard sfull"><div class="slab">// 14-DAY INTAKE</div><div class="sspark">'+spark+'</div></div>'+
+    '<div class="scard sfull"><div class="slab">// 14-DAY INTAKE (new tickets/day)</div><div class="sspark">'+spark+'</div></div>'+
+    '<div class="scard sfull"><div class="slab">// 14-DAY SHIPPED (resolved/day)</div><div class="sspark">'+shipspark+'</div></div>'+
     '<div class="scard sfull"><div class="slab">// THROUGHPUT · avg resolve '+avg+'</div>'+reprows+'</div>'+
    '</div>';
 }

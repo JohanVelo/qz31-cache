@@ -933,7 +933,8 @@ function renderTeamList(){var box=document.getElementById('teamlist');box.innerH
     box.innerHTML=ms.map(function(m){
       var st=m.active?'<span class="tok">● active</span>':'<span class="tpend">● pending</span>';
       var act=m.active?'<button class="tbtn tdeact" onclick="memberSet(\''+m.telegram_id+'\',{active:false})">Deactivate</button>':'<button class="tbtn tappr" onclick="memberSet(\''+m.telegram_id+'\',{active:true})">Approve</button>';
-      return '<div class="tmrow"><div class="tmname">'+H(m.name||m.telegram_id)+'<small>'+H(m.role||'member')+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet(\''+m.telegram_id+'\',{remove:true})">✕</button></div></div>';
+      var sub=(m.username?('@'+H(m.username)):('id '+H(m.telegram_id)))+' · '+H(m.role||'member');
+      return '<div class="tmrow"><div class="tmname">'+H(m.name||m.username||m.telegram_id)+'<small>'+sub+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet(\''+m.telegram_id+'\',{remove:true})">✕</button></div></div>';
     }).join('');
   });
 }

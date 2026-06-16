@@ -453,7 +453,10 @@ function color(n){var h=0,s=String(n||'?');for(var i=0;i<s.length;i++)h=(h*31+s.
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},1900)}
 function devTok(){try{return localStorage.getItem('vr_devtoken')||''}catch(e){return ''}}
 function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:'','X-Device-Token':devTok()}}
-function api(p,opt){opt=opt||{};opt.headers=hdrs();return fetch(API+p,opt).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})}
+function api(p,opt){opt=opt||{};opt.headers=hdrs();
+  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;var to=null;
+  if(ctrl){opt.signal=ctrl.signal;to=setTimeout(function(){try{ctrl.abort();}catch(e){}},12000);}
+  return fetch(API+p,opt).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})}).finally(function(){if(to)clearTimeout(to);});}
 function priClass(p){p=(''+(p==null?'':p)).toLowerCase();if(p==='')return '';if(p==='3')return 'high';if(p==='2')return 'med';if(p==='1')return 'low';if(p.indexOf('high')>=0||p.indexOf('crit')>=0)return 'high';if(p.indexOf('med')>=0)return 'med';if(p.indexOf('low')>=0)return 'low';return ''}
 function priLabel(p){var c=priClass(p);return c?c.toUpperCase():''}
 function isSnoozed(t){return !!t.snz&&new Date(t.snz).getTime()>Date.now();}
@@ -1185,7 +1188,7 @@ function renderTeamList(){var box=document.getElementById('teamlist');box.innerH
 }
 function memberSet(tid,patch){patch.telegram_id=tid;api('/member-set',{method:'POST',body:JSON.stringify(patch)}).then(function(res){if(res.ok){toast(patch.remove?'removed':(patch.active?'✓ approved':'deactivated'));if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');renderTeamList();}else toast('failed');});}
 boot();
-setInterval(function(){if(document.getElementById('app').style.display!=='none'&&!document.getElementById('sheet').classList.contains('on'))load()},25000);
+setInterval(function(){if(document.visibilityState!=='visible')return;if(document.getElementById('app').style.display!=='none'&&!document.getElementById('sheet').classList.contains('on'))load()},60000);
 /* feel live: refresh the moment the app regains focus / becomes visible */
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&document.getElementById('app').style.display!=='none')load();});
 window.addEventListener('focus',function(){if(document.getElementById('app').style.display!=='none')load();});

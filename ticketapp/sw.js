@@ -13,7 +13,15 @@ self.addEventListener('fetch', function (e) {
         try { var c = resp.clone(); caches.open(SHELL).then(function (cache) { cache.put('shell', c); }); } catch (_) {}
         return resp;
       }).catch(function () {
-        return caches.open(SHELL).then(function (cache) { return cache.match('shell'); });
+        return caches.open(SHELL).then(function (cache) { return cache.match('shell'); }).then(function (m) {
+          return m || new Response(
+            '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">' +
+            '<body style="margin:0;background:#070E18;color:#cfe;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center">' +
+            '<div><div style="font-size:34px">📡</div><h2 style="font-weight:600">Velocity Relay is offline</h2>' +
+            '<p style="opacity:.7">No connection right now — this page will reconnect automatically.</p>' +
+            '<button onclick="location.reload()" style="margin-top:10px;padding:10px 20px;border-radius:9px;border:1px solid #22D3EE;background:transparent;color:#22D3EE;font-size:15px;cursor:pointer">Retry</button></div></body>',
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        });
       })
     );
     return;

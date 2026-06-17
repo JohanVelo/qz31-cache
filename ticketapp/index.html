@@ -629,7 +629,7 @@ function agLoadDash(){
           ((sn.terminals&&sn.terminals.length)?'<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:4px">// TERMINALS</div>'+sn.terminals.map(function(t){return '<div style="font-size:12px;margin:3px 0"><b style="color:var(--cyan)">'+agEsc(t.label)+'</b> '+(t.editing?'<span style="color:var(--amber);font-size:9px;font-family:var(--m)">● EDITING</span> ':'')+'<span style="color:var(--txt2)">'+agEsc(t.task||'idle')+'</span></div>';}).join('')+'</div>':'')+
         '</div>'+
         '<div style="margin-top:8px"><button onclick="agCanvas(\''+s.machine_id+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 12px;font-size:12px">📷 Canvas</button><div class="agcv"></div></div>'+
-        '<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:6px">// CONTROL</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+agCmdBtn(s.machine_id,'refresh','🔄 Refresh')+agCmdBtn(s.machine_id,'run_audit','📋 Audit')+agCmdBtn(s.machine_id,'reload_plugin','♻ Reload')+agCmdBtn(s.machine_id,'run_smoke','🧪 Smoke')+'</div><div class="agcmdout" style="font-size:11px;color:var(--txt2);margin-top:6px;font-family:var(--m);white-space:pre-wrap"></div></div>'+
+        '<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:6px">// CONTROL</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+agCmdBtn(s.machine_id,'refresh','🔄 Refresh')+agCmdBtn(s.machine_id,'run_audit','📋 Audit')+agCmdBtn(s.machine_id,'reload_plugin','♻ Reload')+agCmdBtn(s.machine_id,'run_smoke','🧪 Smoke')+agCmdBtnD(s.machine_id,'kill_runaway','🔪 Kill Frozen')+agCmdBtnD(s.machine_id,'restart_qgis','🔁 Restart QGIS')+'</div><div class="agcmdout" style="font-size:11px;color:var(--txt2);margin-top:6px;font-family:var(--m);white-space:pre-wrap"></div></div>'+
       '</div>';
     }).join('');
   }).catch(function(){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';});
@@ -685,8 +685,26 @@ function agCanvas(mid,btn){
 function agCmdBtn(mid,type,label){
   return '<button onclick="agCmd(\''+mid+'\',\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
 }
+function agCmdBtnD(mid,type,label){
+  return '<button onclick="agCmd(\''+mid+'\',\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--red,#FF2E55);color:var(--red,#FF2E55);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
+}
+var AG_DESTRUCTIVE={kill_runaway:'Kill the frozen QGIS process?',restart_qgis:'Force-kill + restart QGIS?'};
+function agBiometric(reason,cb){
+  var bm=tg&&tg.BiometricManager;
+  if(!bm){if(confirm(reason))cb();return;}
+  try{bm.init(function(){
+    if(!bm.isBiometricAvailable){if(confirm(reason))cb();return;}
+    var auth=function(){bm.authenticate({reason:reason},function(ok){if(ok)cb();});};
+    if(bm.isAccessGranted)auth();else bm.requestAccess({reason:reason},function(g){if(g)auth();else if(confirm(reason))cb();});
+  });}catch(e){if(confirm(reason))cb();}
+}
 function agCmd(mid,type,btn){
+  var send=function(){_agCmdSend(mid,type,btn);};
+  if(AG_DESTRUCTIVE[type]){agBiometric(AG_DESTRUCTIVE[type],send);return;}
   if(type==='reload_plugin'&&!confirm('Reload the plugin on '+mid+'?'))return;
+  send();
+}
+function _agCmdSend(mid,type,btn){
   var row=btn.parentElement;var out=row.parentElement.querySelector('.agcmdout');
   var orig=btn.textContent;btn.textContent='…';btn.disabled=true;
   if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('medium');

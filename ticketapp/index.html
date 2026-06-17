@@ -202,14 +202,6 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--cell);border:1px solid var(--line2);
  color:var(--txt);font-family:var(--m);font-size:12px;padding:9px 14px;border-radius:10px;z-index:99;opacity:0;transition:.2s}
 .toast.on{opacity:1}
-/* one-tap "enable desktop alerts" banner (shows only until granted/dismissed) */
-.alertbar{display:none;align-items:center;gap:11px;margin:11px 0 2px;padding:10px 14px;border-radius:11px;background:linear-gradient(90deg,rgba(34,211,238,.10),rgba(45,212,191,.05));border:1px solid rgba(34,211,238,.38)}
-.alertbar.on{display:flex}
-.alertbar .ab-ic{font-size:17px;line-height:1}
-.alertbar .ab-tx{flex:1;font-size:13px;line-height:1.35;color:var(--txt)}
-.alertbar .ab-tx b{color:#22D3EE}
-.alertbar button{font-family:var(--m);font-size:12px;font-weight:700;cursor:pointer;border-radius:9px;padding:7px 14px;border:1px solid #22D3EE;background:#22D3EE;color:#04121a;white-space:nowrap}
-.alertbar button.ab-x{background:transparent;color:#8aa6b8;border-color:var(--line2)}
 /* fullscreen safe-area + deluxe responsive layout */
 body.fs .top{padding-top:calc(13px + var(--safe-top,0px))}
 @media(min-width:760px){
@@ -356,7 +348,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="bar">
       <div class="glyph">♞</div>
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
-      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div></div>
+      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
       <div class="bell" onclick="openQR()" title="get Relay on your phone (scan QR)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v0M17 21h4M21 17v4"/></svg></div>
@@ -377,10 +369,10 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="chips" id="chips"></div>
     <div class="alert" id="alert" onclick="clearNew()"></div>
   </div>
-  <div class="alertbar" id="alertbar"><span class="ab-ic">🔔</span><span class="ab-tx"><b>Turn on desktop alerts</b> — get a popup the instant a ticket lands, even when Relay is minimized.</span><button onclick="enableAlertsFromBanner()">Enable</button><button class="ab-x" onclick="dismissAlertBar()">Later</button></div>
   <div class="list" id="list"></div>
   <div id="board"></div>
   <div id="stats"></div>
+  <div id="agentic" style="display:none"></div>
 </div>
 <div class="selbar" id="selbar" style="display:none">
   <span class="selcount" id="selcount">0 selected</span>
@@ -536,6 +528,7 @@ function counts(){var o=0,p=0,d=0,reps={};STATE.tickets.forEach(function(t){if(t
 function animateNum(el,to,from){if(!el)return;from=from||0;if(from===to){el.textContent=to;return;}var t0=null;function step(ts){if(!t0)t0=ts;var k=Math.min((ts-t0)/650,1);k=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*k);if(k<1)requestAnimationFrame(step)}requestAnimationFrame(step)}
 function flashIf(id,from,to){if(from===to)return;var el=document.getElementById(id);if(!el||!el.closest)return;var kc=el.closest('.kc');if(!kc)return;kc.classList.add('flash');setTimeout(function(){kc.classList.remove('flash')},700);}
 function render(){
+  if(STATE.view==='agentic'){renderAgentic();return;}
   var c=counts();
   document.getElementById('kp').innerHTML=
    '<div class="kc open"><div class="l">OPEN</div><div class="n" id="n0">'+c.o+'</div></div>'+
@@ -576,15 +569,99 @@ function render(){
 function setView(v){
   STATE.view=v;
   try{localStorage.setItem('vr_view',v)}catch(e){}
-  var ids={list:'vL',board:'vB',stats:'vS'};
-  ['vL','vB','vS'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
+  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA'};
+  ['vL','vB','vS','vA'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
   document.getElementById('list').style.display=(v==='list')?'':'none';
   document.getElementById('board').style.display=(v==='board')?'block':'none';
   document.getElementById('stats').style.display=(v==='stats')?'block':'none';
+  var _ag=document.getElementById('agentic');if(_ag)_ag.style.display=(v==='agentic')?'block':'none';
   var hide=(v!=='list');
   ['.kp','.tabs','.tools','.chips','.alert'].forEach(function(sel){var el=document.querySelector(sel);if(el)el.style.display=hide?'none':'';});
   if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();
   render();
+}
+function agEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+function renderAgentic(){
+  var el=document.getElementById('agentic');if(!el)return;
+  if(!el._built){
+    el.innerHTML=
+      '<div style="padding:6px">'+
+      '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:1px;margin:2px 6px 8px">// AGENTIC OS</div>'+
+      '<div id="agDash" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px"></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-top:10px">'+
+        '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
+          '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:.5px;margin-bottom:8px">// TASKS</div>'+
+          '<div id="agTasks"></div>'+
+          '<div style="display:flex;gap:6px;margin-top:8px"><input id="agTaskIn" placeholder="add task…" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px;font-size:13px" onkeydown="if(event.key===\'Enter\')agTaskAdd()"><button onclick="agTaskAdd()" style="background:var(--cyan);color:#04141A;border:0;border-radius:8px;padding:8px 14px;font-weight:700">+</button></div>'+
+        '</div>'+
+        '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
+          '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:.5px;margin-bottom:8px">// NOTES</div>'+
+          '<textarea id="agNoteIn" placeholder="shared scratchpad…" style="width:100%;min-height:88px;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px;font-size:13px;font-family:var(--m)"></textarea>'+
+          '<div style="margin-top:6px"><button onclick="agNoteSave()" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 14px">save notes</button> <span id="agNoteMsg" style="font-size:11px;color:var(--txt2)"></span></div>'+
+        '</div>'+
+      '</div>'+
+      '</div>';
+    el._built=1; agLoadTasks(); agLoadNotes();
+  }
+  agLoadDash();
+}
+function agLoadDash(){
+  var el=document.getElementById('agDash');if(!el)return;
+  api('/agentic-state').then(function(res){
+    if(!res.ok){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';return;}
+    var d=res.j||{};var now=Date.parse(d.server_now)||Date.now();var sts=d.states||[];
+    if(!sts.length){el.innerHTML='<div style="padding:14px;color:var(--txt2)">No agent reporting yet. On the PC run: python research/agentic_agent/agent.py run</div>';return;}
+    function kpi(v,l){return '<div style="flex:1;min-width:68px;background:var(--cell);border:1px solid var(--line);border-radius:8px;padding:8px"><div style="font-family:var(--m);font-size:15px;font-weight:700">'+v+'</div><div style="font-size:9px;color:var(--txt2);letter-spacing:.5px">'+l+'</div></div>';}
+    el.innerHTML=sts.map(function(s){
+      var age=Math.round((now-(Date.parse(s.agent_seen_at)||0))/1000);
+      var bl=age<60?['LIVE','var(--green)']:age<600?['STALE','var(--amber)']:['OFFLINE','var(--txt2)'];
+      var sn=s.snapshot||{};var hld=sn.hld||{};var tot=(hld.pass||0)+(hld.fail||0)+(hld.note||0);
+      var ft=(sn.ft_status||[]).map(function(f){return '<span style="font-family:var(--m);font-size:10px;background:var(--cell);border:1px solid var(--line);border-radius:6px;padding:3px 7px;margin:2px;display:inline-block">'+f.num+' · '+(f.age_min!=null?f.age_min+'m':'–')+'</span>';}).join('');
+      var br=sn.bridge_online?('online '+(sn.bridge_ms!=null?sn.bridge_ms+'ms':'')):'offline';
+      return '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center"><b>'+agEsc(s.project_name||s.machine_id||'?')+'</b>'+
+        '<span style="font-family:var(--m);font-size:11px;color:'+bl[1]+'">● AGENT '+bl[0]+' · '+age+'s</span></div>'+
+        '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+kpi((hld.pass!=null?hld.pass:'–')+'/'+(tot||'–'),'HLD PASS')+kpi(sn.zones!=null?sn.zones:'–','ZONES')+kpi(sn.pon_range||'–','PON')+kpi(br,'BRIDGE')+'</div>'+
+        '<div style="margin-top:8px">'+ft+'</div>'+
+        (sn.context_health?'<div style="margin-top:6px;font-size:11px;color:var(--txt2)">context: '+agEsc(sn.context_health)+' · burn: '+(sn.burn!=null?agEsc(sn.burn):'–')+'</div>':'')+
+      '</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';});
+}
+var AG_ST={todo:['○','var(--txt2)'],doing:['◐','var(--amber)'],done:['●','var(--green)']};
+function agLoadTasks(){
+  var el=document.getElementById('agTasks');if(!el)return;
+  api('/agentic-tasks').then(function(res){
+    var ts=(res.ok&&res.j&&res.j.tasks)||[];
+    if(!ts.length){el.innerHTML='<div style="color:var(--txt2);font-size:12px">no tasks</div>';return;}
+    el.innerHTML=ts.map(function(t){
+      var st=AG_ST[t.status]||AG_ST.todo;var done=t.status==='done';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">'+
+        '<span onclick="agTaskToggle(\''+t.id+'\',\''+t.status+'\')" style="cursor:pointer;color:'+st[1]+';font-size:15px">'+st[0]+'</span>'+
+        '<span style="flex:1;font-size:13px;'+(done?'opacity:.5;text-decoration:line-through':'')+'">'+agEsc(t.title)+'</span>'+
+        '<span onclick="agTaskDel(\''+t.id+'\')" style="cursor:pointer;color:var(--txt2);font-size:13px">✕</span>'+
+      '</div>';
+    }).join('');
+  });
+}
+function agTaskAdd(){
+  var i=document.getElementById('agTaskIn');var v=(i.value||'').trim();if(!v)return;i.value='';
+  api('/agentic-tasks',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',op:'create',title:v})}).then(function(r){if(r.ok)agLoadTasks();else toast('add failed');});
+}
+function agTaskToggle(id,st){
+  var nx=st==='todo'?'doing':st==='doing'?'done':'todo';
+  api('/agentic-tasks',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',op:'update',id:id,status:nx})}).then(function(r){if(r.ok)agLoadTasks();});
+}
+function agTaskDel(id){
+  api('/agentic-tasks',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',op:'delete',id:id})}).then(function(r){if(r.ok)agLoadTasks();});
+}
+function agLoadNotes(){
+  var t=document.getElementById('agNoteIn');if(!t)return;
+  api('/agentic-notes').then(function(r){if(r.ok&&r.j&&typeof r.j.body==='string'&&document.activeElement!==t)t.value=r.j.body;});
+}
+function agNoteSave(){
+  var t=document.getElementById('agNoteIn');var msg=document.getElementById('agNoteMsg');
+  api('/agentic-notes',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',body:t.value||''})}).then(function(r){if(msg)msg.textContent=r.ok?'saved ✓':'save failed';setTimeout(function(){if(msg)msg.textContent='';},2000);});
 }
 function renderBoard(){
   var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return (t.status==='new'||t.status==='reopened')&&!isSnoozed(t);},set:'new'},
@@ -794,12 +871,6 @@ function pushSubscribe(){try{if(!('serviceWorker' in navigator)||!('PushManager'
  }).catch(function(){});}catch(e){}}
 /* if already granted on load, refresh the push subscription silently */
 try{if('Notification' in window&&Notification.permission==='granted'){setTimeout(pushSubscribe,1500);}}catch(e){}
-/* one-tap desktop-alerts banner — surfaces the (otherwise Ctrl+K-buried) enable step */
-function alertsSupported(){try{return ('Notification' in window)&&('serviceWorker' in navigator)&&('PushManager' in window);}catch(e){return false;}}
-function refreshAlertBar(){try{var el=document.getElementById('alertbar');if(!el)return;var dis=false;try{dis=localStorage.getItem('vr_alertbar_dismissed')==='1';}catch(e){}el.classList.toggle('on', alertsSupported()&&Notification.permission!=='granted'&&!dis&&!!devTok());}catch(e){}}
-function enableAlertsFromBanner(){try{notifEnable();setTimeout(refreshAlertBar,800);setTimeout(refreshAlertBar,2500);}catch(e){}}
-function dismissAlertBar(){try{localStorage.setItem('vr_alertbar_dismissed','1');}catch(e){}refreshAlertBar();}
-try{setTimeout(refreshAlertBar,2200);}catch(e){}
 function pushNotif(title,body,tag){try{if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}
 function toggleNotif(){STATE.notifOff=!STATE.notifOff;try{localStorage.setItem('vr_notifoff',STATE.notifOff?'1':'0')}catch(e){}if(!STATE.notifOff)notifEnable();toast(STATE.notifOff?'🔕 notifications muted':'🔔 notifications on');}
 function parseQuery(q){var ops={status:null,reporter:null,kind:null,is:[],text:''};var text=[];String(q||'').split(/\s+/).forEach(function(tok){if(!tok)return;var m=tok.match(/^([a-z]+):(.+)$/i);if(m){var k=m[1].toLowerCase(),v=m[2].toLowerCase();if(k==='status')ops.status=v;else if(k==='reporter'||k==='who'||k==='by')ops.reporter=v;else if(k==='kind'||k==='type')ops.kind=v;else if(k==='is')ops.is.push(v);else text.push(tok);}else text.push(tok);});ops.text=text.join(' ').toLowerCase();return ops;}

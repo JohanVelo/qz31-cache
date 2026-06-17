@@ -629,6 +629,7 @@ function agLoadDash(){
           ((sn.terminals&&sn.terminals.length)?'<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:4px">// TERMINALS</div>'+sn.terminals.map(function(t){return '<div style="font-size:12px;margin:3px 0"><b style="color:var(--cyan)">'+agEsc(t.label)+'</b> '+(t.editing?'<span style="color:var(--amber);font-size:9px;font-family:var(--m)">● EDITING</span> ':'')+'<span style="color:var(--txt2)">'+agEsc(t.task||'idle')+'</span></div>';}).join('')+'</div>':'')+
         '</div>'+
         '<div style="margin-top:8px"><button onclick="agCanvas(\''+s.machine_id+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 12px;font-size:12px">📷 Canvas</button><div class="agcv"></div></div>'+
+        '<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:6px">// CONTROL</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+agCmdBtn(s.machine_id,'refresh','🔄 Refresh')+agCmdBtn(s.machine_id,'run_audit','📋 Audit')+agCmdBtn(s.machine_id,'reload_plugin','♻ Reload')+agCmdBtn(s.machine_id,'run_smoke','🧪 Smoke')+'</div><div class="agcmdout" style="font-size:11px;color:var(--txt2);margin-top:6px;font-family:var(--m);white-space:pre-wrap"></div></div>'+
       '</div>';
     }).join('');
   }).catch(function(){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';});
@@ -680,6 +681,32 @@ function agCanvas(mid,btn){
     box.innerHTML='<div style="margin-top:8px"><img src="data:image/jpeg;base64,'+c.png+'" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block"><div style="font-size:10px;color:var(--txt2);margin-top:2px;font-family:var(--m)">// LIVE CANVAS · '+age+'s ago</div></div>';
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');
   }).catch(function(){btn.textContent='📷 Canvas';box.innerHTML='<div style="color:var(--txt2);font-size:11px">failed</div>';});
+}
+function agCmdBtn(mid,type,label){
+  return '<button onclick="agCmd(\''+mid+'\',\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
+}
+function agCmd(mid,type,btn){
+  if(type==='reload_plugin'&&!confirm('Reload the plugin on '+mid+'?'))return;
+  var row=btn.parentElement;var out=row.parentElement.querySelector('.agcmdout');
+  var orig=btn.textContent;btn.textContent='…';btn.disabled=true;
+  if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('medium');
+  api('/agentic-cmd',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',machine_id:mid,type:type})}).then(function(r){
+    if(!r.ok||!r.j||!r.j.id){btn.textContent=orig;btn.disabled=false;if(out)out.textContent=(r.j&&r.j.error)||'failed (owner only?)';return;}
+    var id=r.j.id;if(out)out.textContent='⧗ running '+type+'…';var tries=0;
+    var iv=setInterval(function(){
+      tries++;
+      api('/agentic-cmd?id='+encodeURIComponent(id)).then(function(rr){
+        var c=rr&&rr.j&&rr.j.command;
+        if(c&&(c.status==='done'||c.status==='error')){
+          clearInterval(iv);btn.textContent=orig;btn.disabled=false;
+          var ok=c.status==='done';
+          if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred(ok?'success':'error');
+          var msg=(c.result&&(c.result.msg||JSON.stringify(c.result)))||c.status;
+          if(out)out.textContent=(ok?'✓ ':'✗ ')+type+': '+String(msg).slice(0,500);
+        } else if(tries>40){clearInterval(iv);btn.textContent=orig;btn.disabled=false;if(out)out.textContent='timed out (agent offline?)';}
+      });
+    },2500);
+  });
 }
 function renderBoard(){
   var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return (t.status==='new'||t.status==='reopened')&&!isSnoozed(t);},set:'new'},

@@ -628,6 +628,7 @@ function agLoadDash(){
           (sn.burn!=null?'<span style="font-family:var(--m);font-size:10px;color:var(--txt2);margin-left:8px">burn '+agEsc(sn.burn)+'</span>':'')+
           ((sn.terminals&&sn.terminals.length)?'<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:4px">// TERMINALS</div>'+sn.terminals.map(function(t){return '<div style="font-size:12px;margin:3px 0"><b style="color:var(--cyan)">'+agEsc(t.label)+'</b> '+(t.editing?'<span style="color:var(--amber);font-size:9px;font-family:var(--m)">● EDITING</span> ':'')+'<span style="color:var(--txt2)">'+agEsc(t.task||'idle')+'</span></div>';}).join('')+'</div>':'')+
         '</div>'+
+        '<div style="margin-top:8px"><button onclick="agCanvas(\''+s.machine_id+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 12px;font-size:12px">📷 Canvas</button><div class="agcv"></div></div>'+
       '</div>';
     }).join('');
   }).catch(function(){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';});
@@ -666,6 +667,19 @@ function agLoadNotes(){
 function agNoteSave(){
   var t=document.getElementById('agNoteIn');var msg=document.getElementById('agNoteMsg');
   api('/agentic-notes',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',body:t.value||''})}).then(function(r){if(msg)msg.textContent=r.ok?'saved ✓':'save failed';setTimeout(function(){if(msg)msg.textContent='';},2000);});
+}
+function agCanvas(mid,btn){
+  var box=btn.nextElementSibling;if(!box)return;
+  if(box.innerHTML){box.innerHTML='';btn.textContent='📷 Canvas';return;}
+  btn.textContent='loading…';
+  api('/agentic-canvas?machine_id='+encodeURIComponent(mid)).then(function(r){
+    btn.textContent='📷 Canvas';
+    var c=r&&r.j&&r.j.canvas;
+    if(!c||!c.png){box.innerHTML='<div style="color:var(--txt2);font-size:11px;margin-top:6px">no canvas yet (agent pushes every few min)</div>';return;}
+    var age=Math.round((Date.now()-(Date.parse(c.at)||0))/1000);
+    box.innerHTML='<div style="margin-top:8px"><img src="data:image/jpeg;base64,'+c.png+'" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block"><div style="font-size:10px;color:var(--txt2);margin-top:2px;font-family:var(--m)">// LIVE CANVAS · '+age+'s ago</div></div>';
+    if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');
+  }).catch(function(){btn.textContent='📷 Canvas';box.innerHTML='<div style="color:var(--txt2);font-size:11px">failed</div>';});
 }
 function renderBoard(){
   var cols=[{lab:'INBOX',dot:'var(--amber)',f:function(t){return (t.status==='new'||t.status==='reopened')&&!isSnoozed(t);},set:'new'},

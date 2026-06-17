@@ -623,7 +623,11 @@ function agLoadDash(){
         '<span style="font-family:var(--m);font-size:11px;color:'+bl[1]+'">● AGENT '+bl[0]+' · '+age+'s</span></div>'+
         '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+kpi((hld.pass!=null?hld.pass:'–')+'/'+(tot||'–'),'HLD PASS')+kpi(sn.zones!=null?sn.zones:'–','ZONES')+kpi(sn.pon_range||'–','PON')+kpi(br,'BRIDGE')+'</div>'+
         '<div style="margin-top:8px">'+ft+'</div>'+
-        (sn.context_health?'<div style="margin-top:6px;font-size:11px;color:var(--txt2)">context: '+agEsc(sn.context_health)+' · burn: '+(sn.burn!=null?agEsc(sn.burn):'–')+'</div>':'')+
+        '<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">'+
+          (sn.context_health?'<span style="font-family:var(--m);font-size:10px;padding:2px 8px;border-radius:6px;background:var(--cell);border:1px solid var(--line);color:'+(sn.context_health==='GREEN'?'var(--green)':sn.context_health==='AMBER'?'var(--amber)':'var(--red,#FF2E55)')+'">ctx '+agEsc(sn.context_health)+(sn.compactions!=null?' · '+sn.compactions+'cmp':'')+'</span>':'')+
+          (sn.burn!=null?'<span style="font-family:var(--m);font-size:10px;color:var(--txt2);margin-left:8px">burn '+agEsc(sn.burn)+'</span>':'')+
+          ((sn.terminals&&sn.terminals.length)?'<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:4px">// TERMINALS</div>'+sn.terminals.map(function(t){return '<div style="font-size:12px;margin:3px 0"><b style="color:var(--cyan)">'+agEsc(t.label)+'</b> '+(t.editing?'<span style="color:var(--amber);font-size:9px;font-family:var(--m)">● EDITING</span> ':'')+'<span style="color:var(--txt2)">'+agEsc(t.task||'idle')+'</span></div>';}).join('')+'</div>':'')+
+        '</div>'+
       '</div>';
     }).join('');
   }).catch(function(){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';});

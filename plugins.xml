@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugins>
-  <pyqgis_plugin name="Velocity Nexus" version="2.5.119">
+  <pyqgis_plugin name="Velocity Nexus" version="2.5.120">
     <description>FTTH planning automation: project wizard, AI building/erven detection, manual planning toolkit, FT + HeroTel pipelines, labelling, QA, splice plans.</description>
-    <version>2.5.119</version>
+    <version>2.5.120</version>
     <qgis_minimum_version>3.28</qgis_minimum_version>
     <qgis_maximum_version>3.99</qgis_maximum_version>
     <homepage>https://velocityfibre.co.za</homepage>

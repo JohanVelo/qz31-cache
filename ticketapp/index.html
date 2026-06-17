@@ -1323,4 +1323,6 @@ setInterval(function(){if(document.visibilityState!=='visible')return;if(documen
 /* feel live: refresh the moment the app regains focus / becomes visible */
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&document.getElementById('app').style.display!=='none')load();});
 window.addEventListener('focus',function(){if(document.getElementById('app').style.display!=='none')load();});
+/* deep-link: a push alert opens ...#agentic → switch to the AGENTIC tab once booted */
+try{if((((location.hash||'')+location.search).toLowerCase()).indexOf('agentic')>=0){var _agt=setInterval(function(){if(typeof setView==='function'&&document.getElementById('agentic')){clearInterval(_agt);setView('agentic');}},300);setTimeout(function(){clearInterval(_agt);},8000);}}catch(e){}
 </script></body></html>

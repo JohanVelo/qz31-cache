@@ -662,6 +662,9 @@ function gInit(){
   GFX.sz=function(){try{g.width(cv.clientWidth||cv.offsetWidth).height(cv.clientHeight||cv.offsetHeight);}catch(e){}};
   GFX.sz();window.addEventListener('resize',GFX.sz);setTimeout(GFX.sz,250);
   GFX.graph=g;
+  /* capture-phase wheel zoom — grabs the wheel before Telegram Desktop / page scroll eats it */
+  try{cv.addEventListener('wheel',function(e){e.preventDefault();e.stopImmediatePropagation();if(!GFX.graph)return;try{var z=GFX.graph.zoom();GFX.graph.zoom(z*(e.deltaY<0?1.18:0.85),90);}catch(_){}},{passive:false,capture:true});}catch(e){}
+  try{if(typeof tg!=='undefined'&&tg&&tg.disableVerticalSwipes)tg.disableVerticalSwipes();}catch(e){}
 }
 function gPaintNode(node,ctx,scale){
   var deg=GFX.deg[node.id]||0;
@@ -681,7 +684,7 @@ function gPaintNode(node,ctx,scale){
   }
   ctx.globalAlpha=1;
 }
-function gPaintArea(node,ctx){ctx.fillStyle=gColor(node.kind);ctx.beginPath();ctx.arc(node.x,node.y,11,0,2*Math.PI);ctx.fill();}
+function gPaintArea(node,color,ctx){var r=(node.kind==='Terminal'||node.kind==='Project'||node.kind==='Person')?13:10;ctx.fillStyle=color;ctx.beginPath();ctx.arc(node.x,node.y,r,0,2*Math.PI);ctx.fill();}
 function gFetch(){
   gHint('loading…');
   api('/graph').then(function(res){

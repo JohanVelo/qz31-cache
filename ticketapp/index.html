@@ -569,11 +569,15 @@ function render(){
   if(STATE.view==='stats')renderStats();
 }
 /* ───────────────── BRAIN MAP — interactive knowledge graph ───────────────── */
-var GFX={graph:null,libLoading:false,connect:false,connectFrom:null,sel:null,fetched:false,sz:null};
+var GFX={graph:null,libLoading:false,connect:false,connectFrom:null,sel:null,fetched:false,sz:null,raw:{nodes:[],links:[]},hidden:{},tree:false,hl:null,deg:{}};
 var GKIND={Terminal:'#22D3EE',Person:'#FBBF24',Tool:'#3DFF9A',Skill:'#A78BFA',Workflow:'#FF6AD5',Table:'#5B9DFF',EdgeFunction:'#2DD4BF',Module:'#F59E0B',Project:'#FF4D5E',Service:'#88C0D0',Concept:'#9AA4B8'};
+var GLINK={owns:'#FF6B6B','part-of':'#4ECDC4','deploys-to':'#3DFF9A','step-of':'#95E1D3',calls:'#22D3EE',reads:'#5B9DFF',writes:'#FBBF24',triggers:'#FF6AD5',notifies:'#A78BFA','depends-on':'#F59E0B',relates:'#6B7280'};
 function gColor(k){return GKIND[k]||'#9AA4B8';}
+function gLcolor(l){return GLINK[l.kind]||(l.confidence==='manual'?'#22D3EE':'#5A6577');}
+function gId(x){return (x&&x.id)||x;}
 var GBTN='style="background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer"';
 var GKINDS_LIST=['Terminal','Person','Tool','Skill','Workflow','Table','EdgeFunction','Module','Project','Service','Concept'];
+var GZB='style="background:var(--cell);border:1px solid var(--line2);color:var(--txt);border-radius:9px;width:38px;height:38px;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)"';
 function gHint(t){var el=document.getElementById('gHint');if(el)el.textContent=t||'';}
 function gRefresh(){if(GFX.graph)GFX.graph.graphData(GFX.graph.graphData());}
 function gLoadLib(cb){
@@ -593,13 +597,20 @@ function renderGraph(){
       '<div style="flex:1;display:flex;flex-direction:column;min-height:0">'+
         '<div style="display:flex;gap:6px;align-items:center;padding:8px 10px;flex-wrap:wrap;border-bottom:1px solid var(--line)">'+
           '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:1px">// BRAIN MAP</div>'+
+          '<button id="gTreeBtn" onclick="gToggleTree()" '+GBTN+'>🌳 Tree</button>'+
           '<button onclick="gAddNode()" '+GBTN+'>＋ Bubble</button>'+
           '<button id="gConnBtn" onclick="gToggleConnect()" '+GBTN+'>🔗 Connect</button>'+
           '<button onclick="gReload()" '+GBTN+'>⟳</button>'+
           '<span id="gHint" style="font-size:11px;color:var(--txt2);margin-left:auto;font-family:var(--m)"></span>'+
         '</div>'+
         '<div style="flex:1;position:relative;min-height:0">'+
-          '<div id="gCanvas" style="position:absolute;inset:0"></div>'+
+          '<div id="gCanvas" style="position:absolute;inset:0;touch-action:none"></div>'+
+          '<div id="gZoom" style="position:absolute;right:10px;bottom:10px;z-index:6;display:flex;flex-direction:column;gap:6px">'+
+            '<button onclick="gZoom(1.4)" '+GZB+'>＋</button>'+
+            '<button onclick="gZoom(0.71)" '+GZB+'>−</button>'+
+            '<button onclick="gFit()" '+GZB+'>⊡</button>'+
+          '</div>'+
+          '<div id="gLegend" style="position:absolute;left:10px;bottom:10px;z-index:6;display:flex;gap:5px;flex-wrap:wrap;max-width:60%"></div>'+
           '<div id="gForm" style="display:none;position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:6;flex-direction:column;gap:8px;background:var(--cell);border:1px solid var(--line2);border-radius:12px;padding:14px;width:min(320px,86%)">'+
             '<div style="font-family:var(--m);font-size:11px;color:var(--cyan)">// NEW BUBBLE</div>'+
             '<input id="gfLabel" placeholder="name…" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:9px;font-size:14px" onkeydown="if(event.key===\'Enter\')gFormSave()">'+
@@ -627,29 +638,48 @@ function gInit(){
   var g=ForceGraph()(cv)
     .backgroundColor('rgba(0,0,0,0)')
     .nodeId('id')
-    .linkColor(function(l){return l.confidence==='manual'?'rgba(34,211,238,.45)':'rgba(150,170,200,.30)';})
-    .linkWidth(function(l){return l.confidence==='manual'?1.8:1;})
+    .nodeRelSize(5)
+    .linkColor(gLinkPaint)
+    .linkWidth(function(l){return gActive(l)?2.4:(l.confidence==='manual'?1.6:0.9);})
+    .linkCurvature(0.12)
+    .linkDirectionalParticles(function(l){return gActive(l)?4:2;})
+    .linkDirectionalParticleSpeed(0.006)
+    .linkDirectionalParticleWidth(function(l){return gActive(l)?2.6:1.5;})
+    .linkDirectionalParticleColor(gLcolor)
+    .linkDirectionalArrowLength(3.2).linkDirectionalArrowRelPos(1)
+    .enableZoomInteraction(true).enablePanInteraction(true).enableNodeDrag(true)
     .nodeCanvasObject(gPaintNode)
     .nodePointerAreaPaint(gPaintArea)
+    .dagLevelDistance(58).onDagError(function(){})
+    .cooldownTicks(220)
+    .onEngineStop(function(){gFit();})
     .onNodeDragEnd(function(n){n.fx=n.x;n.fy=n.y;n.pinned=true;gSaveMove(n);})
+    .onNodeHover(function(n){gSetHover(n);})
     .onNodeClick(gNodeClick)
     .onLinkClick(gLinkClick)
-    .onBackgroundClick(gInfoClose);
+    .onBackgroundClick(function(){GFX.hl=null;gInfoClose();});
+  try{g.d3VelocityDecay(0.28);}catch(e){}
   GFX.sz=function(){try{g.width(cv.clientWidth||cv.offsetWidth).height(cv.clientHeight||cv.offsetHeight);}catch(e){}};
   GFX.sz();window.addEventListener('resize',GFX.sz);setTimeout(GFX.sz,250);
   GFX.graph=g;
 }
 function gPaintNode(node,ctx,scale){
-  var big=(node.kind==='Terminal'||node.kind==='Project'||node.kind==='Workflow');
-  var r=big?9:6.5;var col=gColor(node.kind);
-  ctx.beginPath();ctx.arc(node.x,node.y,r,0,2*Math.PI);
-  ctx.globalAlpha=node.pinned?1:.82;ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=1;
+  var deg=GFX.deg[node.id]||0;
+  var base=(node.kind==='Terminal'||node.kind==='Project'||node.kind==='Person')?7.5:5.5;
+  var r=base+Math.min(5,deg*0.5);var col=gColor(node.kind);
+  var foc=GFX.hl&&GFX.hl[node.id];var dim=GFX.hl&&!foc;
+  ctx.globalAlpha=dim?0.16:1;
+  if(foc){ctx.shadowColor=col;ctx.shadowBlur=18;}
+  ctx.beginPath();ctx.arc(node.x,node.y,r,0,2*Math.PI);ctx.fillStyle=col;ctx.fill();ctx.shadowBlur=0;
   if(GFX.connectFrom===node.id){ctx.lineWidth=2.4/scale;ctx.strokeStyle='#fff';ctx.stroke();}
-  else{ctx.lineWidth=1/scale;ctx.strokeStyle='rgba(0,0,0,.35)';ctx.stroke();}
-  var label=(node.icon?node.icon+' ':'')+(node.label||node.id);
-  var fs=Math.max(2.6,10/scale);ctx.font='600 '+fs+'px Inter,system-ui,sans-serif';
-  ctx.textAlign='center';ctx.textBaseline='top';
-  ctx.fillStyle='rgba(232,236,245,.92)';ctx.fillText(label,node.x,node.y+r+1.5);
+  else{ctx.lineWidth=1/scale;ctx.strokeStyle='rgba(0,0,0,.4)';ctx.stroke();}
+  if(scale>0.55||foc){
+    var label=(node.icon?node.icon+' ':'')+(node.label||node.id);
+    var fs=Math.max(3,9.5/scale);ctx.font='600 '+fs+'px Inter,system-ui,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillStyle=dim?'rgba(180,186,196,.35)':'rgba(232,236,245,.95)';ctx.fillText(label,node.x,node.y+r+1.5);
+  }
+  ctx.globalAlpha=1;
 }
 function gPaintArea(node,ctx){ctx.fillStyle=gColor(node.kind);ctx.beginPath();ctx.arc(node.x,node.y,11,0,2*Math.PI);ctx.fill();}
 function gFetch(){
@@ -658,9 +688,41 @@ function gFetch(){
     if(!res.ok){gHint('offline');return;}
     var nodes=(res.j.nodes||[]).map(function(n){var o={id:n.id,kind:n.kind,label:n.label,icon:n.icon,meta:n.meta,pinned:!!n.pinned};if(n.x!=null){o.x=n.x;o.y=n.y;o.fx=n.x;o.fy=n.y;}return o;});
     var links=(res.j.edges||[]).map(function(e){return {id:e.id,source:e.source,target:e.target,kind:e.kind,label:e.label,confidence:e.confidence};});
-    if(GFX.graph)GFX.graph.graphData({nodes:nodes,links:links});
-    gHint(nodes.length?(nodes.length+' bubbles · '+links.length+' strings'):'empty — tap ＋ Bubble or run the scanner');
+    GFX.raw={nodes:nodes,links:links};GFX.deg={};
+    links.forEach(function(l){var a=gId(l.source),b=gId(l.target);GFX.deg[a]=(GFX.deg[a]||0)+1;GFX.deg[b]=(GFX.deg[b]||0)+1;});
+    gBuildLegend();gApply();
+    gHint(nodes.length?(nodes.length+' bubbles · '+links.length+' strings · tap a bubble'):'empty — tap ＋ Bubble or run the scanner');
   }).catch(function(){gHint('offline');});
+}
+function gApply(){
+  if(!GFX.graph)return;
+  var ns=GFX.raw.nodes.filter(function(n){return !GFX.hidden[n.kind];});
+  var ok={};ns.forEach(function(n){ok[n.id]=1;});
+  var ls=GFX.raw.links.filter(function(l){return ok[gId(l.source)]&&ok[gId(l.target)];});
+  GFX.graph.graphData({nodes:ns,links:ls});
+}
+function gBuildLegend(){
+  var el=document.getElementById('gLegend');if(!el)return;
+  var kinds={};GFX.raw.nodes.forEach(function(n){kinds[n.kind]=(kinds[n.kind]||0)+1;});
+  var html='';Object.keys(kinds).sort().forEach(function(k){
+    var off=GFX.hidden[k];
+    html+='<span onclick="gToggleKind(\''+k+'\')" style="cursor:pointer;font-size:10px;font-family:var(--m);padding:3px 7px;border-radius:11px;border:1px solid var(--line2);background:rgba(0,0,0,.5);opacity:'+(off?'0.4':'1')+'"><span style="color:'+gColor(k)+'">●</span> <span style="color:var(--txt2)">'+k+'</span></span>';
+  });
+  el.innerHTML=html;
+}
+function gToggleKind(k){GFX.hidden[k]=!GFX.hidden[k];gBuildLegend();gApply();}
+function gActive(l){return !!(GFX.hl&&(GFX.hl[gId(l.source)]||GFX.hl[gId(l.target)]));}
+function gHexA(h,a){if(!h||h.charAt(0)!=='#')return h;var n=parseInt(h.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+function gLinkPaint(l){if(GFX.hl){return gActive(l)?gHexA(gLcolor(l),0.95):'rgba(110,120,140,.05)';}return gHexA(gLcolor(l),0.34);}
+function gFocusSet(n){var s={};s[n.id]=1;(GFX.raw.links||[]).forEach(function(l){var a=gId(l.source),b=gId(l.target);if(a===n.id)s[b]=1;if(b===n.id)s[a]=1;});GFX.hl=s;}
+function gSetHover(n){if(n)gFocusSet(n);else GFX.hl=null;}
+function gZoom(f){if(GFX.graph){try{GFX.graph.zoom(GFX.graph.zoom()*f,300);}catch(e){}}}
+function gFit(){if(GFX.graph){try{GFX.graph.zoomToFit(600,40);}catch(e){}}}
+function gToggleTree(){
+  GFX.tree=!GFX.tree;var g=GFX.graph;
+  if(g){try{g.dagMode(GFX.tree?'td':null);g.d3ReheatSimulation();}catch(e){}g.cooldownTicks(220);setTimeout(gFit,900);}
+  var b=document.getElementById('gTreeBtn');if(b){b.style.background=GFX.tree?'var(--cyan)':'transparent';b.style.color=GFX.tree?'#04141A':'var(--txt)';}
+  gHint(GFX.tree?'hierarchy view (top-down)':'force view');
 }
 function gSaveMove(n){api('/graph',{method:'POST',body:JSON.stringify({op:'node.move',id:n.id,x:n.x,y:n.y,pinned:true})}).catch(function(){});}
 function gToggleConnect(){GFX.connect=!GFX.connect;GFX.connectFrom=null;gConnBtn(GFX.connect);gHint(GFX.connect?'🔗 tap a source bubble, then a target':'');gRefresh();}
@@ -671,7 +733,7 @@ function gNodeClick(node){
     if(GFX.connectFrom!==node.id)gMakeEdge(GFX.connectFrom,node.id);
     GFX.connectFrom=null;gRefresh();return;
   }
-  gNodeInfo(node);
+  gFocusSet(node);gNodeInfo(node);
 }
 function gMakeEdge(s,t){
   api('/graph',{method:'POST',body:JSON.stringify({op:'edge.create',source:s,target:t,kind:'relates'})}).then(function(r){

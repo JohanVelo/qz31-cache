@@ -348,7 +348,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="bar">
       <div class="glyph">♞</div>
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
-      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div></div>
+      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div><div id="vG" onclick="setView('graph')">BRAIN</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
       <div class="bell" onclick="openQR()" title="get Relay on your phone (scan QR)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v0M17 21h4M21 17v4"/></svg></div>
@@ -373,6 +373,7 @@ body.dense .kc{padding:6px 6px 7px}
   <div id="board"></div>
   <div id="stats"></div>
   <div id="agentic" style="display:none"></div>
+  <div id="graph" style="display:none;flex:1;min-height:0"></div>
 </div>
 <div class="selbar" id="selbar" style="display:none">
   <span class="selcount" id="selcount">0 selected</span>
@@ -529,6 +530,7 @@ function animateNum(el,to,from){if(!el)return;from=from||0;if(from===to){el.text
 function flashIf(id,from,to){if(from===to)return;var el=document.getElementById(id);if(!el||!el.closest)return;var kc=el.closest('.kc');if(!kc)return;kc.classList.add('flash');setTimeout(function(){kc.classList.remove('flash')},700);}
 function render(){
   if(STATE.view==='agentic'){renderAgentic();return;}
+  if(STATE.view==='graph'){renderGraph();return;}
   var c=counts();
   document.getElementById('kp').innerHTML=
    '<div class="kc open"><div class="l">OPEN</div><div class="n" id="n0">'+c.o+'</div></div>'+
@@ -566,15 +568,170 @@ function render(){
   if(STATE.view==='board')renderBoard();
   if(STATE.view==='stats')renderStats();
 }
+/* ───────────────── BRAIN MAP — interactive knowledge graph ───────────────── */
+var GFX={graph:null,libLoading:false,connect:false,connectFrom:null,sel:null,fetched:false,sz:null};
+var GKIND={Terminal:'#22D3EE',Person:'#FBBF24',Tool:'#3DFF9A',Skill:'#A78BFA',Workflow:'#FF6AD5',Table:'#5B9DFF',EdgeFunction:'#2DD4BF',Module:'#F59E0B',Project:'#FF4D5E',Service:'#88C0D0',Concept:'#9AA4B8'};
+function gColor(k){return GKIND[k]||'#9AA4B8';}
+var GBTN='style="background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer"';
+var GKINDS_LIST=['Terminal','Person','Tool','Skill','Workflow','Table','EdgeFunction','Module','Project','Service','Concept'];
+function gHint(t){var el=document.getElementById('gHint');if(el)el.textContent=t||'';}
+function gRefresh(){if(GFX.graph)GFX.graph.graphData(GFX.graph.graphData());}
+function gLoadLib(cb){
+  if(window.ForceGraph){cb();return;}
+  var t=setInterval(function(){if(window.ForceGraph){clearInterval(t);cb();}},120);
+  if(GFX.libLoading)return; GFX.libLoading=true;
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/force-graph';
+  s.onerror=function(){clearInterval(t);var el=document.getElementById('gCanvas');if(el)el.innerHTML='<div style="padding:20px;color:var(--txt2)">Couldn’t load the graph engine (offline?). Reconnect and reopen this tab.</div>';};
+  document.head.appendChild(s);
+}
+function renderGraph(){
+  var host=document.getElementById('graph');if(!host)return;
+  if(!host._built){
+    var opts=GKINDS_LIST.map(function(k){return '<option value="'+k+'">'+k+'</option>';}).join('');
+    host.innerHTML=
+      '<div style="flex:1;display:flex;flex-direction:column;min-height:0">'+
+        '<div style="display:flex;gap:6px;align-items:center;padding:8px 10px;flex-wrap:wrap;border-bottom:1px solid var(--line)">'+
+          '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:1px">// BRAIN MAP</div>'+
+          '<button onclick="gAddNode()" '+GBTN+'>＋ Bubble</button>'+
+          '<button id="gConnBtn" onclick="gToggleConnect()" '+GBTN+'>🔗 Connect</button>'+
+          '<button onclick="gReload()" '+GBTN+'>⟳</button>'+
+          '<span id="gHint" style="font-size:11px;color:var(--txt2);margin-left:auto;font-family:var(--m)"></span>'+
+        '</div>'+
+        '<div style="flex:1;position:relative;min-height:0">'+
+          '<div id="gCanvas" style="position:absolute;inset:0"></div>'+
+          '<div id="gForm" style="display:none;position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:6;flex-direction:column;gap:8px;background:var(--cell);border:1px solid var(--line2);border-radius:12px;padding:14px;width:min(320px,86%)">'+
+            '<div style="font-family:var(--m);font-size:11px;color:var(--cyan)">// NEW BUBBLE</div>'+
+            '<input id="gfLabel" placeholder="name…" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:9px;font-size:14px" onkeydown="if(event.key===\'Enter\')gFormSave()">'+
+            '<select id="gfKind" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:9px;font-size:13px">'+opts+'</select>'+
+            '<div style="display:flex;gap:8px"><button onclick="gFormSave()" style="flex:1;background:var(--cyan);color:#04141A;border:0;border-radius:8px;padding:9px;font-weight:700;cursor:pointer">Add</button><button onclick="gFormCancel()" style="background:transparent;border:1px solid var(--line);color:var(--txt2);border-radius:8px;padding:9px 14px;cursor:pointer">Cancel</button></div>'+
+          '</div>'+
+          '<div id="gInfo" style="display:none;position:absolute;left:0;right:0;bottom:0;z-index:6;flex-direction:column;gap:6px;background:var(--cell);border-top:1px solid var(--line2);padding:14px">'+
+            '<div style="display:flex;justify-content:space-between;align-items:center"><b id="giTitle" style="font-size:15px"></b><span onclick="gInfoClose()" style="cursor:pointer;color:var(--txt2)">✕</span></div>'+
+            '<div id="giBody"></div>'+
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'+
+              '<button onclick="giConnect()" '+GBTN+'>🔗 Connect from here</button>'+
+              '<button onclick="gUnpin()" '+GBTN+'>📌 Unpin</button>'+
+              '<button onclick="gDelNode()" style="background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer">🗑 Delete</button>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    host._built=1;
+  }
+  gLoadLib(function(){ gInit(); if(GFX.sz)GFX.sz(); if(!GFX.fetched){GFX.fetched=true;gFetch();} });
+}
+function gInit(){
+  if(GFX.graph)return;
+  var cv=document.getElementById('gCanvas');if(!cv||!window.ForceGraph)return;
+  var g=ForceGraph()(cv)
+    .backgroundColor('rgba(0,0,0,0)')
+    .nodeId('id')
+    .linkColor(function(l){return l.confidence==='manual'?'rgba(34,211,238,.45)':'rgba(150,170,200,.30)';})
+    .linkWidth(function(l){return l.confidence==='manual'?1.8:1;})
+    .nodeCanvasObject(gPaintNode)
+    .nodePointerAreaPaint(gPaintArea)
+    .onNodeDragEnd(function(n){n.fx=n.x;n.fy=n.y;n.pinned=true;gSaveMove(n);})
+    .onNodeClick(gNodeClick)
+    .onLinkClick(gLinkClick)
+    .onBackgroundClick(gInfoClose);
+  GFX.sz=function(){try{g.width(cv.clientWidth||cv.offsetWidth).height(cv.clientHeight||cv.offsetHeight);}catch(e){}};
+  GFX.sz();window.addEventListener('resize',GFX.sz);setTimeout(GFX.sz,250);
+  GFX.graph=g;
+}
+function gPaintNode(node,ctx,scale){
+  var big=(node.kind==='Terminal'||node.kind==='Project'||node.kind==='Workflow');
+  var r=big?9:6.5;var col=gColor(node.kind);
+  ctx.beginPath();ctx.arc(node.x,node.y,r,0,2*Math.PI);
+  ctx.globalAlpha=node.pinned?1:.82;ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=1;
+  if(GFX.connectFrom===node.id){ctx.lineWidth=2.4/scale;ctx.strokeStyle='#fff';ctx.stroke();}
+  else{ctx.lineWidth=1/scale;ctx.strokeStyle='rgba(0,0,0,.35)';ctx.stroke();}
+  var label=(node.icon?node.icon+' ':'')+(node.label||node.id);
+  var fs=Math.max(2.6,10/scale);ctx.font='600 '+fs+'px Inter,system-ui,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillStyle='rgba(232,236,245,.92)';ctx.fillText(label,node.x,node.y+r+1.5);
+}
+function gPaintArea(node,ctx){ctx.fillStyle=gColor(node.kind);ctx.beginPath();ctx.arc(node.x,node.y,11,0,2*Math.PI);ctx.fill();}
+function gFetch(){
+  gHint('loading…');
+  api('/graph').then(function(res){
+    if(!res.ok){gHint('offline');return;}
+    var nodes=(res.j.nodes||[]).map(function(n){var o={id:n.id,kind:n.kind,label:n.label,icon:n.icon,meta:n.meta,pinned:!!n.pinned};if(n.x!=null){o.x=n.x;o.y=n.y;o.fx=n.x;o.fy=n.y;}return o;});
+    var links=(res.j.edges||[]).map(function(e){return {id:e.id,source:e.source,target:e.target,kind:e.kind,label:e.label,confidence:e.confidence};});
+    if(GFX.graph)GFX.graph.graphData({nodes:nodes,links:links});
+    gHint(nodes.length?(nodes.length+' bubbles · '+links.length+' strings'):'empty — tap ＋ Bubble or run the scanner');
+  }).catch(function(){gHint('offline');});
+}
+function gSaveMove(n){api('/graph',{method:'POST',body:JSON.stringify({op:'node.move',id:n.id,x:n.x,y:n.y,pinned:true})}).catch(function(){});}
+function gToggleConnect(){GFX.connect=!GFX.connect;GFX.connectFrom=null;gConnBtn(GFX.connect);gHint(GFX.connect?'🔗 tap a source bubble, then a target':'');gRefresh();}
+function gConnBtn(on){var b=document.getElementById('gConnBtn');if(b){b.style.background=on?'var(--cyan)':'transparent';b.style.color=on?'#04141A':'var(--txt)';}}
+function gNodeClick(node){
+  if(GFX.connect){
+    if(!GFX.connectFrom){GFX.connectFrom=node.id;gHint('source: '+(node.label||node.id)+' — tap a target');gRefresh();return;}
+    if(GFX.connectFrom!==node.id)gMakeEdge(GFX.connectFrom,node.id);
+    GFX.connectFrom=null;gRefresh();return;
+  }
+  gNodeInfo(node);
+}
+function gMakeEdge(s,t){
+  api('/graph',{method:'POST',body:JSON.stringify({op:'edge.create',source:s,target:t,kind:'relates'})}).then(function(r){
+    if(r.ok){var d=GFX.graph.graphData();d.links.push({source:s,target:t,kind:'relates',confidence:'manual'});GFX.graph.graphData(d);toast('🔗 connected');if(tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();}
+    else toast((r.j&&r.j.error)||'connect failed');
+  }).catch(function(){toast('connect failed');});
+}
+function gLinkClick(l){
+  var s=(l.source&&l.source.id)||l.source,t=(l.target&&l.target.id)||l.target;
+  gConfirm('Detach this string?\n'+s+'  →  '+t,function(){
+    api('/graph',{method:'POST',body:JSON.stringify({op:'edge.delete',id:l.id,source:s,target:t})}).then(function(){
+      var d=GFX.graph.graphData();d.links=d.links.filter(function(x){return x!==l;});GFX.graph.graphData(d);toast('✂ detached');
+    }).catch(function(){toast('failed');});
+  });
+}
+function gNodeInfo(node){
+  var p=document.getElementById('gInfo');if(!p)return;GFX.sel=node;
+  var meta=node.meta||{};var desc=meta.description||meta.desc||'';
+  document.getElementById('giTitle').innerHTML=(node.icon?node.icon+' ':'')+agEsc(node.label||node.id);
+  document.getElementById('giBody').innerHTML=
+    '<div style="font-family:var(--m);font-size:10px;color:'+gColor(node.kind)+';letter-spacing:.5px">'+agEsc(node.kind)+'</div>'+
+    (desc?'<div style="font-size:12px;color:var(--txt2);margin-top:6px;line-height:1.5">'+agEsc(desc)+'</div>':'')+
+    (meta.path?'<div style="font-family:var(--m);font-size:10px;color:var(--txt3);margin-top:6px;word-break:break-all">'+agEsc(meta.path)+'</div>':'')+
+    (meta.version?'<div style="font-family:var(--m);font-size:10px;color:var(--txt3);margin-top:4px">v'+agEsc(meta.version)+'</div>':'');
+  p.style.display='flex';
+}
+function gInfoClose(){var p=document.getElementById('gInfo');if(p)p.style.display='none';}
+function giConnect(){var n=GFX.sel;if(!n)return;GFX.connect=true;GFX.connectFrom=n.id;gConnBtn(true);gHint('source: '+(n.label||n.id)+' — tap a target');gInfoClose();gRefresh();}
+function gUnpin(){var n=GFX.sel;if(!n)return;n.fx=null;n.fy=null;n.pinned=false;api('/graph',{method:'POST',body:JSON.stringify({op:'node.move',id:n.id,x:null,y:null,pinned:false})}).catch(function(){});gInfoClose();gRefresh();toast('📌 unpinned');}
+function gDelNode(){var n=GFX.sel;if(!n)return;gConfirm('Delete bubble “'+(n.label||n.id)+'” and all its strings?',function(){
+  api('/graph',{method:'POST',body:JSON.stringify({op:'node.delete',id:n.id})}).then(function(){
+    var d=GFX.graph.graphData();d.nodes=d.nodes.filter(function(x){return x.id!==n.id;});
+    d.links=d.links.filter(function(l){return ((l.source&&l.source.id)||l.source)!==n.id&&((l.target&&l.target.id)||l.target)!==n.id;});
+    GFX.graph.graphData(d);toast('🗑 deleted');gInfoClose();gHint(d.nodes.length+' bubbles');
+  }).catch(function(){toast('failed');});
+});}
+function gAddNode(){var f=document.getElementById('gForm');if(f){var i=document.getElementById('gfLabel');i.value='';f.style.display='flex';setTimeout(function(){i.focus();},50);}}
+function gFormCancel(){var f=document.getElementById('gForm');if(f)f.style.display='none';}
+function gFormSave(){
+  var label=document.getElementById('gfLabel').value.trim();if(!label){toast('name?');return;}
+  var kind=document.getElementById('gfKind').value;
+  var id=kind.toLowerCase()+'.'+label.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)+'.'+Math.random().toString(36).slice(2,6);
+  api('/graph',{method:'POST',body:JSON.stringify({op:'node.upsert',id:id,kind:kind,label:label})}).then(function(r){
+    if(r.ok){var d=GFX.graph.graphData();d.nodes.push({id:id,kind:kind,label:label});GFX.graph.graphData(d);toast('＋ '+label);gFormCancel();gHint(d.nodes.length+' bubbles');}
+    else toast('add failed');
+  }).catch(function(){toast('add failed');});
+}
+function gConfirm(msg,cb){try{if(tg&&tg.showConfirm){tg.showConfirm(msg,function(ok){if(ok)cb();});return;}}catch(e){}if(window.confirm(msg))cb();}
+function gReload(){GFX.fetched=true;gFetch();}
+
 function setView(v){
   STATE.view=v;
   try{localStorage.setItem('vr_view',v)}catch(e){}
-  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA'};
-  ['vL','vB','vS','vA'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
+  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA',graph:'vG'};
+  ['vL','vB','vS','vA','vG'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
   document.getElementById('list').style.display=(v==='list')?'':'none';
   document.getElementById('board').style.display=(v==='board')?'block':'none';
   document.getElementById('stats').style.display=(v==='stats')?'block':'none';
   var _ag=document.getElementById('agentic');if(_ag)_ag.style.display=(v==='agentic')?'block':'none';
+  var _gr=document.getElementById('graph');if(_gr)_gr.style.display=(v==='graph')?'flex':'none';
   var hide=(v!=='list');
   ['.kp','.tabs','.tools','.chips','.alert'].forEach(function(sel){var el=document.querySelector(sel);if(el)el.style.display=hide?'none':'';});
   if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();
@@ -1278,12 +1435,7 @@ function handoff(id){
   L.push("");
   L.push("GOAL: investigate and fix this ticket, then mark it resolved once verified.");
   L.push("Start from the PDF report and screenshots above, reproduce the issue on the real project data, find the cause, apply the fix, smoke-test it, and resolve the ticket.");
-  // Hand to Terminal: flag the ticket as assigned to the RELAY terminal (B) so the
-  // terminal's ticket-watch hook auto-surfaces it on the next turn — no manual paste.
-  // The clipboard copy stays as a fallback for when the terminal isn't watching.
-  try{api('/assign',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,assignee:'B'})});}catch(e){}
   copyText(L.join("\n"));
-  toast('⚡ handed to terminal — it pops up there automatically');
   if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
 }
 function copyText(b){

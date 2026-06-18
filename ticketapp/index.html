@@ -1278,7 +1278,12 @@ function handoff(id){
   L.push("");
   L.push("GOAL: investigate and fix this ticket, then mark it resolved once verified.");
   L.push("Start from the PDF report and screenshots above, reproduce the issue on the real project data, find the cause, apply the fix, smoke-test it, and resolve the ticket.");
+  // Hand to Terminal: flag the ticket as assigned to the RELAY terminal (B) so the
+  // terminal's ticket-watch hook auto-surfaces it on the next turn — no manual paste.
+  // The clipboard copy stays as a fallback for when the terminal isn't watching.
+  try{api('/assign',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,assignee:'B'})});}catch(e){}
   copyText(L.join("\n"));
+  toast('⚡ handed to terminal — it pops up there automatically');
   if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
 }
 function copyText(b){

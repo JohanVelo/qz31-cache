@@ -663,7 +663,7 @@ function gInit(){
   GFX.sz();window.addEventListener('resize',GFX.sz);setTimeout(GFX.sz,250);
   GFX.graph=g;
   /* capture-phase wheel zoom — grabs the wheel before Telegram Desktop / page scroll eats it */
-  try{cv.addEventListener('wheel',function(e){e.preventDefault();e.stopImmediatePropagation();if(!GFX.graph)return;try{var z=GFX.graph.zoom();GFX.graph.zoom(z*(e.deltaY<0?1.18:0.85),90);}catch(_){}},{passive:false,capture:true});}catch(e){}
+  try{cv.addEventListener('wheel',function(e){e.preventDefault();e.stopImmediatePropagation();if(!GFX.graph)return;try{var z=GFX.graph.zoom();GFX.graph.zoom(z*(e.deltaY<0?1.18:0.85));}catch(_){}},{passive:false,capture:true});}catch(e){}
   try{if(typeof tg!=='undefined'&&tg&&tg.disableVerticalSwipes)tg.disableVerticalSwipes();}catch(e){}
 }
 function gPaintNode(node,ctx,scale){
@@ -719,7 +719,7 @@ function gHexA(h,a){if(!h||h.charAt(0)!=='#')return h;var n=parseInt(h.slice(1),
 function gLinkPaint(l){if(GFX.hl){return gActive(l)?gHexA(gLcolor(l),0.95):'rgba(110,120,140,.05)';}return gHexA(gLcolor(l),0.34);}
 function gFocusSet(n){var s={};s[n.id]=1;(GFX.raw.links||[]).forEach(function(l){var a=gId(l.source),b=gId(l.target);if(a===n.id)s[b]=1;if(b===n.id)s[a]=1;});GFX.hl=s;}
 function gSetHover(n){if(n)gFocusSet(n);else GFX.hl=null;}
-function gZoom(f){if(GFX.graph){try{GFX.graph.zoom(GFX.graph.zoom()*f,300);}catch(e){}}}
+function gZoom(f){if(GFX.graph){try{GFX.graph.zoom(GFX.graph.zoom()*f);}catch(e){}}}
 function gFit(){if(GFX.graph){try{GFX.graph.zoomToFit(600,40);}catch(e){}}}
 function gToggleTree(){
   GFX.tree=!GFX.tree;var g=GFX.graph;

@@ -455,10 +455,26 @@ function color(n){var h=0,s=String(n||'?');for(var i=0;i<s.length;i++)h=(h*31+s.
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},1900)}
 function devTok(){try{return localStorage.getItem('vr_devtoken')||''}catch(e){return ''}}
 function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:'','X-Device-Token':devTok()}}
+function _wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
 function api(p,opt){opt=opt||{};opt.headers=hdrs();
-  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;var to=null;
-  if(ctrl){opt.signal=ctrl.signal;to=setTimeout(function(){try{ctrl.abort();}catch(e){}},12000);}
-  return fetch(API+p,opt).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})}).finally(function(){if(to)clearTimeout(to);});}
+  var method=((opt.method||'GET')+'').toUpperCase();
+  // auto-retry ONLY idempotent reads — never retry POST/PATCH (would risk duplicate tickets/replies)
+  var maxRetry=(method==='GET')?2:0;
+  function attempt(n){
+    var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;var to=null;
+    var o={};for(var k in opt)o[k]=opt[k];
+    if(ctrl){o.signal=ctrl.signal;to=setTimeout(function(){try{ctrl.abort();}catch(e){}},12000);}
+    return fetch(API+p,o).then(function(r){return r.json().then(function(j){return{ok:r.ok,status:r.status,j:j}});}).finally(function(){if(to)clearTimeout(to);})
+      .then(function(res){
+        if(!res.ok && res.status>=500 && n<maxRetry){return _wait(400*Math.pow(3,n)).then(function(){return attempt(n+1);});}
+        return res;
+      })
+      .catch(function(e){
+        if(n<maxRetry){return _wait(400*Math.pow(3,n)).then(function(){return attempt(n+1);});}
+        throw e;
+      });
+  }
+  return attempt(0);}
 function priClass(p){p=(''+(p==null?'':p)).toLowerCase();if(p==='')return '';if(p==='3')return 'high';if(p==='2')return 'med';if(p==='1')return 'low';if(p.indexOf('high')>=0||p.indexOf('crit')>=0)return 'high';if(p.indexOf('med')>=0)return 'med';if(p.indexOf('low')>=0)return 'low';return ''}
 function priLabel(p){var c=priClass(p);return c?c.toUpperCase():''}
 function isSnoozed(t){return !!t.snz&&new Date(t.snz).getTime()>Date.now();}
@@ -485,11 +501,6 @@ function scheduleRetry(){STATE.retries=Math.min((STATE.retries||0)+1,6);var d=Ma
 function setConn(s){var dot=document.querySelector('.opp .live'),ts=document.getElementById('ts');if(!ts)return;if(s==='ok'){var n=new Date();ts.textContent='LIVE '+('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);if(dot)dot.style.color='var(--green)';}else if(s==='reconnecting'){ts.textContent='RECONNECTING…';if(dot)dot.style.color='var(--amber)';}else{ts.textContent='OFFLINE — retrying';if(dot)dot.style.color='var(--red)';}}
 function load(){
   if(STATE.loading)return;
-  /* R2 cache-first instant paint: on the very first load, show the last-saved
-     tickets immediately so the board doesn't wait for the network round-trip
-     (the fetch below then refreshes them). Runs once; no-op if we already have
-     tickets in memory or no cache exists. */
-  if(!STATE._cachePainted && !STATE.tickets.length){STATE._cachePainted=true;try{var _cc=JSON.parse(localStorage.getItem('vr_lastdata')||'[]');if(_cc&&_cc.length){STATE.tickets=_cc;var _ap=document.getElementById('app');if(_ap)_ap.style.display='flex';render();}}catch(e){}}
   if(typeof navigator!=='undefined'&&navigator.onLine===false){setConn('offline');scheduleRetry();return;}
   STATE.loading=true;
   api('/tickets').then(function(res){

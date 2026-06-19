@@ -485,6 +485,11 @@ function scheduleRetry(){STATE.retries=Math.min((STATE.retries||0)+1,6);var d=Ma
 function setConn(s){var dot=document.querySelector('.opp .live'),ts=document.getElementById('ts');if(!ts)return;if(s==='ok'){var n=new Date();ts.textContent='LIVE '+('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);if(dot)dot.style.color='var(--green)';}else if(s==='reconnecting'){ts.textContent='RECONNECTING…';if(dot)dot.style.color='var(--amber)';}else{ts.textContent='OFFLINE — retrying';if(dot)dot.style.color='var(--red)';}}
 function load(){
   if(STATE.loading)return;
+  /* R2 cache-first instant paint: on the very first load, show the last-saved
+     tickets immediately so the board doesn't wait for the network round-trip
+     (the fetch below then refreshes them). Runs once; no-op if we already have
+     tickets in memory or no cache exists. */
+  if(!STATE._cachePainted && !STATE.tickets.length){STATE._cachePainted=true;try{var _cc=JSON.parse(localStorage.getItem('vr_lastdata')||'[]');if(_cc&&_cc.length){STATE.tickets=_cc;var _ap=document.getElementById('app');if(_ap)_ap.style.display='flex';render();}}catch(e){}}
   if(typeof navigator!=='undefined'&&navigator.onLine===false){setConn('offline');scheduleRetry();return;}
   STATE.loading=true;
   api('/tickets').then(function(res){

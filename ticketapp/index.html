@@ -1565,13 +1565,16 @@ function closeQR(){document.getElementById('qrovl').style.display='none';}
 /* ── Team admin panel (owner/admin) ── */
 function openTeam(){document.getElementById('teamovl').style.display='flex';renderTeamList();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');}
 function closeTeam(){document.getElementById('teamovl').style.display='none';}
+function _crewRow(){return '<div class="tmrow"><div class="tmname">Crew Badges<small>floating A / B terminal tags (dev screen)</small></div><button class="tbtn" id="crewbtn" onclick="toggleCrew()">…</button></div>';}
+function _loadCrew(){api('/crew-badges').then(function(r){STATE.crewOn=!(r.j&&r.j.on===false);var b=document.getElementById('crewbtn');if(b)b.textContent=STATE.crewOn?'● ON':'○ OFF';}).catch(function(){});}
+function toggleCrew(){var on=!STATE.crewOn;api('/crew-badges',{method:'POST',body:JSON.stringify({on:on})}).then(function(r){if(r&&r.ok){STATE.crewOn=on;var b=document.getElementById('crewbtn');if(b)b.textContent=on?'● ON':'○ OFF';toast(on?'🪪 crew badges ON':'crew badges OFF');if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');}else toast('failed (admin only?)');});}
 function renderTeamList(){var box=document.getElementById('teamlist');box.innerHTML='<div class="tmuted">loading…</div>';
   api('/members').then(function(res){
     if(!res.ok){box.innerHTML='<div class="tmuted">not allowed</div>';return;}
     var ms=(res.j&&res.j.members)||[];
-    if(!ms.length){box.innerHTML='<div class="tmuted">No one yet.<br>Share Relay with the team — when they open it inside Telegram they\'ll appear here for you to approve.</div>';return;}
+    if(!ms.length){box.innerHTML=_crewRow()+'<div class="tmuted">No one yet.<br>Share Relay with the team — when they open it inside Telegram they\'ll appear here for you to approve.</div>';_loadCrew();return;}
     ms.sort(function(a,b){return (a.active?1:0)-(b.active?1:0)||(b.telegram_id-a.telegram_id);});
-    box.innerHTML=ms.map(function(m){
+    box.innerHTML=_crewRow()+ms.map(function(m){
       var st=m.active?'<span class="tok">● active</span>':'<span class="tpend">● pending</span>';
       var act=m.active?'<button class="tbtn tdeact" onclick="memberSet(\''+m.telegram_id+'\',{active:false})">Deactivate</button>':'<button class="tbtn tappr" onclick="memberSet(\''+m.telegram_id+'\',{active:true})">Approve</button>';
       var roleBtn=(m.active&&m.role!=='owner')?(m.role==='admin'?'<button class="tbtn" title="demote to member" onclick="memberSet(\''+m.telegram_id+'\',{role:\'member\'})">↓ member</button>':'<button class="tbtn" title="promote to admin (can approve others)" onclick="memberSet(\''+m.telegram_id+'\',{role:\'admin\'})">↑ admin</button>'):'';
@@ -1579,6 +1582,7 @@ function renderTeamList(){var box=document.getElementById('teamlist');box.innerH
       var sub=(m.username?('@'+H(m.username)):('id '+H(m.telegram_id)))+' · '+H(m.role||'member');
       return '<div class="tmrow"><div class="tmname">'+H(m.name||m.username||m.telegram_id)+'<small>'+sub+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet(\''+m.telegram_id+'\',{remove:true})">✕</button></div></div>';
     }).join('');
+    _loadCrew();
   });
 }
 function memberSet(tid,patch){patch.telegram_id=tid;api('/member-set',{method:'POST',body:JSON.stringify(patch)}).then(function(res){if(res.ok){toast(patch.remove?'removed':(patch.active?'✓ approved':'deactivated'));if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');renderTeamList();}else toast('failed');});}

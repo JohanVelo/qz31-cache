@@ -527,9 +527,9 @@ function load(){
       var _fresh=STATE.tickets.filter(function(t){return t.id>prevMax;});
       if(_fresh.length){tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');beep();nflash();if('Notification' in window&&Notification.permission==='default')notifEnable();
         var _vis=(typeof document!=='undefined'&&document.visibilityState==='visible');
-        _fresh.slice(0,4).forEach(function(t){ if(_vis){arriveCard(t);} else {pushNotif('🆕 New ticket #'+t.id,(t.who?(t.who+' · '):'')+t.title,'new-'+t.id);} });
+        _fresh.slice(0,4).forEach(function(t){ if(_vis)arriveCard(t); /* OS notification is sent ONCE by the server Web Push (sw.js); no in-app duplicate */ });
         if(_vis&&_fresh.length>4)toast('🆕 +'+(_fresh.length-4)+' more new tickets');}
-      STATE.tickets.forEach(function(t){if(_oldStatus[t.id]&&_oldStatus[t.id]!=='done'&&t.done){pushNotif('✅ Ticket #'+t.id+' shipped',t.title,'done-'+t.id);}});
+      /* 'shipped' OS notification is the server Web Push too — removed the in-app duplicate that double-notified */
     }
     render();
     if(STATE.first){try{if(localStorage.getItem('vr_view')==='stats')setView('stats');}catch(e){}}

@@ -348,7 +348,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="bar">
       <div class="glyph">♞</div>
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
-      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div><div id="vG" onclick="setView('graph')">BRAIN</div></div>
+      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div><div id="vH" onclick="setView('agents')">AGENTS</div><div id="vG" onclick="setView('graph')">BRAIN</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
       <div class="bell" onclick="openQR()" title="get Relay on your phone (scan QR)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v0M17 21h4M21 17v4"/></svg></div>
@@ -373,6 +373,7 @@ body.dense .kc{padding:6px 6px 7px}
   <div id="board"></div>
   <div id="stats"></div>
   <div id="agentic" style="display:none"></div>
+  <div id="agents" style="display:none"></div>
   <div id="graph" style="display:none;flex:1;min-height:0"></div>
 </div>
 <div class="selbar" id="selbar" style="display:none">
@@ -546,6 +547,7 @@ function animateNum(el,to,from){if(!el)return;from=from||0;if(from===to){el.text
 function flashIf(id,from,to){if(from===to)return;var el=document.getElementById(id);if(!el||!el.closest)return;var kc=el.closest('.kc');if(!kc)return;kc.classList.add('flash');setTimeout(function(){kc.classList.remove('flash')},700);}
 function render(){
   if(STATE.view==='agentic'){renderAgentic();return;}
+  if(STATE.view==='agents'){renderAgents();return;}
   if(STATE.view==='graph'){renderGraph();return;}
   var c=counts();
   document.getElementById('kp').innerHTML=
@@ -571,7 +573,7 @@ function render(){
          '<div class="chip sm'+(STATE.smart==='due'?' on':'')+'" onclick="setSmart(\'due\')">📅 Due</div>';
   STATE.views.forEach(function(v,i){ch+='<div class="chip vw'+(viewActive(v)?' on':'')+'" onclick="applyView('+i+')">⭐ '+H(v.name)+'<span class="vx" onclick="delView(event,'+i+')">✕</span></div>';});
   ch+='<div class="chip addv" onclick="saveView()" title="save the current filter as a view">＋ Save view</div>';
-  Object.keys(reps).forEach(function(n){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+n.replace(/'/g,"\\'")+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
+  Object.keys(reps).forEach(function(n){var _rn=H(n.replace(/\\/g,'\\\\').replace(/'/g,"\\'")).replace(/"/g,'&quot;');ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+_rn+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
   document.getElementById('chips').innerHTML=ch;
   // new alert
   var al=document.getElementById('alert');
@@ -806,12 +808,13 @@ function gReload(){GFX.fetched=true;gFetch();}
 function setView(v){
   STATE.view=v;
   try{localStorage.setItem('vr_view',v)}catch(e){}
-  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA',graph:'vG'};
-  ['vL','vB','vS','vA','vG'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
+  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA',agents:'vH',graph:'vG'};
+  ['vL','vB','vS','vA','vH','vG'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
   document.getElementById('list').style.display=(v==='list')?'':'none';
   document.getElementById('board').style.display=(v==='board')?'block':'none';
   document.getElementById('stats').style.display=(v==='stats')?'block':'none';
   var _ag=document.getElementById('agentic');if(_ag)_ag.style.display=(v==='agentic')?'block':'none';
+  var _agh=document.getElementById('agents');if(_agh)_agh.style.display=(v==='agents')?'block':'none';
   var _gr=document.getElementById('graph');if(_gr)_gr.style.display=(v==='graph')?'flex':'none';
   var hide=(v!=='list');
   ['.kp','.tabs','.tools','.chips','.alert'].forEach(function(sel){var el=document.querySelector(sel);if(el)el.style.display=hide?'none':'';});
@@ -879,6 +882,56 @@ function agLoadDash(){
       '</div>';
     }).join('');
   }).catch(function(){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';});
+}
+/* AGENT HUB — roster of every agent + live crew activity (reuses /agentic-state) */
+var AGENTS=[
+  {e:'⚖️',n:'plan-critic',g:'PLAN',m:'sonnet',p:'Red-teams a build plan before GO — safe / risks / block, with surgical fixes.',f:'after a plan, before you GO'},
+  {e:'🛡',n:'code-guardian',g:'GUARD',m:'sonnet',p:'Flags the bug classes this codebase was bitten by, before an edit ships.',f:'before / after a code change'},
+  {e:'🔎',n:'researcher',g:'RESEARCH',m:'haiku',p:'QGIS / PyQGIS / fiber-standard research, open-source first.',f:'research · compare · investigate'},
+  {e:'🧪',n:'reviewer',g:'REVIEW',m:'sonnet',p:'PyQGIS / plugin code review, returns a pass/fail gate verdict.',f:'before deploying an algorithm'},
+  {e:'🛰️',n:'attribute-auditor',g:'AUDIT',m:'sonnet',p:'Full geometry + attribute + topology audit of the live project vs the rulebook.',f:'"check everything" · after a bulk edit'},
+  {e:'👁️',n:'vlm-researcher',g:'RESEARCH',m:'haiku',p:'VLM building-detection / aerial-imagery ML research.',f:'detection improvements'},
+  {e:'🔬',n:'vlm-reviewer',g:'REVIEW',m:'sonnet',p:'Reviews vlm_detect changes for regressions.',f:'before a detection change'},
+  {e:'🧭',n:'Explore',g:'BUILT-IN',m:'—',p:'Fast read-only codebase search across many files.',f:'broad find / where-is sweeps'},
+  {e:'📐',n:'Plan',g:'BUILT-IN',m:'—',p:'Software-architect agent for implementation plans.',f:'design a build approach'}
+];
+var AH_GC={PLAN:'var(--cyan)',GUARD:'var(--green)',RESEARCH:'var(--amber)',REVIEW:'#9E86FF',AUDIT:'var(--cyan)','BUILT-IN':'var(--txt2)'};
+function renderAgents(){
+  var el=document.getElementById('agents');if(!el)return;
+  if(!el._built){
+    el.innerHTML=
+      '<div style="padding:6px">'+
+      '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:1px;margin:2px 6px 8px">// AGENT HUB</div>'+
+      '<div id="ahCrew" style="margin:0 6px 12px"></div>'+
+      '<div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin:0 6px 8px">// ROSTER — what each agent does</div>'+
+      '<div id="ahRoster" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px"></div>'+
+      '<div style="font-family:var(--m);font-size:10px;color:var(--txt2);margin:12px 6px 4px;line-height:1.5">Per-agent live status is not fed yet — activity above is at the crew (terminal) level. Machine control + dispatch live in the AGENTIC tab.</div>'+
+      '</div>';
+    document.getElementById('ahRoster').innerHTML=AGENTS.map(function(a){
+      var gc=AH_GC[a.g]||'var(--txt2)';
+      return '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
+        '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">'+a.e+'</span>'+
+        '<b style="font-family:var(--m)">'+agEsc(a.n)+'</b>'+
+        '<span style="margin-left:auto;font-family:var(--m);font-size:9px;letter-spacing:.5px;color:'+gc+';border:1px solid var(--line);border-radius:999px;padding:2px 8px">'+a.g+'</span></div>'+
+        '<div style="font-size:12.5px;color:var(--txt);margin-top:7px">'+agEsc(a.p)+'</div>'+
+        '<div style="font-family:var(--m);font-size:10.5px;color:var(--txt2);margin-top:7px">fires: '+agEsc(a.f)+' · '+agEsc(a.m)+'</div>'+
+      '</div>';
+    }).join('');
+    el._built=1;
+  }
+  ahLoadCrew();
+}
+function ahLoadCrew(){
+  var el=document.getElementById('ahCrew');if(!el)return;
+  api('/agentic-state').then(function(res){
+    var sts=(res.ok&&res.j&&res.j.states)||[];var rows=[];
+    sts.forEach(function(s){var sn=s.snapshot||{};(sn.terminals||[]).forEach(function(t){
+      rows.push('<div style="font-size:12.5px;margin:4px 0"><b style="color:var(--cyan)">'+agEsc(t.label)+'</b> '+(t.editing?'<span style="color:var(--amber);font-size:9px;font-family:var(--m)">● EDITING</span> ':'')+'<span style="color:var(--txt2)">'+agEsc(t.task||'idle')+'</span></div>');
+    });});
+    el.innerHTML='<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
+      '<div style="font-family:var(--m);font-size:10px;color:var(--cyan);letter-spacing:.5px;margin-bottom:6px">// CREW — running now</div>'+
+      (rows.length?rows.join(''):'<div style="color:var(--txt2);font-size:12px">no crew reporting yet</div>')+'</div>';
+  }).catch(function(){el.innerHTML='';});
 }
 var AG_ST={todo:['○','var(--txt2)'],doing:['◐','var(--amber)'],done:['●','var(--green)']};
 function agLoadTasks(){

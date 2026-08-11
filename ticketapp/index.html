@@ -1139,7 +1139,7 @@ function renderNotifState(){var boxes=document.querySelectorAll('.notifstatebox'
     paint(true,'Notifications ON','checking this device…');
     if('serviceWorker' in navigator&&'PushManager' in window){
       navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();})
-        .then(function(s){paint(!!s,s?'Notifications ON':'Notifications OFF',s?'this device is registered':'allowed, but this device is NOT registered — tap to fix');})
+        .then(function(s){paint(!!s,s?'Notifications ON':'Notifications OFF',s?'this device is registered':(PUSH_LAST_ERR?('cannot register: '+PUSH_LAST_ERR):'allowed, but this device is NOT registered — tap to fix'));})
         .catch(function(){paint(true,'Notifications ON','could not confirm this device');});
     }else{paint(true,'Notifications ON','');}
   }catch(e){}
@@ -1274,16 +1274,25 @@ try{STATE.muted=localStorage.getItem('vr_muted')==='1';STATE.dense=localStorage.
 function notifEnable(){try{if('Notification' in window){Notification.requestPermission().then(function(p){toast(p==='granted'?'🔔 notifications on':'notifications blocked in browser settings');if(p==='granted')pushSubscribe();});}else toast('notifications not supported here');}catch(e){}}
 function _u8(b64){var pad='='.repeat((4-b64.length%4)%4);var s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(s);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 var IS_MOBILE=(function(){try{return /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|webOS/i.test(navigator.userAgent)||((navigator.maxTouchPoints||0)>1&&matchMedia('(pointer:coarse)').matches);}catch(e){return false;}})();
-function pushSubscribe(){try{/* JJ, 2026-08-11: desktop web-push is now WANTED — "the notification on my laptop should come from velocity relay the app and show up as a windows notification". Chrome/Edge on Windows deliver web-push as native Windows toasts. This supersedes the earlier mobile-only rule. */ if(!('serviceWorker' in navigator)||!('PushManager' in window))return;if(!devTok()){return;}/* push only meaningful for the linked owner */
+/* WHY registration failed, in plain words. This function had FIVE silent exits -
+   no service worker, no device token, no VAPID key, and two catch(){} blocks that
+   swallowed the real error - so "it just doesn't register" was undiagnosable from
+   the outside. Every exit now records a reason and the state box shows it. */
+var PUSH_LAST_ERR='';
+function pushSubscribe(){try{/* JJ, 2026-08-11: desktop web-push is now WANTED — "the notification on my laptop should come from velocity relay the app and show up as a windows notification". Chrome/Edge on Windows deliver web-push as native Windows toasts. This supersedes the earlier mobile-only rule. */
+ PUSH_LAST_ERR='';
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)){PUSH_LAST_ERR='this app build has no Push support';return;}
+ if(!devTok()){PUSH_LAST_ERR='not signed in on this device (no device token)';return;}
  navigator.serviceWorker.ready.then(function(reg){
-  api('/vapid').then(function(r){var key=r&&r.j&&r.j.key;if(!key){return;}
+  api('/vapid').then(function(r){var key=r&&r.j&&r.j.key;if(!key){PUSH_LAST_ERR='server did not return a VAPID key';return;}
    reg.pushManager.getSubscription().then(function(existing){
-    function send(sub){api('/subscribe',{method:'POST',body:JSON.stringify({subscription:sub})}).then(function(rr){if(rr.ok)toast('🔔 background alerts on');}).catch(function(){});}
+    function send(sub){api('/subscribe',{method:'POST',body:JSON.stringify({subscription:sub})}).then(function(rr){if(rr.ok){toast('🔔 background alerts on');}else{PUSH_LAST_ERR='server rejected the subscription';}}).catch(function(){PUSH_LAST_ERR='could not reach the server to save it';});}
     if(existing){send(existing);return;}
-    reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_u8(key)}).then(send).catch(function(e){/* push subscribe blocked */});
-   });
-  }).catch(function(){});
- }).catch(function(){});}catch(e){}}
+    reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_u8(key)}).then(send).catch(function(e){PUSH_LAST_ERR='browser refused: '+((e&&e.message)||e||'unknown');});
+   }).catch(function(e){PUSH_LAST_ERR='could not read existing subscription: '+((e&&e.message)||e);});
+  }).catch(function(e){PUSH_LAST_ERR='could not fetch the VAPID key: '+((e&&e.message)||e);});
+ }).catch(function(e){PUSH_LAST_ERR='service worker never became ready: '+((e&&e.message)||e);});
+ }catch(e){PUSH_LAST_ERR=(e&&e.message)||String(e);}}
 /* if already granted on load, refresh the push subscription silently */
 try{/* Desktop used to actively UNSUBSCRIBE itself here, so a laptop could never be notified even if the user allowed it. Both surfaces now subscribe the same way. */if('Notification' in window&&Notification.permission==='granted')setTimeout(pushSubscribe,1500);}catch(e){}
 function pushNotif(title,body,tag){try{/* desktop now raises a native Windows toast too (JJ, 2026-08-11) */ if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}

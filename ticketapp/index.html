@@ -528,7 +528,7 @@ function load(){
       var _fresh=STATE.tickets.filter(function(t){return t.id>prevMax;});
       if(_fresh.length){tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');beep();nflash();if('Notification' in window&&Notification.permission==='default')notifEnable();
         var _vis=(typeof document!=='undefined'&&document.visibilityState==='visible');
-        _fresh.slice(0,4).forEach(function(t){ if(_vis)arriveCard(t); /* OS notification is sent ONCE by the server Web Push (sw.js); no in-app duplicate */ });
+        _fresh.slice(0,4).forEach(function(t){ if(_vis)arriveCard(t); /* Normally the OS notification comes ONCE from server Web Push (sw.js) and an    in-app one would double-notify. But a device with NO push service - the    Electron desktop app - gets nothing at all from the server, so it must raise    its own. Gated on PUSH_OK so subscribed devices still see exactly one. */ if(!PUSH_OK)pushNotif('🆕 New ticket #'+t.id,(t.title||''),'t'+t.id); });
         if(_vis&&_fresh.length>4)toast('🆕 +'+(_fresh.length-4)+' more new tickets');}
       /* 'shipped' OS notification is the server Web Push too — removed the in-app duplicate that double-notified */
     }
@@ -1139,7 +1139,7 @@ function renderNotifState(){var boxes=document.querySelectorAll('.notifstatebox'
     paint(true,'Notifications ON','checking this device…');
     if('serviceWorker' in navigator&&'PushManager' in window){
       navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();})
-        .then(function(s){paint(!!s,s?'Notifications ON':'Notifications OFF',s?'this device is registered':(PUSH_LAST_ERR?('cannot register: '+PUSH_LAST_ERR):'allowed, but this device is NOT registered — tap to fix'));})
+        .then(function(s){PUSH_OK=!!s;if(s){paint(true,'Notifications ON','this device is registered');}else if(Notification.permission==='granted'){paint(true,'Notifications ON','this app is open — alerts appear while it runs'+(PUSH_LAST_ERR?' (no background push: '+PUSH_LAST_ERR+')':''));}else{paint(false,'Notifications OFF','tap to fix');}})
         .catch(function(){paint(true,'Notifications ON','could not confirm this device');});
     }else{paint(true,'Notifications ON','');}
   }catch(e){}
@@ -1279,6 +1279,11 @@ var IS_MOBILE=(function(){try{return /Android|iPhone|iPad|iPod|Mobile|Silk|Kindl
    swallowed the real error - so "it just doesn't register" was undiagnosable from
    the outside. Every exit now records a reason and the state box shows it. */
 var PUSH_LAST_ERR='';
+/* Does THIS device actually receive server web-push? The Electron desktop app
+   does not - Chromium there reports "Registration failed - push service not
+   available" - so anything that assumes the server will deliver the OS
+   notification is wrong on the laptop. */
+var PUSH_OK=false;
 function pushSubscribe(){try{/* JJ, 2026-08-11: desktop web-push is now WANTED — "the notification on my laptop should come from velocity relay the app and show up as a windows notification". Chrome/Edge on Windows deliver web-push as native Windows toasts. This supersedes the earlier mobile-only rule. */
  PUSH_LAST_ERR='';
  if(!('serviceWorker' in navigator)||!('PushManager' in window)){PUSH_LAST_ERR='this app build has no Push support';return;}
@@ -1286,9 +1291,9 @@ function pushSubscribe(){try{/* JJ, 2026-08-11: desktop web-push is now WANTED �
  navigator.serviceWorker.ready.then(function(reg){
   api('/vapid').then(function(r){var key=r&&r.j&&r.j.key;if(!key){PUSH_LAST_ERR='server did not return a VAPID key';return;}
    reg.pushManager.getSubscription().then(function(existing){
-    function send(sub){api('/subscribe',{method:'POST',body:JSON.stringify({subscription:sub})}).then(function(rr){if(rr.ok){toast('🔔 background alerts on');}else{PUSH_LAST_ERR='server rejected the subscription';}}).catch(function(){PUSH_LAST_ERR='could not reach the server to save it';});}
+    function send(sub){api('/subscribe',{method:'POST',body:JSON.stringify({subscription:sub})}).then(function(rr){if(rr.ok){PUSH_OK=true;toast('🔔 background alerts on');}else{PUSH_LAST_ERR='server rejected the subscription';}}).catch(function(){PUSH_LAST_ERR='could not reach the server to save it';});}
     if(existing){send(existing);return;}
-    reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_u8(key)}).then(send).catch(function(e){PUSH_LAST_ERR='browser refused: '+((e&&e.message)||e||'unknown');});
+    reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_u8(key)}).then(send).catch(function(e){PUSH_OK=false;PUSH_LAST_ERR='browser refused: '+((e&&e.message)||e||'unknown');});
    }).catch(function(e){PUSH_LAST_ERR='could not read existing subscription: '+((e&&e.message)||e);});
   }).catch(function(e){PUSH_LAST_ERR='could not fetch the VAPID key: '+((e&&e.message)||e);});
  }).catch(function(e){PUSH_LAST_ERR='service worker never became ready: '+((e&&e.message)||e);});

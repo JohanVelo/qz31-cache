@@ -1145,10 +1145,27 @@ function renderNotifState(){var boxes=document.querySelectorAll('.notifstatebox'
   }catch(e){}
   })(boxes[bi]);
 }
+/* The box can say "allowed, but this device is NOT registered - tap to fix", so a
+   tap has FOUR possible meanings, not two. The first version only knew two and
+   treated "granted" as "toggle mute" - so tapping the fix-me state MUTED
+   notifications instead of registering the device. Exactly the wrong action, and
+   the opposite of what the box told the user it would do. */
 function notifBoxTap(){try{
   if(!('Notification' in window))return;
-  if(Notification.permission==='granted'){toggleNotif();}else{notifEnable();}
-  setTimeout(renderNotifState,900);setTimeout(renderNotifState,2600);
+  var again=function(){setTimeout(renderNotifState,900);setTimeout(renderNotifState,2600);};
+  if(Notification.permission!=='granted'){notifEnable();again();return;}   /* ask for permission */
+  if(STATE.notifOff){toggleNotif();again();return;}                        /* unmute */
+  if('serviceWorker' in navigator&&'PushManager' in window){
+    navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();})
+      .then(function(s){
+        if(!s){pushSubscribe();toast('registering this device\u2026');}    /* THE "tap to fix" case */
+        else{toggleNotif();}                                               /* genuinely on -> mute */
+        again();
+      })
+      .catch(function(){toggleNotif();again();});
+    return;
+  }
+  toggleNotif();again();
 }catch(e){}}
 function closeCmd(){document.getElementById('cmdk').classList.remove('on');}
 (function(){

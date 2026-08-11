@@ -393,14 +393,14 @@ body.dense .kc{padding:6px 6px 7px}
 <div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
 <div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who opens Relay inside Telegram appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
 <div class="ovl" id="qrovl" style="display:none" onclick="if(event.target===this)closeQR()"><div class="teambox" style="max-width:420px"><div class="teamhd">GET RELAY ON YOUR PHONE<span class="tx" onclick="closeQR()">✕</span></div><div style="padding:18px;text-align:center"><img id="qrimg" alt="QR" style="width:300px;max-width:78vw;border-radius:10px;background:#fff;padding:8px"><div style="font-family:var(--m);font-size:12px;color:var(--txt2);margin-top:12px;line-height:1.7">Scan with your phone camera →<br>then <b>Add to Home Screen</b> → tap 🔔 Allow.</div></div></div></div>
-<div class="ovl" id="notifovl" style="display:none" onclick="if(event.target===this)closeNotif()"><div class="teambox"><div class="teamhd">🔔 NOTIFICATIONS<span style="display:flex;align-items:center"><span class="nothd-act" id="notmarkall" onclick="markNotifAllRead()">✓ mark all read</span><span class="tx" onclick="closeNotif()">✕</span></span></div><div class="teamlist" id="notiflist"></div><div class="teamft">Every ticket arrival, status change, reply and shipped notice lands here — newest first. Tap a row to open the ticket.</div></div></div>
+<div class="ovl" id="notifovl" style="display:none" onclick="if(event.target===this)closeNotif()"><div class="teambox"><div class="teamhd">🔔 NOTIFICATIONS<span style="display:flex;align-items:center"><span class="nothd-act" id="notmarkall" onclick="markNotifAllRead()">✓ mark all read</span><span class="tx" onclick="closeNotif()">✕</span></span></div><div class="notifstatebox" onclick="notifBoxTap()" title="tap to turn notifications on or off"></div><div class="teamlist" id="notiflist"></div><div class="teamft">Every ticket arrival, status change, reply and shipped notice lands here — newest first. Tap a row to open the ticket.</div></div></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
   <div class="sh-body" id="sh-body"></div>
   <div class="tmpl" id="tmpl"></div>
   <div class="reply"><textarea id="reply-text" placeholder="Reply to the planner…"></textarea><button class="send" id="reply-send">SEND</button></div>
 </div>
-<div class="cmdk" id="cmdk"><div class="cmdk-box"><input class="cmdk-in" id="cmdk-in" placeholder="Type a command or ticket #…   (Esc to close)"><div id="notifstate" onclick="notifBoxTap()" title="tap to turn notifications on or off"></div><div class="cmdk-list" id="cmdk-list"></div></div></div>
+<div class="cmdk" id="cmdk"><div class="cmdk-box"><input class="cmdk-in" id="cmdk-in" placeholder="Type a command or ticket #…   (Esc to close)"><div class="notifstatebox" onclick="notifBoxTap()" title="tap to turn notifications on or off"></div><div class="cmdk-list" id="cmdk-list"></div></div></div>
 <div class="help" id="help"><div class="help-box"><h3>// KEYBOARD SHORTCUTS</h3>
  <div class="help-row"><span>Command palette</span><kbd>Ctrl / ⌘ K</kbd></div>
  <div class="help-row"><span>Focus search</span><kbd>/</kbd></div>
@@ -1124,7 +1124,7 @@ function openCmd(){document.getElementById('cmdk').classList.add('on');var inp=d
    precisely the silent-lie class this system has been bitten by repeatedly.
    Built with textContent, never innerHTML: this box sits one refactor away from someone
    pasting a ticket title into it. */
-function renderNotifState(){var el=document.getElementById('notifstate');if(!el)return;
+function renderNotifState(){var boxes=document.querySelectorAll('.notifstatebox');for(var bi=0;bi<boxes.length;bi++)(function(el){
   function paint(on,txt,sub){
     el.style.cssText='margin:8px 10px 2px;padding:10px 12px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;border:1px solid '+(on?'#12C971':'var(--line)')+';background:'+(on?'rgba(18,201,113,.14)':'var(--cell)')+';color:'+(on?'#12C971':'var(--txt2)');
     while(el.firstChild)el.removeChild(el.firstChild);
@@ -1143,6 +1143,7 @@ function renderNotifState(){var el=document.getElementById('notifstate');if(!el)
         .catch(function(){paint(true,'Notifications ON','could not confirm this device');});
     }else{paint(true,'Notifications ON','');}
   }catch(e){}
+  })(boxes[bi]);
 }
 function notifBoxTap(){try{
   if(!('Notification' in window))return;
@@ -1480,7 +1481,7 @@ function renderNotif(){
 }
 function _notifMaxWhen(){return buildFeed().reduce(function(m,f){return Math.max(m,f.when||0);},0);}
 function markNotifAllRead(){STATE.notifSeen=_notifMaxWhen();try{localStorage.setItem('vr_notifseen',String(STATE.notifSeen));}catch(e){}renderNotif();render();if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');}
-function openNotif(){var o=document.getElementById('notifovl');o.style.display='flex';renderNotif();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');
+function openNotif(){var o=document.getElementById('notifovl');o.style.display='flex';renderNotif();renderNotifState();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');
   // opening = "I've seen it": mark read after the list paints, and also clear the new-ticket banner
   setTimeout(function(){STATE.notifSeen=_notifMaxWhen();try{localStorage.setItem('vr_notifseen',String(STATE.notifSeen));}catch(e){}clearNew();},900);}
 function closeNotif(){document.getElementById('notifovl').style.display='none';}

@@ -999,16 +999,24 @@ function agBiometric(reason,cb){
   });}catch(e){if(confirm(reason))cb();}
 }
 function agCmd(mid,type,btn){
-  var send=function(){_agCmdSend(mid,type,btn);};
-  if(AG_DESTRUCTIVE[type]){agBiometric(AG_DESTRUCTIVE[type],send);return;}
+  var send=function(pw){_agCmdSend(mid,type,btn,pw);};
+  /* agBiometric() only ever meant anything INSIDE Telegram. Everywhere else it
+     degraded to a confirm() box, and the server checked nothing at all — so
+     "biometric-gated" was a claim, not a control. The server now demands the
+     owner's password for these two and verifies it, so collect it here. The
+     biometric prompt is kept as a first factor where it genuinely exists. */
+  if(AG_DESTRUCTIVE[type]){agBiometric(AG_DESTRUCTIVE[type],function(){
+    var pw=prompt(AG_DESTRUCTIVE[type]+' Enter your Velocity password to confirm:');
+    if(pw)send(pw);
+  });return;}
   if(type==='reload_plugin'&&!confirm('Reload the plugin on '+mid+'?'))return;
   send();
 }
-function _agCmdSend(mid,type,btn){
+function _agCmdSend(mid,type,btn,pw){
   var row=btn.parentElement;var out=row.parentElement.querySelector('.agcmdout');
   var orig=btn.textContent;btn.textContent='…';btn.disabled=true;
   if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('medium');
-  api('/agentic-cmd',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',machine_id:mid,type:type})}).then(function(r){
+  api('/agentic-cmd',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',machine_id:mid,type:type,password:pw||undefined})}).then(function(r){
     if(!r.ok||!r.j||!r.j.id){btn.textContent=orig;btn.disabled=false;if(out)out.textContent=(r.j&&r.j.error)||'failed (owner only?)';return;}
     var id=r.j.id;if(out)out.textContent='⧗ running '+type+'…';var tries=0;
     var iv=setInterval(function(){

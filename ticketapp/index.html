@@ -528,11 +528,12 @@ function load(){
       var _fresh=STATE.tickets.filter(function(t){return t.id>prevMax;});
       if(_fresh.length){tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('warning');beep();nflash();if('Notification' in window&&Notification.permission==='default')notifEnable();
         var _vis=(typeof document!=='undefined'&&document.visibilityState==='visible');
-        _fresh.slice(0,4).forEach(function(t){ if(_vis)arriveCard(t); /* Normally the OS notification comes ONCE from server Web Push (sw.js) and an    in-app one would double-notify. But a device with NO push service - the    Electron desktop app - gets nothing at all from the server, so it must raise    its own. Gated on PUSH_OK so subscribed devices still see exactly one. */ if(!PUSH_OK)pushNotif('🆕 New ticket #'+t.id,(t.title||''),'t'+t.id); });
+        _fresh.slice(0,4).forEach(function(t){ if(_vis)arriveCard(t); });
         if(_vis&&_fresh.length>4)toast('🆕 +'+(_fresh.length-4)+' more new tickets');}
       /* 'shipped' OS notification is the server Web Push too — removed the in-app duplicate that double-notified */
     }
     render();
+    notifyFromFeed();
     if(STATE.first){try{if(localStorage.getItem('vr_view')==='stats')setView('stats');}catch(e){}}
     if(DEEP){var dl=DEEP;DEEP=null;if(find(dl)){openT(dl);}else{toast('ticket #'+dl+' not found');}}
     STATE.first=false;
@@ -1322,6 +1323,30 @@ if('serviceWorker' in navigator){try{
   var _vrReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_vrReloaded)return;_vrReloaded=true;location.reload();});
 }catch(e){}}
 function openStandalone(){var tk=devTok();if(!tk){toast('open in Telegram first to link this device');return;}var url='https://johanvelo.github.io/qz31-cache/ticketapp/index.html?devtoken='+encodeURIComponent(tk);try{if(typeof tg!=='undefined'&&tg&&tg.openLink){tg.openLink(url);}else{window.open(url,'_blank');}toast('opening in your browser — then Install it');}catch(e){window.open(url,'_blank');}}
+/* Raise a Windows toast for ANY new activity, not just new tickets.
+   The first version only fired for tickets with an id higher than the last seen, so
+   a status change - including "shipped" - produced NOTHING on the desktop app. JJ hit
+   exactly that on 2026-08-11: #145 arrived fine, then closing it wrote the "fixed and
+   shipped" row and the laptop stayed silent.
+   buildFeed() already derives new-ticket, status-change and office-reply events, so
+   watch the feed itself. Gated on PUSH_OK: a device with a real subscription is served
+   by the server and must not be double-notified. */
+var LAST_FEED_TS = 0;
+function notifyFromFeed(){
+  try{
+    if(PUSH_OK) return;
+    var feed = buildFeed();
+    if(!feed.length) return;
+    if(!LAST_FEED_TS){ LAST_FEED_TS = feed[0].when || Date.now(); return; }  /* first pass: baseline only, never spam on startup */
+    var fresh = feed.filter(function(f){ return (f.when||0) > LAST_FEED_TS; });
+    if(!fresh.length) return;
+    LAST_FEED_TS = feed[0].when || LAST_FEED_TS;
+    var strip = function(s){ return String(s||'').replace(/<[^>]*>/g,''); };   /* feed text carries <b> tags */
+    fresh.slice(0,3).forEach(function(f){
+      pushNotif('Velocity Relay', strip(f.text) + (f.sub ? ' - ' + strip(f.sub) : ''), 'f'+(f.id||0)+'-'+(f.when||0));
+    });
+  }catch(e){}
+}
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){

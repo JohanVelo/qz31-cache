@@ -400,7 +400,7 @@ body.dense .kc{padding:6px 6px 7px}
   <div class="tmpl" id="tmpl"></div>
   <div class="reply"><textarea id="reply-text" placeholder="Reply to the planner…"></textarea><button class="send" id="reply-send">SEND</button></div>
 </div>
-<div class="cmdk" id="cmdk"><div class="cmdk-box"><input class="cmdk-in" id="cmdk-in" placeholder="Type a command or ticket #…   (Esc to close)"><div class="cmdk-list" id="cmdk-list"></div></div></div>
+<div class="cmdk" id="cmdk"><div class="cmdk-box"><input class="cmdk-in" id="cmdk-in" placeholder="Type a command or ticket #…   (Esc to close)"><div id="notifstate" onclick="notifBoxTap()" title="tap to turn notifications on or off"></div><div class="cmdk-list" id="cmdk-list"></div></div></div>
 <div class="help" id="help"><div class="help-box"><h3>// KEYBOARD SHORTCUTS</h3>
  <div class="help-row"><span>Command palette</span><kbd>Ctrl / ⌘ K</kbd></div>
  <div class="help-row"><span>Focus search</span><kbd>/</kbd></div>
@@ -1114,7 +1114,41 @@ function renderCmd(){
 }
 function markSel(){[].forEach.call(document.querySelectorAll('#cmdk-list .cmdk-it'),function(el){el.classList.toggle('sel',+el.getAttribute('data-i')===CMD_SEL);});}
 function runCmd(i){var it=CMD_ITEMS[i];if(it&&it.run){closeCmd();it.run();}}
-function openCmd(){document.getElementById('cmdk').classList.add('on');var inp=document.getElementById('cmdk-in');inp.value='';CMD_SEL=0;renderCmd();setTimeout(function(){inp.focus()},30);}
+function openCmd(){document.getElementById('cmdk').classList.add('on');var inp=document.getElementById('cmdk-in');inp.value='';CMD_SEL=0;renderCmd();renderNotifState();setTimeout(function(){inp.focus()},30);}
+/* JJ, 2026-08-11: "click the bell, and then there should be a green box that says if
+   you've got notifications enabled or not. You can toggle that on or off."
+   Until now the only control was an entry buried inside the command SEARCH, and there
+   was no way to see whether notifications were actually on.
+   It reports the REAL state, not merely the local mute flag: permission must be granted
+   AND a live push subscription must exist. Showing "ON" while no subscription exists is
+   precisely the silent-lie class this system has been bitten by repeatedly.
+   Built with textContent, never innerHTML: this box sits one refactor away from someone
+   pasting a ticket title into it. */
+function renderNotifState(){var el=document.getElementById('notifstate');if(!el)return;
+  function paint(on,txt,sub){
+    el.style.cssText='margin:8px 10px 2px;padding:10px 12px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;border:1px solid '+(on?'#12C971':'var(--line)')+';background:'+(on?'rgba(18,201,113,.14)':'var(--cell)')+';color:'+(on?'#12C971':'var(--txt2)');
+    while(el.firstChild)el.removeChild(el.firstChild);
+    el.appendChild(document.createTextNode((on?'● ':'○ ')+txt));
+    if(sub){var s=document.createElement('span');s.style.cssText='display:block;font-weight:400;font-size:11px;opacity:.75;margin-top:2px';s.textContent=sub;el.appendChild(s);}
+  }
+  try{
+    if(!('Notification' in window)){paint(false,'Notifications not supported','this browser cannot show them');return;}
+    if(Notification.permission==='denied'){paint(false,'Notifications BLOCKED','allow them in your browser site settings');return;}
+    if(Notification.permission!=='granted'){paint(false,'Notifications OFF','tap to turn on');return;}
+    if(STATE.notifOff){paint(false,'Notifications MUTED','tap to unmute');return;}
+    paint(true,'Notifications ON','checking this device…');
+    if('serviceWorker' in navigator&&'PushManager' in window){
+      navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();})
+        .then(function(s){paint(!!s,s?'Notifications ON':'Notifications OFF',s?'this device is registered':'allowed, but this device is NOT registered — tap to fix');})
+        .catch(function(){paint(true,'Notifications ON','could not confirm this device');});
+    }else{paint(true,'Notifications ON','');}
+  }catch(e){}
+}
+function notifBoxTap(){try{
+  if(!('Notification' in window))return;
+  if(Notification.permission==='granted'){toggleNotif();}else{notifEnable();}
+  setTimeout(renderNotifState,900);setTimeout(renderNotifState,2600);
+}catch(e){}}
 function closeCmd(){document.getElementById('cmdk').classList.remove('on');}
 (function(){
   var inp=document.getElementById('cmdk-in');
@@ -1222,7 +1256,7 @@ try{STATE.muted=localStorage.getItem('vr_muted')==='1';STATE.dense=localStorage.
 function notifEnable(){try{if('Notification' in window){Notification.requestPermission().then(function(p){toast(p==='granted'?'🔔 notifications on':'notifications blocked in browser settings');if(p==='granted')pushSubscribe();});}else toast('notifications not supported here');}catch(e){}}
 function _u8(b64){var pad='='.repeat((4-b64.length%4)%4);var s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(s);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 var IS_MOBILE=(function(){try{return /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|webOS/i.test(navigator.userAgent)||((navigator.maxTouchPoints||0)>1&&matchMedia('(pointer:coarse)').matches);}catch(e){return false;}})();
-function pushSubscribe(){try{if(!IS_MOBILE)return;/* JJ: desktop/Chrome gets NO web-push — the phone app is the only notification surface */ if(!('serviceWorker' in navigator)||!('PushManager' in window))return;if(!devTok()){return;}/* push only meaningful for the linked owner */
+function pushSubscribe(){try{/* JJ, 2026-08-11: desktop web-push is now WANTED — "the notification on my laptop should come from velocity relay the app and show up as a windows notification". Chrome/Edge on Windows deliver web-push as native Windows toasts. This supersedes the earlier mobile-only rule. */ if(!('serviceWorker' in navigator)||!('PushManager' in window))return;if(!devTok()){return;}/* push only meaningful for the linked owner */
  navigator.serviceWorker.ready.then(function(reg){
   api('/vapid').then(function(r){var key=r&&r.j&&r.j.key;if(!key){return;}
    reg.pushManager.getSubscription().then(function(existing){
@@ -1233,8 +1267,8 @@ function pushSubscribe(){try{if(!IS_MOBILE)return;/* JJ: desktop/Chrome gets NO 
   }).catch(function(){});
  }).catch(function(){});}catch(e){}}
 /* if already granted on load, refresh the push subscription silently */
-try{if(IS_MOBILE){if('Notification' in window&&Notification.permission==='granted')setTimeout(pushSubscribe,1500);}else if('serviceWorker' in navigator&&'PushManager' in window){/* desktop/Chrome: actively drop any old web-push subscription so the server stops notifying this browser (the dead endpoint then auto-prunes) */navigator.serviceWorker.ready.then(function(reg){reg.pushManager.getSubscription().then(function(s){if(s)s.unsubscribe().catch(function(){});}).catch(function(){});}).catch(function(){});}}catch(e){}
-function pushNotif(title,body,tag){try{if(!IS_MOBILE)return;/* phone app only — never raise a desktop/Chrome notification */ if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}
+try{/* Desktop used to actively UNSUBSCRIBE itself here, so a laptop could never be notified even if the user allowed it. Both surfaces now subscribe the same way. */if('Notification' in window&&Notification.permission==='granted')setTimeout(pushSubscribe,1500);}catch(e){}
+function pushNotif(title,body,tag){try{/* desktop now raises a native Windows toast too (JJ, 2026-08-11) */ if(!('Notification' in window)||Notification.permission!=='granted'||STATE.notifOff)return;var opts={body:String(body||'').slice(0,140),tag:tag,icon:'icon.svg',badge:'icon.svg',renotify:true};if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);},function(){try{new Notification(title,opts);}catch(e){}});}else{new Notification(title,opts);}}catch(e){}}
 function toggleNotif(){STATE.notifOff=!STATE.notifOff;try{localStorage.setItem('vr_notifoff',STATE.notifOff?'1':'0')}catch(e){}if(!STATE.notifOff)notifEnable();toast(STATE.notifOff?'🔕 notifications muted':'🔔 notifications on');}
 function parseQuery(q){var ops={status:null,reporter:null,kind:null,is:[],text:''};var text=[];String(q||'').split(/\s+/).forEach(function(tok){if(!tok)return;var m=tok.match(/^([a-z]+):(.+)$/i);if(m){var k=m[1].toLowerCase(),v=m[2].toLowerCase();if(k==='status')ops.status=v;else if(k==='reporter'||k==='who'||k==='by')ops.reporter=v;else if(k==='kind'||k==='type')ops.kind=v;else if(k==='is')ops.is.push(v);else text.push(tok);}else text.push(tok);});ops.text=text.join(' ').toLowerCase();return ops;}
 /* ── PWA: install + service worker (open standalone, not Telegram) ── */

@@ -348,7 +348,7 @@ body.dense .kc{padding:6px 6px 7px}
     <div class="bar">
       <div class="glyph">♞</div>
       <div class="wm">VELOCITY RELAY<small>MISSION&nbsp;CONTROL&nbsp;//&nbsp;TICKET&nbsp;OPS</small></div>
-      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div><div id="vH" onclick="setView('agents')">AGENTS</div><div id="vG" onclick="setView('graph')">BRAIN</div></div>
+      <div class="vtoggle"><div class="on" id="vL" onclick="setView('list')">LIST</div><div id="vB" onclick="setView('board')">BOARD</div><div id="vS" onclick="setView('stats')">STATS</div><div id="vA" onclick="setView('agentic')">AGENTIC</div><div id="vH" onclick="setView('agents')">AGENTS</div><div id="vG" onclick="setView('graph')">BRAIN</div><div id="vP" onclick="setView('laptop')" style="display:none">LAPTOP</div></div>
       <div class="ticker" id="ticker"></div>
       <div class="bell" id="installbtn" onclick="smartInstall()" title="install Velocity Relay as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 19h14"/></svg></div>
       <div class="bell" onclick="openQR()" title="get Relay on your phone (scan QR)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v0M17 21h4M21 17v4"/></svg></div>
@@ -375,6 +375,7 @@ body.dense .kc{padding:6px 6px 7px}
   <div id="agentic" style="display:none"></div>
   <div id="agents" style="display:none"></div>
   <div id="graph" style="display:none;flex:1;min-height:0"></div>
+  <div id="laptop" style="display:none"></div>
 </div>
 <div class="selbar" id="selbar" style="display:none">
   <span class="selcount" id="selcount">0 selected</span>
@@ -550,6 +551,7 @@ function render(){
   if(STATE.view==='agentic'){renderAgentic();return;}
   if(STATE.view==='agents'){renderAgents();return;}
   if(STATE.view==='graph'){renderGraph();return;}
+  if(STATE.view==='laptop'){renderLaptop();return;}
   var c=counts();
   document.getElementById('kp').innerHTML=
    '<div class="kc open"><div class="l">OPEN</div><div class="n" id="n0">'+c.o+'</div></div>'+
@@ -809,19 +811,113 @@ function gReload(){GFX.fetched=true;gFetch();}
 function setView(v){
   STATE.view=v;
   try{localStorage.setItem('vr_view',v)}catch(e){}
-  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA',agents:'vH',graph:'vG'};
-  ['vL','vB','vS','vA','vH','vG'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
+  var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA',agents:'vH',graph:'vG',laptop:'vP'};
+  ['vL','vB','vS','vA','vH','vG','vP'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
   document.getElementById('list').style.display=(v==='list')?'':'none';
   document.getElementById('board').style.display=(v==='board')?'block':'none';
   document.getElementById('stats').style.display=(v==='stats')?'block':'none';
   var _ag=document.getElementById('agentic');if(_ag)_ag.style.display=(v==='agentic')?'block':'none';
   var _agh=document.getElementById('agents');if(_agh)_agh.style.display=(v==='agents')?'block':'none';
   var _gr=document.getElementById('graph');if(_gr)_gr.style.display=(v==='graph')?'flex':'none';
+  var _lp=document.getElementById('laptop');if(_lp)_lp.style.display=(v==='laptop')?'block':'none';
+  if(v!=='laptop')lpStop();
   var hide=(v!=='list');
   ['.kp','.tabs','.tools','.chips','.alert'].forEach(function(sel){var el=document.querySelector(sel);if(el)el.style.display=hide?'none':'';});
   if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();
   render();
 }
+/* LAPTOP: JJ's open Claude terminals on the laptop (Savepoint Relay link). Owner only.
+   Polls /laptop/state every 2 s while open (which also tells the laptop to sync fast);
+   replies go through /laptop/send and are typed into that exact terminal. */
+var LP={sel:null,timer:null,data:null,sending:false};
+function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}var b=document.getElementById('lpBar');if(b)b.style.display='none';}
+function lpAge(iso,now){var s=Math.max(0,Math.round(((now||Date.now())-(Date.parse(iso)||0))/1000));return s<60?s+'s':s<3600?Math.round(s/60)+'m':Math.round(s/3600)+'h';}
+function lpBase(p){return String(p||'').split(/[\\/]/).filter(Boolean).pop()||'';}
+function renderLaptop(){
+  var el=document.getElementById('laptop');if(!el)return;
+  if(!el._built){
+    el.innerHTML='<div style="padding:6px 6px 130px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 6px 8px"><span style="font-family:var(--m);font-size:11px;color:var(--txt2);letter-spacing:1px">// LAPTOP</span><span id="lpConn" style="font-family:var(--m);font-size:11px;color:var(--txt2)">connecting</span></div>'+
+      '<div id="lpTerms" style="display:flex;gap:8px;overflow-x:auto;padding:0 4px 8px"></div>'+
+      '<div id="lpPend"></div><div id="lpConv"></div><div id="lpCmds"></div></div>'+
+      '<div id="lpBar" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:none;z-index:20">'+
+        '<div style="display:flex;gap:6px;margin-bottom:6px">'+['1','2','3','Esc'].map(function(k){return '<button onclick="lpKey(\''+k+'\')" style="flex:1;background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 0;font-family:var(--m);font-size:13px">'+k+'</button>';}).join('')+'</div>'+
+        '<div style="display:flex;gap:6px;align-items:flex-end"><textarea id="lpIn" rows="1" placeholder="Message this terminal" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,140)+\'px\'" style="flex:1;min-width:0;resize:none;background:var(--cell);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:9px;font-size:16px;font-family:inherit"></textarea>'+
+        '<button id="lpSend" onclick="lpSendText()" style="background:var(--cyan);color:#04141A;border:0;border-radius:10px;padding:10px 16px;font-weight:700">Send</button></div></div>';
+    el._built=1;
+  }
+  var bar=document.getElementById('lpBar');if(bar)bar.style.display='block';
+  lpLoad();
+}
+function lpLoad(){
+  if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}
+  if(STATE.view!=='laptop')return;
+  api('/laptop/state').then(function(r){
+    if(STATE.view!=='laptop')return;
+    if(r.status===403||r.status===401){document.getElementById('lpTerms').innerHTML='<div style="padding:14px;color:var(--txt2)">The laptop link is for the owner only.</div>';return;}
+    if(!r.ok){document.getElementById('lpConn').textContent='● Relay offline';return;}
+    LP.data=r.j;lpPaint();
+  }).catch(function(){var c=document.getElementById('lpConn');if(c)c.textContent='● Relay offline';}).finally(function(){
+    if(STATE.view==='laptop')LP.timer=setTimeout(lpLoad,document.visibilityState==='visible'?2000:15000);
+  });
+}
+function lpPaint(){
+  var d=LP.data||{},now=Date.parse(d.server_now)||Date.now();
+  var live=(d.machines||[]).filter(function(m){return now-(Date.parse(m.seen_at)||0)<60000;});
+  var conn=document.getElementById('lpConn');
+  if(conn){conn.textContent=live.length?('● LIVE · '+((live[0].info&&live[0].info.host)||'laptop')):((d.machines&&d.machines.length)?'● laptop offline · seen '+lpAge(d.machines[0].seen_at,now)+' ago':'● not paired yet');conn.style.color=live.length?'var(--green)':'var(--txt2)';}
+  var ss=(d.sessions||[]).filter(function(s){return now-(Date.parse(s.updated_at)||0)<90000;});
+  if(!ss.length){
+    document.getElementById('lpTerms').innerHTML='<div style="padding:14px;color:var(--txt2);line-height:1.5">No Claude terminal is open on the laptop'+(live.length?'':', or the laptop is asleep')+'.<br><span style="font-size:12px">On the laptop, the status-bar <b>Relay</b> item in VS Code must be on.</span></div>';
+    ['lpPend','lpConv','lpCmds'].forEach(function(id){document.getElementById(id).innerHTML='';});return;
+  }
+  if(!LP.sel||!ss.some(function(s){return s.session_id===LP.sel;})){var w=ss.filter(function(s){return s.status==='waiting';})[0];LP.sel=(w||ss[0]).session_id;}
+  var col={waiting:'var(--red)',busy:'var(--amber)',idle:'var(--green)'};
+  document.getElementById('lpTerms').innerHTML=ss.map(function(s){var on=s.session_id===LP.sel;var c=col[s.status]||'var(--txt2)';
+    return '<div onclick="LP.sel=\''+agEsc(s.session_id)+'\';lpPaint()" style="flex:0 0 auto;min-width:130px;cursor:pointer;background:var(--cell);border:1px solid '+(on?'var(--cyan)':'var(--line)')+';border-radius:10px;padding:9px 11px">'+
+      '<div style="font-weight:700;font-size:13px">'+agEsc(s.name||'Claude')+'</div>'+
+      '<div style="font-family:var(--m);font-size:10px;color:'+c+';margin-top:3px">● '+agEsc((s.status||'idle').toUpperCase())+'</div>'+
+      '<div style="font-size:10px;color:var(--txt2);margin-top:2px">'+agEsc(lpBase(s.cwd))+'</div></div>';}).join('');
+  var s=ss.filter(function(x){return x.session_id===LP.sel;})[0];
+  var p=s.pending,ph='';
+  if(p){
+    var btn=function(k,label,bg){return '<button onclick="lpKey(\''+k+'\')" style="background:'+(bg||'var(--cell)')+';color:'+(bg?'#04141A':'var(--txt)')+';border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-weight:700;margin:6px 6px 0 0">'+agEsc(label)+'</button>';};
+    var what='';if(p.input){try{var i=JSON.parse(p.input);what=i.command||i.file_path||i.url||p.input;}catch(e){what=p.input;}}
+    ph='<div style="background:var(--cell);border:1px solid var(--red);border-radius:10px;padding:12px;margin:0 4px 10px">'+
+      '<div style="font-family:var(--m);font-size:11px;color:var(--red);letter-spacing:.5px">// '+(p.kind==='question'?'QUESTION':'PERMISSION')+' · '+lpAge(p.at,now)+' ago</div>'+
+      (p.kind==='question'
+        ?'<div style="font-size:14px;margin:6px 0">'+agEsc(p.question||p.message||'')+'</div>'+((p.options||[]).map(function(o){return btn(o.key,o.key+'. '+o.label);}).join('')||'<div style="font-size:12px;color:var(--txt2)">Use the number keys below.</div>')
+        :'<div style="font-size:14px;margin:6px 0"><b>'+agEsc(p.tool||'Tool')+'</b></div>'+(what?'<pre style="white-space:pre-wrap;word-break:break-word;font-family:var(--m);font-size:12px;background:var(--bg);border-radius:8px;padding:8px;margin:0;max-height:180px;overflow:auto">'+agEsc(what)+'</pre>':(p.message?'<div style="font-size:13px">'+agEsc(p.message)+'</div>':''))+
+          btn('1','Allow','var(--green)')+btn('Esc','Deny'))+
+      '</div>';
+  }
+  document.getElementById('lpPend').innerHTML=ph;
+  var ms=s.messages||[];
+  var conv=document.getElementById('lpConv');
+  var atBottom=(window.innerHeight+window.scrollY)>=(document.body.scrollHeight-80);
+  conv.innerHTML='<div style="display:flex;flex-direction:column;gap:6px;padding:0 4px">'+(ms.length?ms.map(function(m){
+    if(m.role==='tool')return '<div style="font-family:var(--m);font-size:11px;color:var(--txt2);padding:2px 6px;word-break:break-word">⚙ '+agEsc(m.text)+'</div>';
+    var me=m.role==='user';
+    return '<div style="align-self:'+(me?'flex-end':'flex-start')+';max-width:88%;background:'+(me?'color-mix(in srgb,var(--cyan) 22%,var(--cell))':'var(--cell)')+';border:1px solid var(--line);border-radius:12px;padding:8px 11px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word">'+agEsc(m.text)+'</div>';
+  }).join(''):'<div style="color:var(--txt2);font-size:13px;padding:8px">Nothing said yet.</div>')+'</div>';
+  if(atBottom)window.scrollTo(0,document.body.scrollHeight);
+  var cs=(d.commands||[]).filter(function(c){return c.session_id===LP.sel;}).slice(0,5);
+  var cc={queued:'var(--amber)',delivered:'var(--amber)',done:'var(--green)',failed:'var(--red)',expired:'var(--txt2)'};
+  document.getElementById('lpCmds').innerHTML=cs.length?'<div style="margin:12px 6px 0;font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px">// SENT</div>'+cs.map(function(c){
+    return '<div style="font-size:12px;margin:4px 6px;display:flex;gap:8px"><span style="font-family:var(--m);color:'+(cc[c.status]||'var(--txt2)')+'">'+agEsc(c.status)+'</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+agEsc(c.kind==='key'?'key '+c.body:c.body)+'</span>'+(c.status==='failed'&&c.result&&c.result.reason?'<span style="color:var(--red)">'+agEsc(c.result.reason)+'</span>':'')+'</div>';}).join(''):'';
+}
+function lpSend(kind,body){
+  var s=LP.data&&(LP.data.sessions||[]).filter(function(x){return x.session_id===LP.sel;})[0];
+  if(!s){toast('No terminal selected');return Promise.resolve(false);}
+  if(LP.sending)return Promise.resolve(false);LP.sending=true;
+  return api('/laptop/send',{method:'POST',body:JSON.stringify({machine_id:s.machine_id,session_id:s.session_id,kind:kind,body:body})}).then(function(r){
+    if(!r.ok){toast((r.j&&r.j.error)||'send failed');return false;}
+    toast(kind==='key'?('Sent '+body):('Sent to '+(s.name||'Claude')));lpLoad();return true;
+  }).catch(function(){toast('send failed: offline');return false;}).finally(function(){LP.sending=false;});
+}
+function lpKey(k){lpSend('key',k);}
+function lpSendText(){var t=document.getElementById('lpIn');var v=((t&&t.value)||'').trim();if(!v)return;if(v.length>4000){toast('Over 4,000 characters');return;}
+  lpSend('text',v).then(function(ok){if(ok){t.value='';t.style.height='auto';}});}
 function agEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
 function renderAgentic(){
   var el=document.getElementById('agentic');if(!el)return;
@@ -1699,7 +1795,7 @@ function doSignup(){var inp=document.getElementById('signupname');var name=(inp&
     }else{toast('signup failed');}
   }).catch(function(){toast('signup failed')});}
 function updateTeamBadge(n){var b=document.getElementById('teambdg');if(!b)return;n=n||0;if(n>0){b.textContent=n>9?'9+':n;b.style.display='';}else{b.style.display='none';}}
-function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';updateTeamBadge(me.pending_count);if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
+function applyMe(){var me=STATE.me||{};var el=document.getElementById('mewho');if(el)el.textContent=me.name?('◆ '+me.name):'';var tb=document.getElementById('teambtn');if(tb)tb.style.display=(me.role==='owner'||me.role==='admin')?'':'none';var _vp=document.getElementById('vP');if(_vp)_vp.style.display=(me.role==='owner')?'':'none';updateTeamBadge(me.pending_count);if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
  try{if((new URLSearchParams(location.search)).get('team')==='1'&&(me.role==='owner'||me.role==='admin')){history.replaceState(null,'',location.pathname);setTimeout(function(){openTeam();},600);}}catch(e){}}
 function boot(){
   api('/me').then(function(res){
@@ -1744,6 +1840,10 @@ setInterval(function(){if(document.visibilityState!=='visible')return;if(documen
 /* feel live: refresh the moment the app regains focus / becomes visible */
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&document.getElementById('app').style.display!=='none')load();});
 window.addEventListener('focus',function(){if(document.getElementById('app').style.display!=='none')load();});
+/* deep-link: a laptop push opens ...#laptop -> the LAPTOP tab once the owner is known */
+try{if((((location.hash||'')+location.search).toLowerCase()).indexOf('laptop')>=0){var _lpt=setInterval(function(){if(typeof setView==='function'&&document.getElementById('laptop')&&STATE.me&&STATE.me.role){clearInterval(_lpt);if(STATE.me.role==='owner')setView('laptop');}},300);setTimeout(function(){clearInterval(_lpt);},10000);}}catch(e){}
+/* a push tapped while the app is already open only changes the hash: follow it */
+window.addEventListener('hashchange',function(){try{if((location.hash||'').toLowerCase().indexOf('laptop')>=0&&STATE.me&&STATE.me.role==='owner')setView('laptop');}catch(e){}});
 /* deep-link: a push alert opens ...#agentic → switch to the AGENTIC tab once booted */
 try{if((((location.hash||'')+location.search).toLowerCase()).indexOf('agentic')>=0){var _agt=setInterval(function(){if(typeof setView==='function'&&document.getElementById('agentic')){clearInterval(_agt);setView('agentic');}},300);setTimeout(function(){clearInterval(_agt);},8000);}}catch(e){}
 </script></body></html>

@@ -2,7 +2,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,maximum-scale=1">
 <title>Velocity Relay</title>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0A0A0F"><link rel="apple-touch-icon" href="icon.svg"><link rel="icon" href="icon.svg">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -132,6 +131,7 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .reply .send{flex:0 0 auto;background:linear-gradient(135deg,var(--cyan),#1AA6FF);color:#04070D;font-weight:700;
  border:none;border-radius:10px;padding:0 16px;font-family:var(--m);font-size:12px}
 .deny{padding:60px 24px;text-align:center;font-family:var(--m);color:var(--amber)}
+.devline{font-family:var(--m);font-size:11px;color:var(--txt3);margin-top:12px;line-height:1.5;word-break:break-word}
 .meid{font-family:var(--m);font-size:11px;color:var(--txt2);margin-left:8px;padding:3px 8px;border:1px solid var(--line2);border-radius:6px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:8vh 14px}
 .teambox{width:100%;max-width:520px;background:var(--cell);border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
@@ -389,11 +389,11 @@ body.dense .kc{padding:6px 6px 7px}
     <button onclick="exitSel()">Cancel</button>
   </div>
 </div>
-<div class="deny" id="deny" style="display:none">⚠ Not linked yet.<br><br>Open Velocity Relay once <b>inside Telegram</b> (the ♞ button) to link this device — then it opens on its own.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">(private to the planning office)</span></div>
+<div class="deny" id="deny" style="display:none">⚠ Not linked yet.<br><br>Scan the Velocity Relay <b>QR code</b> with your phone camera and request access — the planning office approves you, then it opens on its own.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">(private to the planning office)</span></div>
 <div class="deny" id="signup" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:8px">🛰</div><b style="color:var(--txt);font-size:18px">Join Velocity Relay</b><br><br><div style="max-width:320px;margin:0 auto"><div id="signupwarn" style="display:none;background:rgba(251,191,36,.12);border:1px solid var(--amber);border-radius:9px;padding:11px;font-family:var(--m);font-size:11.5px;color:var(--amber);line-height:1.6;margin-bottom:12px"></div><button id="signupinstall" onclick="doInstall()" style="display:none;width:100%;margin-bottom:10px;background:transparent;color:var(--cyan);border:1px solid var(--cyan);border-radius:9px;padding:11px;font-weight:700;font-size:14px;cursor:pointer">📲 Install the app</button><input id="signupname" maxlength="40" placeholder="Your name" style="width:100%;background:var(--cell);border:1px solid var(--line2);border-radius:9px;padding:12px;color:var(--txt);font-family:var(--d);font-size:15px;text-align:center"><button onclick="doSignup()" style="width:100%;margin-top:10px;background:var(--cyan);color:var(--bg);border:none;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer">Request access</button><div id="signuphint" style="font-family:var(--m);font-size:11px;color:var(--txt3);line-height:1.7;margin-top:14px"></div></div></div>
-<div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span></div>
-<div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who opens Relay inside Telegram appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
-<div class="ovl" id="qrovl" style="display:none" onclick="if(event.target===this)closeQR()"><div class="teambox" style="max-width:420px"><div class="teamhd">GET RELAY ON YOUR PHONE<span class="tx" onclick="closeQR()">✕</span></div><div style="padding:18px;text-align:center"><img id="qrimg" alt="QR" style="width:300px;max-width:78vw;border-radius:10px;background:#fff;padding:8px"><div style="font-family:var(--m);font-size:12px;color:var(--txt2);margin-top:12px;line-height:1.7">Scan with your phone camera →<br>then <b>Add to Home Screen</b> → tap 🔔 Allow.</div></div></div></div>
+<div class="deny" id="pending" style="display:none;color:var(--txt2)"><div style="font-size:40px;margin-bottom:10px">⏳</div><b style="color:var(--txt);font-size:17px">Access requested</b><br><br><span id="pendname">You</span>, your request to join <b>Velocity Relay</b> has been sent to the planning office.<br><br>You'll be let in <b>automatically</b> the moment you're approved — you can leave this open.<br><br><span style="font-family:var(--m);font-size:11px;color:var(--txt3)">Velocity Relay · team access</span><div class="devline" id="devline-pend"></div></div>
+<div class="ovl" id="teamovl" style="display:none" onclick="if(event.target===this)closeTeam()"><div class="teambox"><div class="teamhd">TEAM ACCESS<span class="tx" onclick="closeTeam()">✕</span></div><div class="teamlist" id="teamlist"></div><div class="teamft">Anyone who scans the Relay QR code and requests access appears here. <b>Approve</b> to grant view + reply + status access; <b>deactivate</b> to revoke instantly.</div></div></div>
+<div class="ovl" id="qrovl" style="display:none" onclick="if(event.target===this)closeQR()"><div class="teambox" style="max-width:420px"><div class="teamhd">GET RELAY ON YOUR PHONE<span class="tx" onclick="closeQR()">✕</span></div><div style="padding:18px;text-align:center"><img id="qrimg" alt="QR" style="width:300px;max-width:78vw;border-radius:10px;background:#fff;padding:8px"><div style="font-family:var(--m);font-size:12px;color:var(--txt2);margin-top:12px;line-height:1.7">Scan with your phone camera →<br>then <b>Add to Home Screen</b> → tap 🔔 Allow.</div><div class="devline" id="devline-qr"></div></div></div></div>
 <div class="ovl" id="notifovl" style="display:none" onclick="if(event.target===this)closeNotif()"><div class="teambox"><div class="teamhd">🔔 NOTIFICATIONS<span style="display:flex;align-items:center"><span class="nothd-act" id="notmarkall" onclick="markNotifAllRead()">✓ mark all read</span><span class="tx" onclick="closeNotif()">✕</span></span></div><div class="notifstatebox" onclick="notifBoxTap()" title="tap to turn notifications on or off"></div><div class="teamlist" id="notiflist"></div><div class="teamft">Every ticket arrival, status change, reply and shipped notice lands here — newest first. Tap a row to open the ticket.</div></div></div>
 <div class="sheet" id="sheet">
   <div class="sh-top"><span class="back" id="back">‹ BACK</span><span class="tid" id="sh-id"></span></div>
@@ -425,8 +425,8 @@ var STATE={tickets:[],team:[],mineOnly:false,smart:null,views:[],selMode:false,s
 try{STATE.views=JSON.parse(localStorage.getItem('vr_views')||'[]')||[];}catch(e){STATE.views=[];}
 try{STATE.notifSeen=Number(localStorage.getItem('vr_notifseen')||0)||0;}catch(e){STATE.notifSeen=0;}
 var DEEP=null;try{DEEP=parseInt((new URLSearchParams(location.search)).get("t")||"",10)||null;}catch(e){}
-/* bridge: a device token passed in the URL (from Telegram → standalone browser) is stored locally */
-try{var _dt=(new URLSearchParams(location.search)).get("devtoken");if(_dt){localStorage.setItem("vr_devtoken",_dt);history.replaceState(null,"",location.pathname);}}catch(e){}
+/* a device token in the URL is never stored: an old devtoken link is ignored and the parameter is removed from the address bar */
+try{var _sp=new URLSearchParams(location.search);if(_sp.has("devtoken")){_sp.delete("devtoken");var _qs=_sp.toString();history.replaceState(null,"",location.pathname+(_qs?"?"+_qs:"")+location.hash);}}catch(e){}
 var THEMES={
  void:{name:"Cyber Void",bg:"radial-gradient(900px 520px at 50% -16%,rgba(34,211,238,.08),transparent 60%),radial-gradient(500px 360px at 96% 4%,rgba(255,46,85,.05),transparent 55%),#0A0A0F",v:{"--bg":"#0A0A0F","--cell":"#13131B","--line":"rgba(34,211,238,.12)","--line2":"rgba(34,211,238,.22)","--cyan":"#22D3EE","--green":"#3DFF9A","--amber":"#F59E0B","--red":"#FF2E55","--violet":"#A78BFA","--txt":"#E8E8F0","--txt2":"#A9A9BD","--txt3":"#6D6D82"}},
  slate:{name:"Slate Indigo",bg:"radial-gradient(700px 420px at 50% -12%,rgba(129,140,248,.12),transparent 60%),#0B0E14",v:{"--bg":"#0B0E14","--cell":"#151A23","--line":"rgba(140,150,180,.12)","--line2":"rgba(140,150,180,.20)","--cyan":"#818CF8","--green":"#4ADE80","--amber":"#FBBF24","--red":"#F87171","--violet":"#A78BFA","--txt":"#F1F3F8","--txt2":"#9AA4B8","--txt3":"#5B6679"}},
@@ -445,7 +445,12 @@ function applyThemeName(n){var real=n;if(n==='auto'){real=(typeof tg!=='undefine
 function cycleTheme(){var i=THEME_ORDER.indexOf(STATE.theme||"void");var n=THEME_ORDER[(i+1)%THEME_ORDER.length];applyThemeName(n);toast("🎨 "+THEMES[n].name);if(typeof tg!=="undefined"&&tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged()}
 try{var _tv=localStorage.getItem("vr_theme_v");if(_tv!=="2"){localStorage.setItem("vr_theme_v","2");localStorage.setItem("vr_theme","void");}applyThemeName(localStorage.getItem("vr_theme")||"void")}catch(e){applyThemeName("void")}
 try{STATE.lastSeen=parseInt(localStorage.getItem("vr_lastseen")||"0",10)||0}catch(e){}
-function H(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function H(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+/* sink guards: a value from the server or a member reaches a URL, an image or a colour only through these */
+function safeUrl(u){try{var x=new URL(String(u==null?'':u));return x.protocol==='https:'?x.href:'';}catch(e){return '';}}
+function safeB64(s){s=String(s==null?'':s);return /^[A-Za-z0-9+\/=]+$/.test(s)?s:'';}
+function safeQr(s){var m=/^data:image\/png;base64,([A-Za-z0-9+\/=]+)$/.exec(String(s==null?'':s));return m?'data:image/png;base64,'+m[1]:'';}
+function safeColor(c){var s=String(c==null?'':c);return (/^#[0-9A-Fa-f]{3,8}$/.test(s)||/^var\(--[a-z0-9-]+(,#[0-9A-Fa-f]{3,8})?\)$/.test(s))?s:'#9AA4B8';}
 function ageH(iso){try{return (Date.now()-new Date(iso).getTime())/3.6e6}catch(e){return 0}}
 function ageS(iso){var h=ageH(iso);return h<48?(h|0)+'h':((h/24)|0)+'d'}
 /* SA public holidays (weekday ones matter; weekends already skipped). 2026-2027. */
@@ -456,6 +461,9 @@ var PAL=["#1AE5FF","#3DFF9A","#FFB020","#9D8CFF","#FF6FB5","#2DD4BF","#5B9DFF","
 function color(n){var h=0,s=String(n||'?');for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},1900)}
 function devTok(){try{return localStorage.getItem('vr_devtoken')||''}catch(e){return ''}}
+/* device line: uid and expiry of this device's token, read locally from vr_devtoken and never sent anywhere */
+function devLine(){var p=devTok().split('.');if(p.length!==3||!/^[0-9]+$/.test(p[0])||!/^[0-9]+$/.test(p[1]))return '';var exp=parseInt(p[1],10),d=new Date(exp*1000);return 'Device id '+p[0]+' · token expires '+(isNaN(d.getTime())?'?':d.toISOString().slice(0,10))+' ('+exp+')';}
+function paintDevLine(){var s=devLine();['devline-pend','devline-qr'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=s;el.style.display=s?'':'none';}});}
 function hdrs(){return{'Content-Type':'application/json','X-Init-Data':tg?tg.initData:'','X-Device-Token':devTok()}}
 function _wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
 function api(p,opt){opt=opt||{};opt.headers=hdrs();
@@ -482,7 +490,7 @@ function priLabel(p){var c=priClass(p);return c?c.toUpperCase():''}
 function isSnoozed(t){return !!t.snz&&new Date(t.snz).getTime()>Date.now();}
 function snooze(id,days){var until=new Date(Date.now()+days*864e5).toISOString();api('/snooze',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,until:until})}).then(function(res){if(res.ok){toast('😴 snoozed '+days+'d');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');closeT();load();}else{toast('snooze failed')}});}
 function unsnooze(id){api('/snooze',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,until:null})}).then(function(res){if(res.ok){toast('⏰ woke up');if(typeof tg!=='undefined'&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');load();setTimeout(function(){openT(id);},400);}else{toast('failed')}});}
-function snoozeRow(t){var wake=Math.max(0,(new Date(t.snz).getTime()-Date.now())/3.6e6);var w=wake<48?Math.ceil(wake)+'h':Math.ceil(wake/24)+'d';return '<div class="row" style="border-left-color:'+t.color+';opacity:.72" onclick="openT('+t.id+')"><span class="tag prog">😴 SNZ</span><span class="tid">#'+H(t.id)+'</span><div class="ttl"><div class="tl1">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div></div><span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span><span class="meta-r">wakes '+w+'</span></div>';}
+function snoozeRow(t){var wake=Math.max(0,(new Date(t.snz).getTime()-Date.now())/3.6e6);var w=wake<48?Math.ceil(wake)+'h':Math.ceil(wake/24)+'d';return '<div class="row" style="border-left-color:'+safeColor(t.color)+';opacity:.72" onclick="openT('+Number(t.id)+')"><span class="tag prog">😴 SNZ</span><span class="tid">#'+H(t.id)+'</span><div class="ttl"><div class="tl1">'+(t.kind==='bug'?'🐛 ':'✨ ')+H(t.title)+'</div></div><span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span><span class="meta-r">wakes '+w+'</span></div>';}
 
 function toggleFs(){try{if(!tg)return;if(tg.isFullscreen){tg.exitFullscreen&&tg.exitFullscreen()}else{tg.requestFullscreen&&tg.requestFullscreen()}tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light')}catch(e){}}
 function minimise(){try{if(!tg)return;tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');if(tg.isFullscreen&&tg.exitFullscreen)tg.exitFullscreen();if(tg.close)tg.close();}catch(e){}}
@@ -576,7 +584,7 @@ function render(){
          '<div class="chip sm'+(STATE.smart==='due'?' on':'')+'" onclick="setSmart(\'due\')">📅 Due</div>';
   STATE.views.forEach(function(v,i){ch+='<div class="chip vw'+(viewActive(v)?' on':'')+'" onclick="applyView('+i+')">⭐ '+H(v.name)+'<span class="vx" onclick="delView(event,'+i+')">✕</span></div>';});
   ch+='<div class="chip addv" onclick="saveView()" title="save the current filter as a view">＋ Save view</div>';
-  Object.keys(reps).forEach(function(n){var _rn=H(n.replace(/\\/g,'\\\\').replace(/'/g,"\\'")).replace(/"/g,'&quot;');ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(\''+_rn+'\')"><i style="background:'+reps[n]+'"></i>'+H(n)+'</div>'});
+  STATE.repNames=Object.keys(reps);STATE.repNames.forEach(function(n,ri){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(STATE.repNames['+Number(ri)+'])"><i style="background:'+safeColor(reps[n])+'"></i>'+H(n)+'</div>'});
   document.getElementById('chips').innerHTML=ch;
   // new alert
   var al=document.getElementById('alert');
@@ -606,7 +614,7 @@ function gLoadLib(cb){
   var t=setInterval(function(){if(window.ForceGraph){clearInterval(t);cb();}},120);
   if(GFX.libLoading)return; GFX.libLoading=true;
   var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/force-graph';
+  s.src='https://cdn.jsdelivr.net/npm/force-graph@1.52.0/dist/force-graph.min.js';s.integrity='sha384-isW4dF8tfo3t+I2iiIdnz1MFV+hW1Vn3YyY2PmAgPbRQaW7Biahepz8fTRR+nLxm';s.crossOrigin='anonymous';
   s.onerror=function(){clearInterval(t);var el=document.getElementById('gCanvas');if(el)el.innerHTML='<div style="padding:20px;color:var(--txt2)">Couldn’t load the graph engine (offline?). Reconnect and reopen this tab.</div>';};
   document.head.appendChild(s);
 }
@@ -728,9 +736,9 @@ function gApply(){
 function gBuildLegend(){
   var el=document.getElementById('gLegend');if(!el)return;
   var kinds={};GFX.raw.nodes.forEach(function(n){kinds[n.kind]=(kinds[n.kind]||0)+1;});
-  var html='';Object.keys(kinds).sort().forEach(function(k){
+  var html='';GFX.legend=Object.keys(kinds).sort();GFX.legend.forEach(function(k,ki){
     var off=GFX.hidden[k];
-    html+='<span onclick="gToggleKind(\''+k+'\')" style="cursor:pointer;font-size:10px;font-family:var(--m);padding:3px 7px;border-radius:11px;border:1px solid var(--line2);background:rgba(0,0,0,.5);opacity:'+(off?'0.4':'1')+'"><span style="color:'+gColor(k)+'">●</span> <span style="color:var(--txt2)">'+k+'</span></span>';
+    html+='<span onclick="gToggleKind(GFX.legend['+Number(ki)+'])" style="cursor:pointer;font-size:10px;font-family:var(--m);padding:3px 7px;border-radius:11px;border:1px solid var(--line2);background:rgba(0,0,0,.5);opacity:'+(off?'0.4':'1')+'"><span style="color:'+safeColor(gColor(k))+'">●</span> <span style="color:var(--txt2)">'+agEsc(k)+'</span></span>';
   });
   el.innerHTML=html;
 }
@@ -776,9 +784,9 @@ function gLinkClick(l){
 function gNodeInfo(node){
   var p=document.getElementById('gInfo');if(!p)return;GFX.sel=node;
   var meta=node.meta||{};var desc=meta.description||meta.desc||'';
-  document.getElementById('giTitle').innerHTML=(node.icon?node.icon+' ':'')+agEsc(node.label||node.id);
+  document.getElementById('giTitle').innerHTML=(node.icon?agEsc(node.icon)+' ':'')+agEsc(node.label||node.id);
   document.getElementById('giBody').innerHTML=
-    '<div style="font-family:var(--m);font-size:10px;color:'+gColor(node.kind)+';letter-spacing:.5px">'+agEsc(node.kind)+'</div>'+
+    '<div style="font-family:var(--m);font-size:10px;color:'+safeColor(gColor(node.kind))+';letter-spacing:.5px">'+agEsc(node.kind)+'</div>'+
     (desc?'<div style="font-size:12px;color:var(--txt2);margin-top:6px;line-height:1.5">'+agEsc(desc)+'</div>':'')+
     (meta.path?'<div style="font-family:var(--m);font-size:10px;color:var(--txt3);margin-top:6px;word-break:break-all">'+agEsc(meta.path)+'</div>':'')+
     (meta.version?'<div style="font-family:var(--m);font-size:10px;color:var(--txt3);margin-top:4px">v'+agEsc(meta.version)+'</div>':'');
@@ -918,7 +926,7 @@ function lpSend(kind,body){
 function lpKey(k){lpSend('key',k);}
 function lpSendText(){var t=document.getElementById('lpIn');var v=((t&&t.value)||'').trim();if(!v)return;if(v.length>4000){toast('Over 4,000 characters');return;}
   lpSend('text',v).then(function(ok){if(ok){t.value='';t.style.height='auto';}});}
-function agEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+function agEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
 function renderAgentic(){
   var el=document.getElementById('agentic');if(!el)return;
   if(!el._built){
@@ -951,30 +959,32 @@ function agLoadToday(){
     el.innerHTML='<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px"><div style="font-family:var(--m);font-size:11px;color:var(--cyan);letter-spacing:.5px;margin-bottom:6px">// TODAY</div><div style="font-size:13px;white-space:pre-wrap;line-height:1.55">'+agEsc(d)+'</div></div>';
   }).catch(function(){});
 }
+/* machine ids live in this page array; a handler carries only the index */
+var AG_MIDS=[];function agMidIx(mid){var i=AG_MIDS.indexOf(mid);return i>=0?i:AG_MIDS.push(mid)-1;}
 function agLoadDash(){
   var el=document.getElementById('agDash');if(!el)return;
   api('/agentic-state').then(function(res){
     if(!res.ok){el.innerHTML='<div style="padding:14px;color:var(--txt2)">offline</div>';return;}
     var d=res.j||{};var now=Date.parse(d.server_now)||Date.now();var sts=d.states||[];
     if(!sts.length){el.innerHTML='<div style="padding:14px;color:var(--txt2)">No agent reporting yet. On the PC run: python research/agentic_agent/agent.py run</div>';return;}
-    function kpi(v,l){return '<div style="flex:1;min-width:68px;background:var(--cell);border:1px solid var(--line);border-radius:8px;padding:8px"><div style="font-family:var(--m);font-size:15px;font-weight:700">'+v+'</div><div style="font-size:9px;color:var(--txt2);letter-spacing:.5px">'+l+'</div></div>';}
+    function kpi(v,l){return '<div style="flex:1;min-width:68px;background:var(--cell);border:1px solid var(--line);border-radius:8px;padding:8px"><div style="font-family:var(--m);font-size:15px;font-weight:700">'+agEsc(v)+'</div><div style="font-size:9px;color:var(--txt2);letter-spacing:.5px">'+l+'</div></div>';}
     el.innerHTML=sts.map(function(s){
       var age=Math.round((now-(Date.parse(s.agent_seen_at)||0))/1000);
       var bl=age<60?['LIVE','var(--green)']:age<600?['STALE','var(--amber)']:['OFFLINE','var(--txt2)'];
       var sn=s.snapshot||{};var hld=sn.hld||{};var tot=(hld.pass||0)+(hld.fail||0)+(hld.note||0);
-      var ft=(sn.ft_status||[]).map(function(f){return '<span style="font-family:var(--m);font-size:10px;background:var(--cell);border:1px solid var(--line);border-radius:6px;padding:3px 7px;margin:2px;display:inline-block">'+f.num+' · '+(f.age_min!=null?f.age_min+'m':'–')+'</span>';}).join('');
+      var ft=(sn.ft_status||[]).map(function(f){return '<span style="font-family:var(--m);font-size:10px;background:var(--cell);border:1px solid var(--line);border-radius:6px;padding:3px 7px;margin:2px;display:inline-block">'+agEsc(f.num)+' · '+(f.age_min!=null?agEsc(f.age_min)+'m':'–')+'</span>';}).join('');
       var br=sn.bridge_online?('online '+(sn.bridge_ms!=null?sn.bridge_ms+'ms':'')):'offline';
       return '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
         '<div style="display:flex;justify-content:space-between;align-items:center"><b>'+agEsc(s.project_name||s.machine_id||'?')+'</b>'+
-        '<span style="font-family:var(--m);font-size:11px;color:'+bl[1]+'">● AGENT '+bl[0]+' · '+age+'s</span></div>'+
+        '<span style="font-family:var(--m);font-size:11px;color:'+safeColor(bl[1])+'">● AGENT '+bl[0]+' · '+age+'s</span></div>'+
         '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+kpi((hld.pass!=null?hld.pass:'–')+'/'+(tot||'–'),'HLD PASS')+kpi(sn.zones!=null?sn.zones:'–','ZONES')+kpi(sn.pon_range||'–','PON')+kpi(br,'BRIDGE')+'</div>'+
         '<div style="margin-top:8px">'+ft+'</div>'+
         '<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">'+
-          (sn.context_health?'<span style="font-family:var(--m);font-size:10px;padding:2px 8px;border-radius:6px;background:var(--cell);border:1px solid var(--line);color:'+(sn.context_health==='GREEN'?'var(--green)':sn.context_health==='AMBER'?'var(--amber)':'var(--red,#FF2E55)')+'">ctx '+agEsc(sn.context_health)+(sn.compactions!=null?' · '+sn.compactions+'cmp':'')+'</span>':'')+
+          (sn.context_health?'<span style="font-family:var(--m);font-size:10px;padding:2px 8px;border-radius:6px;background:var(--cell);border:1px solid var(--line);color:'+(sn.context_health==='GREEN'?'var(--green)':sn.context_health==='AMBER'?'var(--amber)':'var(--red,#FF2E55)')+'">ctx '+agEsc(sn.context_health)+(sn.compactions!=null?' · '+agEsc(sn.compactions)+'cmp':'')+'</span>':'')+
           (sn.burn!=null?'<span style="font-family:var(--m);font-size:10px;color:var(--txt2);margin-left:8px">burn '+agEsc(sn.burn)+'</span>':'')+
           ((sn.terminals&&sn.terminals.length)?'<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:4px">// TERMINALS</div>'+sn.terminals.map(function(t){return '<div style="font-size:12px;margin:3px 0"><b style="color:var(--cyan)">'+agEsc(t.label)+'</b> '+(t.editing?'<span style="color:var(--amber);font-size:9px;font-family:var(--m)">● EDITING</span> ':'')+'<span style="color:var(--txt2)">'+agEsc(t.task||'idle')+'</span></div>';}).join('')+'</div>':'')+
         '</div>'+
-        '<div style="margin-top:8px"><button onclick="agCanvas(\''+s.machine_id+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 12px;font-size:12px">📷 Canvas</button><div class="agcv"></div></div>'+
+        '<div style="margin-top:8px"><button onclick="agCanvas(AG_MIDS['+Number(agMidIx(s.machine_id))+'],this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 12px;font-size:12px">📷 Canvas</button><div class="agcv"></div></div>'+
         '<div style="margin-top:8px"><div style="font-family:var(--m);font-size:10px;color:var(--txt2);letter-spacing:.5px;margin-bottom:6px">// CONTROL</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+agCmdBtn(s.machine_id,'refresh','🔄 Refresh')+agCmdBtn(s.machine_id,'run_audit','📋 Audit')+agCmdBtn(s.machine_id,'reload_plugin','♻ Reload')+agCmdBtn(s.machine_id,'run_smoke','🧪 Smoke')+agCmdBtnD(s.machine_id,'kill_runaway','🔪 Kill Frozen')+agCmdBtnD(s.machine_id,'restart_qgis','🔁 Restart QGIS')+'</div><div class="agcmdout" style="font-size:11px;color:var(--txt2);margin-top:6px;font-family:var(--m);white-space:pre-wrap"></div></div>'+
       '</div>';
     }).join('');
@@ -1009,7 +1019,7 @@ function renderAgents(){
       return '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
         '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">'+a.e+'</span>'+
         '<b style="font-family:var(--m)">'+agEsc(a.n)+'</b>'+
-        '<span style="margin-left:auto;font-family:var(--m);font-size:9px;letter-spacing:.5px;color:'+gc+';border:1px solid var(--line);border-radius:999px;padding:2px 8px">'+a.g+'</span></div>'+
+        '<span style="margin-left:auto;font-family:var(--m);font-size:9px;letter-spacing:.5px;color:'+safeColor(gc)+';border:1px solid var(--line);border-radius:999px;padding:2px 8px">'+a.g+'</span></div>'+
         '<div style="font-size:12.5px;color:var(--txt);margin-top:7px">'+agEsc(a.p)+'</div>'+
         '<div style="font-family:var(--m);font-size:10.5px;color:var(--txt2);margin-top:7px">fires: '+agEsc(a.f)+' · '+agEsc(a.m)+'</div>'+
       '</div>';
@@ -1031,17 +1041,18 @@ function ahLoadCrew(){
   }).catch(function(){el.innerHTML='';});
 }
 var AG_ST={todo:['○','var(--txt2)'],doing:['◐','var(--amber)'],done:['●','var(--green)']};
+var AG_TASKS=[];
 function agLoadTasks(){
   var el=document.getElementById('agTasks');if(!el)return;
   api('/agentic-tasks').then(function(res){
     var ts=(res.ok&&res.j&&res.j.tasks)||[];
     if(!ts.length){el.innerHTML='<div style="color:var(--txt2);font-size:12px">no tasks</div>';return;}
-    el.innerHTML=ts.map(function(t){
+    AG_TASKS=ts;el.innerHTML=ts.map(function(t,i){
       var st=AG_ST[t.status]||AG_ST.todo;var done=t.status==='done';
       return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">'+
-        '<span onclick="agTaskToggle(\''+t.id+'\',\''+t.status+'\')" style="cursor:pointer;color:'+st[1]+';font-size:15px">'+st[0]+'</span>'+
+        '<span onclick="agTaskToggle(AG_TASKS['+Number(i)+'].id,AG_TASKS['+Number(i)+'].status)" style="cursor:pointer;color:'+safeColor(st[1])+';font-size:15px">'+st[0]+'</span>'+
         '<span style="flex:1;font-size:13px;'+(done?'opacity:.5;text-decoration:line-through':'')+'">'+agEsc(t.title)+'</span>'+
-        '<span onclick="agTaskDel(\''+t.id+'\')" style="cursor:pointer;color:var(--txt2);font-size:13px">✕</span>'+
+        '<span onclick="agTaskDel(AG_TASKS['+Number(i)+'].id)" style="cursor:pointer;color:var(--txt2);font-size:13px">✕</span>'+
       '</div>';
     }).join('');
   });
@@ -1072,17 +1083,17 @@ function agCanvas(mid,btn){
   api('/agentic-canvas?machine_id='+encodeURIComponent(mid)).then(function(r){
     btn.textContent='📷 Canvas';
     var c=r&&r.j&&r.j.canvas;
-    if(!c||!c.png){box.innerHTML='<div style="color:var(--txt2);font-size:11px;margin-top:6px">no canvas yet (agent pushes every few min)</div>';return;}
+    if(!c||!c.png||!safeB64(c.png)){box.innerHTML='<div style="color:var(--txt2);font-size:11px;margin-top:6px">no canvas yet (agent pushes every few min)</div>';return;}
     var age=Math.round((Date.now()-(Date.parse(c.at)||0))/1000);
-    box.innerHTML='<div style="margin-top:8px"><img src="data:image/jpeg;base64,'+c.png+'" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block"><div style="font-size:10px;color:var(--txt2);margin-top:2px;font-family:var(--m)">// LIVE CANVAS · '+age+'s ago</div></div>';
+    box.innerHTML='<div style="margin-top:8px"><img src="data:image/jpeg;base64,'+safeB64(c.png)+'" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block"><div style="font-size:10px;color:var(--txt2);margin-top:2px;font-family:var(--m)">// LIVE CANVAS · '+age+'s ago</div></div>';
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');
   }).catch(function(){btn.textContent='📷 Canvas';box.innerHTML='<div style="color:var(--txt2);font-size:11px">failed</div>';});
 }
 function agCmdBtn(mid,type,label){
-  return '<button onclick="agCmd(\''+mid+'\',\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
+  return '<button onclick="agCmd(AG_MIDS['+Number(agMidIx(mid))+'],\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
 }
 function agCmdBtnD(mid,type,label){
-  return '<button onclick="agCmd(\''+mid+'\',\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--red,#FF2E55);color:var(--red,#FF2E55);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
+  return '<button onclick="agCmd(AG_MIDS['+Number(agMidIx(mid))+'],\''+type+'\',this)" style="background:var(--cell);border:1px solid var(--red,#FF2E55);color:var(--red,#FF2E55);border-radius:8px;padding:6px 10px;font-size:12px">'+label+'</button>';
 }
 var AG_DESTRUCTIVE={kill_runaway:'Kill the frozen QGIS process?',restart_qgis:'Force-kill + restart QGIS?'};
 function agBiometric(reason,cb){
@@ -1139,7 +1150,7 @@ function renderBoard(){
   cols.forEach(function(c){
     var items=STATE.tickets.filter(c.f);
     h+='<div class="bcol" data-set="'+c.set+'" ondragover="bOver(event)" ondragleave="bLeave(event)" ondrop="bDrop(event,\''+c.set+'\')">'+
-       '<div class="bcolh"><span class="bdot" style="background:'+c.dot+'"></span>'+c.lab+'<span class="bn">'+items.length+'</span></div>'+
+       '<div class="bcolh"><span class="bdot" style="background:'+safeColor(c.dot)+'"></span>'+c.lab+'<span class="bn">'+items.length+'</span></div>'+
        (items.map(bCard).join('')||'<div class="bempty">—</div>')+'</div>';
   });
   document.getElementById('board').innerHTML=h+'</div>';
@@ -1148,10 +1159,10 @@ function bCard(t){
   var ic=t.kind==='bug'?'🐛':'✨';
   var pri=priClass(t.priority)?'<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>':'';
   var asg=t.assignee?'<span class="asg">'+H(t.assignee)+'</span>':'';
-  return '<div class="bcard" draggable="true" ondragstart="bStart(event,'+t.id+')" ondragend="bEnd(event)" onclick="openT('+t.id+')" style="border-left-color:'+t.color+'">'+
+  return '<div class="bcard" draggable="true" ondragstart="bStart(event,'+Number(t.id)+')" ondragend="bEnd(event)" onclick="openT('+Number(t.id)+')" style="border-left-color:'+safeColor(t.color)+'">'+
     '<div class="bctop"><span class="tid">#'+H(t.id)+'</span>'+pri+asg+'</div>'+
     '<div class="bctt">'+ic+' '+H(t.title)+'</div>'+
-    '<div class="bcf"><span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span><span class="meta-r">'+(t.done?('v'+(H(t.ver)||'?')):ageS(t.created))+'</span></div></div>';
+    '<div class="bcf"><span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span><span class="meta-r">'+(t.done?('v'+(H(t.ver)||'?')):ageS(t.created))+'</span></div></div>';
 }
 var _drag=null;
 function bStart(e,id){_drag=id;try{e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';}catch(_){}var el=e.currentTarget;setTimeout(function(){if(el&&el.classList)el.classList.add('dragging');},0);}
@@ -1193,12 +1204,10 @@ function cmdItems(q){
     {lbl:'Next theme',hint:'theme',run:function(){cycleTheme()}},
     {lbl:'Theme: Cyber Void',hint:'theme',run:function(){applyThemeName('void')}},
     {sec:'TOOLS'},
-    {lbl:'Open as app (standalone, no Telegram)',hint:'install',run:function(){openStandalone()}},
     {lbl:'Enable notifications',hint:'alerts',run:function(){notifEnable()}},
     {lbl:'Mute / unmute notifications',hint:'alerts',run:function(){toggleNotif()}},
     {lbl:'Install app',hint:'pwa',run:function(){doInstall()}},
     {lbl:'Export CSV',hint:'download',run:function(){exportCSV()}},
-    {lbl:'Theme: Match Telegram (auto)',hint:'theme',run:function(){applyThemeName('auto')}},
     {lbl:'Toggle compact density',hint:'view',run:function(){toggleDensity()}},
     {lbl:'Toggle sound',hint:'audio',run:function(){toggleMute()}},
     {lbl:'Keyboard help',hint:'?',run:function(){openHelp()}}];
@@ -1334,7 +1343,7 @@ document.addEventListener('keydown',function(e){
   }
 });
 /* ── delight: confetti, sound, density, search operators ── */
-function confetti(){try{var c=document.createElement('div');c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden';var cols=['#22D3EE','#3DFF9A','#FFB020','#A78BFA','#FF2E55','#F59E0B'];for(var i=0;i<70;i++){var p=document.createElement('div');var col=cols[i%cols.length];var sz=5+Math.floor(Math.random()*6);p.style.cssText='position:absolute;top:-12px;left:'+Math.floor(Math.random()*100)+'%;width:'+sz+'px;height:'+Math.round(sz*1.6)+'px;background:'+col+';border-radius:1px;animation:cfall '+(1.5+Math.random()*1.3).toFixed(2)+'s '+(Math.random()*0.25).toFixed(2)+'s ease-in forwards';c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},3400);}catch(e){}}
+function confetti(){try{var c=document.createElement('div');c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden';var cols=['#22D3EE','#3DFF9A','#FFB020','#A78BFA','#FF2E55','#F59E0B'];for(var i=0;i<70;i++){var p=document.createElement('div');var col=cols[i%cols.length];var sz=5+Math.floor(Math.random()*6);p.style.cssText='position:absolute;top:-12px;left:'+Math.floor(Math.random()*100)+'%;width:'+sz+'px;height:'+Math.round(sz*1.6)+'px;background:'+safeColor(col)+';border-radius:1px;animation:cfall '+(1.5+Math.random()*1.3).toFixed(2)+'s '+(Math.random()*0.25).toFixed(2)+'s ease-in forwards';c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},3400);}catch(e){}}
 function beep(){if(STATE.muted)return;try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;var ctx=window.__vrac||(window.__vrac=new AC());var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(660,ctx.currentTime);o.frequency.setValueAtTime(990,ctx.currentTime+0.09);g.gain.setValueAtTime(0.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.12,ctx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.32);o.start();o.stop(ctx.currentTime+0.34);}catch(e){}}
 function nflash(){try{var f=document.createElement('div');f.className='nflash';document.body.appendChild(f);setTimeout(function(){f.remove();},1600);}catch(e){}}
 function _rgba(hex,a){try{hex=String(hex||'').trim();if(hex[0]!=='#')return 'rgba(34,211,238,'+a+')';var h=hex.slice(1);if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}catch(e){return 'rgba(34,211,238,'+a+')';}}
@@ -1342,7 +1351,7 @@ function arriveCard(t){try{
   var wrap=document.getElementById('arrive');
   if(!wrap){wrap=document.createElement('div');wrap.className='arrive';wrap.id='arrive';document.body.appendChild(wrap);}
   var ac=t.color||'#22D3EE';var icon=t.kind==='bug'?'🐛':'✨';
-  var c=document.createElement('div');c.className='acard';c.style.setProperty('--ac',ac);c.style.setProperty('--acg',_rgba(ac,.2));
+  var c=document.createElement('div');c.className='acard';c.style.setProperty('--ac',safeColor(ac));c.style.setProperty('--acg',_rgba(ac,.2));
   c.innerHTML='<div class="aglow"></div><div class="ax">✕</div>'
     +'<div class="aeye"><span class="adot"></span>New ticket · #'+H(t.id)+'</div>'
     +'<div class="atitle"><span>'+icon+'</span><span>'+H(t.title||'(no title)')+'</span></div>'
@@ -1360,7 +1369,7 @@ function accessCard(n){try{
   var wrap=document.getElementById('arrive');
   if(!wrap){wrap=document.createElement('div');wrap.className='arrive';wrap.id='arrive';document.body.appendChild(wrap);}
   var ac='#22D3EE';
-  var c=document.createElement('div');c.className='acard';c.style.setProperty('--ac',ac);c.style.setProperty('--acg',_rgba(ac,.2));
+  var c=document.createElement('div');c.className='acard';c.style.setProperty('--ac',safeColor(ac));c.style.setProperty('--acg',_rgba(ac,.2));
   c.innerHTML='<div class="aglow"></div><div class="ax">✕</div>'
     +'<div class="aeye"><span class="adot"></span>Access request</div>'
     +'<div class="atitle"><span>👤</span><span>'+(n>1?(n+' people want'):'Someone wants')+' to use Velocity Relay</span></div>'
@@ -1413,8 +1422,8 @@ var _installEvt=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_installEvt=e;var b=document.getElementById('installbtn');if(b)b.style.display='';});
 window.addEventListener('appinstalled',function(){var b=document.getElementById('installbtn');if(b)b.style.display='none';toast('✓ Velocity Relay installed');});
 function doInstall(){try{if(_installEvt){_installEvt.prompt();_installEvt.userChoice.then(function(){_installEvt=null;});}else{toast('Open the browser ⋮ menu → Install / Add to Home screen');}}catch(e){}}
-/* smart install: inside Telegram → open the standalone PWA (carries the login); in a browser → native install */
-function smartInstall(){try{if(typeof tg!=='undefined'&&tg&&tg.initData){openStandalone();}else{doInstall();}}catch(e){doInstall();}}
+/* install button: the browser's native install */
+function smartInstall(){doInstall();}
 /* global error trap — silent client crashes (any device) flow to relay_client_errors */
 var _vrLastErr=0;
 function _vrLogErr(msg,stack){try{var now=Date.now();if(now-_vrLastErr<3000)return;_vrLastErr=now;
@@ -1426,7 +1435,6 @@ if('serviceWorker' in navigator){try{
   navigator.serviceWorker.register('sw.js').then(function(reg){try{reg.update();}catch(e){}setInterval(function(){try{reg.update();}catch(e){}},120000);}).catch(function(){});
   var _vrReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_vrReloaded)return;_vrReloaded=true;location.reload();});
 }catch(e){}}
-function openStandalone(){var tk=devTok();if(!tk){toast('open in Telegram first to link this device');return;}var url='https://johanvelo.github.io/qz31-cache/ticketapp/index.html?devtoken='+encodeURIComponent(tk);try{if(typeof tg!=='undefined'&&tg&&tg.openLink){tg.openLink(url);}else{window.open(url,'_blank');}toast('opening in your browser — then Install it');}catch(e){window.open(url,'_blank');}}
 /* Raise a Windows toast for ANY new activity, not just new tickets.
    The first version only fired for tickets with an id higher than the last seen, so
    a status change - including "shipped" - produced NOTHING on the desktop app. JJ hit
@@ -1445,7 +1453,7 @@ function notifyFromFeed(){
     var fresh = feed.filter(function(f){ return (f.when||0) > LAST_FEED_TS; });
     if(!fresh.length) return;
     LAST_FEED_TS = feed[0].when || LAST_FEED_TS;
-    var strip = function(s){ return String(s||'').replace(/<[^>]*>/g,''); };   /* feed text carries <b> tags */
+    var strip = function(s){ return String(s||'').replace(/<[^>]*>/g,'').replace(/&#39;/g,"'").replace(/&quot;/gi,'"'); };   /* feed text carries <b> tags and H()-escaped quotes */
     fresh.slice(0,3).forEach(function(f){
       pushNotif('Velocity Relay', strip(f.text) + (f.sub ? ' - ' + strip(f.sub) : ''), 'f'+(f.id||0)+'-'+(f.when||0));
     });
@@ -1454,9 +1462,9 @@ function notifyFromFeed(){
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){
-    (t.history||[]).forEach(function(h){ev.push({id:t.id,icon:h.field==='shipped'?'🚀':h.field==='priority'?'⚑':h.field==='assignee'?'👤':'🔄',when:new Date(h.created_at).getTime()||0,text:'#'+t.id+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
+    (t.history||[]).forEach(function(h){ev.push({id:t.id,icon:h.field==='shipped'?'🚀':h.field==='priority'?'⚑':h.field==='assignee'?'👤':'🔄',when:new Date(h.created_at).getTime()||0,text:'#'+Number(t.id)+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
     (t.thread||[]).forEach(function(m){if(m.author==='office')ev.push({id:t.id,icon:'💬',when:new Date(m.created_at).getTime()||0,text:'office replied on #'+t.id,sub:H(String(m.body)).slice(0,44),color:'var(--violet)'});});
-    ev.push({id:t.id,icon:'🆕',when:new Date(t.created).getTime()||0,text:'#'+t.id+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
+    ev.push({id:t.id,icon:'🆕',when:new Date(t.created).getTime()||0,text:'#'+Number(t.id)+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
   });
   ev.sort(function(a,b){return b.when-a.when;});
   return ev;
@@ -1480,12 +1488,12 @@ function renderStats(){
   var reps=Object.keys(byRep).map(function(n){return {name:n,n:byRep[n],color:color(n)};}).sort(function(a,b){return b.n-a.n;});
   var totalOpen=openAll.length,off=25,segs='';
   reps.forEach(function(r){var pct=totalOpen?r.n/totalOpen*100:0;
-    segs+='<circle cx="21" cy="21" r="15.9" fill="none" stroke="'+r.color+'" stroke-width="5" stroke-dasharray="'+pct.toFixed(2)+' '+(100-pct).toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'" transform="rotate(-90 21 21)"></circle>';
+    segs+='<circle cx="21" cy="21" r="15.9" fill="none" stroke="'+safeColor(r.color)+'" stroke-width="5" stroke-dasharray="'+pct.toFixed(2)+' '+(100-pct).toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'" transform="rotate(-90 21 21)"></circle>';
     off-=pct;});
   var donut='<svg width="150" height="150" viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--cell)" stroke-width="5"></circle>'+segs+
     '<text x="21" y="20.5" text-anchor="middle" fill="var(--txt)" font-size="9" font-weight="700">'+totalOpen+'</text>'+
     '<text x="21" y="26" text-anchor="middle" fill="var(--txt3)" font-size="3">OPEN</text></svg>';
-  var leg=reps.map(function(r){return '<div><i style="background:'+r.color+'"></i>'+H(r.name)+' <b>'+r.n+'</b></div>';}).join('')||'<div style="color:var(--txt3)">none open</div>';
+  var leg=reps.map(function(r){return '<div><i style="background:'+safeColor(r.color)+'"></i>'+H(r.name)+' <b>'+r.n+'</b></div>';}).join('')||'<div style="color:var(--txt3)">none open</div>';
   var dr=done.filter(function(t){return t.resolved&&t.created;}),avg='—';
   if(dr.length){var s=0;dr.forEach(function(t){s+=(new Date(t.resolved)-new Date(t.created))/3.6e6;});var a=s/dr.length;avg=a<48?a.toFixed(1)+'h':(a/24).toFixed(1)+'d';}
   var bins=[];for(var i=0;i<14;i++)bins.push(0);
@@ -1507,8 +1515,8 @@ function renderStats(){
   var rt={};ts.forEach(function(t){var d=rt[t.who]||(rt[t.who]={o:0,d:0,color:t.color});if(t.open)d.o++;else if(t.done)d.d++;});
   var rtArr=Object.keys(rt).map(function(n){return {name:n,o:rt[n].o,d:rt[n].d,color:rt[n].color};}).sort(function(a,b){return (b.o+b.d)-(a.o+a.d);});
   var mxt=Math.max.apply(null,rtArr.map(function(r){return r.o+r.d;}).concat([1]));
-  var reprows=rtArr.map(function(r){return '<div class="srep"><span class="rn"><i style="background:'+r.color+'"></i>'+H(r.name)+'</span><span class="rb"><i style="width:'+Math.round((r.o+r.d)/mxt*100)+'%;background:'+r.color+'"></i></span><span class="rc"><b>'+r.o+'</b> open · '+r.d+' done</span></div>';}).join('')||'<div style="color:var(--txt3);font-family:var(--m);font-size:11px">no reporters</div>';
-  var feedHtml=buildFeed().slice(0,7).map(function(f){return '<div class="sfeed-item"><span class="fi" style="background:'+(f.color||'var(--cyan,#22D3EE)')+'"></span><div>'+f.text+'<div class="ft">'+f.sub+'</div></div></div>';}).join('')||'<div style="color:var(--txt3);font-family:var(--m);font-size:11px">no recent activity</div>';
+  var reprows=rtArr.map(function(r){return '<div class="srep"><span class="rn"><i style="background:'+safeColor(r.color)+'"></i>'+H(r.name)+'</span><span class="rb"><i style="width:'+Math.round((r.o+r.d)/mxt*100)+'%;background:'+safeColor(r.color)+'"></i></span><span class="rc"><b>'+r.o+'</b> open · '+r.d+' done</span></div>';}).join('')||'<div style="color:var(--txt3);font-family:var(--m);font-size:11px">no reporters</div>';
+  var feedHtml=buildFeed().slice(0,7).map(function(f){return '<div class="sfeed-item"><span class="fi" style="background:'+safeColor(f.color||'var(--cyan,#22D3EE)')+'"></span><div>'+f.text+'<div class="ft">'+f.sub+'</div></div></div>';}).join('')||'<div style="color:var(--txt3);font-family:var(--m);font-size:11px">no recent activity</div>';
   document.getElementById('stats').innerHTML=
    '<div class="sgrid">'+
     '<div class="scard"><div class="slab">// OPEN BY REPORTER</div><div class="dwrap">'+donut+'<div class="dleg">'+leg+'</div></div></div>'+
@@ -1571,7 +1579,7 @@ function listHtml(){
     var pinned=STATE.tickets.filter(function(t){return isPinned(t.id);});
     if(pinned.length)h+=lsec('📌','Pinned',pinned.length,'violet')+'<div class="rowgrid">'+pinned.map(rowHtml).join('')+'</div>';
     h+=lsec('📥','Inbox',opens.length,'amber');
-    var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+p[0]+' &amp; #'+p[1]+' look similar — possible duplicate</div>';}).join('');
+    var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+Number(p[0])+' &amp; #'+Number(p[1])+' look similar — possible duplicate</div>';}).join('');
     h+=opens.length?('<div class="rowgrid">'+opens.map(rowHtml).join('')+'</div>'):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
     if(snoozed.length)h+=lsec('😴','Snoozed',snoozed.length,'')+'<div class="rowgrid">'+snoozed.map(snoozeRow).join('')+'</div>';
     h+=lsec('🚀','Shipped · Recent',done.length,'green')+(done.length?('<div class="rowgrid">'+done.slice(0,40).map(rowHtml).join('')+'</div>'):'<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>');
@@ -1593,11 +1601,11 @@ function rowHtml(t){
   var isnew=STATE.newIds.indexOf(t.id)>=0?'<span class="badge" style="color:var(--amber);background:rgba(255,176,32,.12)">NEW</span>':'';
   var seld=STATE.selMode&&STATE.sel[t.id];
   var selbox=STATE.selMode?('<span class="selbox'+(seld?' on':'')+'">'+(seld?'✓':'')+'</span>'):'';
-  return '<div class="row'+(seld?' selrow':'')+'" style="border-left-color:'+t.color+'" onclick="rowClick(event,'+t.id+')">'+selbox+
+  return '<div class="row'+(seld?' selrow':'')+'" style="border-left-color:'+safeColor(t.color)+'" onclick="rowClick(event,'+Number(t.id)+')">'+selbox+
    '<span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+H(t.id)+'</span>'+
    '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+dueb+stale+thread+asg+
-   '<span class="who" style="color:'+t.color+'"><i style="background:'+t.color+'"></i>'+H(t.who)+'</span>'+
-   '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+t.id+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
+   '<span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span>'+
+   '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+Number(t.id)+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
    '<span class="meta-r"'+ageStyle+'>'+right+'</span></div>';
 }
 function insightsHtml(){
@@ -1633,7 +1641,7 @@ function renderNotif(){
   if(!feed.length){box.innerHTML='<div class="tmuted">✨ All quiet — no activity yet.</div>';return;}
   box.innerHTML=feed.map(function(f){
     var un=f.when>seen;
-    return '<div class="notrow'+(un?' unread':'')+'" onclick="notifGo('+(f.id||0)+')">'+
+    return '<div class="notrow'+(un?' unread':'')+'" onclick="notifGo('+Number(f.id||0)+')">'+
       '<span class="noti">'+(f.icon||'•')+'</span>'+
       '<div class="notc"><div class="nottx">'+f.text+'</div>'+(f.sub?('<div class="notsub">'+f.sub+'</div>'):'')+'<div class="nott">'+notifRel(f.when)+'</div></div>'+
       '<span class="notdot'+(un?'':' off')+'"></span></div>';
@@ -1650,33 +1658,33 @@ function find(id){for(var i=0;i<STATE.tickets.length;i++)if(STATE.tickets[i].id=
 function openT(id){
   var t=find(id);if(!t)return;STATE.cur=id;
   var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
-  document.getElementById('sh-id').textContent='#'+id+(t.assignee?(' · @'+H(t.assignee)):'');
-  var meta='<span style="color:'+t.color+'">●&nbsp;'+H(t.who)+'</span><span>'+H(t.status)+'</span>';
+  document.getElementById('sh-id').textContent='#'+id+(t.assignee?(' · @'+t.assignee):'');
+  var meta='<span style="color:'+safeColor(t.color)+'">●&nbsp;'+H(t.who)+'</span><span>'+H(t.status)+'</span>';
   if(priClass(t.priority))meta+='<span>prio '+priLabel(t.priority)+'</span>';
   if(t.due&&!t.done){var _mdi=dueInfo(t.due);if(_mdi)meta+='<span'+(_mdi.overdue?' style="color:var(--red,#FF2E55)"':'')+'>📅 '+_mdi.txt+'</span>';}
   if(t.ver)meta+='<span>v'+H(t.ver)+'</span>';if(t.pv)meta+='<span>from v'+H(t.pv)+'</span>';
   if(t.proj)meta+='<span>'+H(t.proj)+'</span>';meta+='<span>'+ageS(t.created)+' old</span>';
-  var shots=(t.shots||[]).length?('<div class="shots">'+t.shots.map(function(u){return '<img src="'+H(u)+'" onclick="tg&&tg.openLink&&tg.openLink(\''+H(u)+'\')">'}).join('')+'</div>'):'';
-  var pdf=t.pdf?('<a class="pdfbtn" href="'+H(t.pdf)+'" target="_blank" onclick="tg&&tg.openLink&&(event.preventDefault(),tg.openLink(\''+H(t.pdf)+'\'))">📄 open PDF report</a>'):'';
+  var _shots=(t.shots||[]).filter(function(u){return !!safeUrl(u);});var shots=_shots.length?('<div class="shots">'+_shots.map(function(u){return '<img src="'+H(safeUrl(u))+'">'}).join('')+'</div>'):'';
+  var pdf=safeUrl(t.pdf)?('<a class="pdfbtn" href="'+H(safeUrl(t.pdf))+'" target="_blank" rel="noopener">📄 open PDF report</a>'):'';
   var thread=(t.thread||[]).map(function(m){return '<div class="tmsg '+(m.author==='office'?'office':'reporter')+'"><div class="a">'+(m.author==='office'?'OFFICE':H(t.who))+' · '+ageS(m.created_at)+'</div>'+H(m.body)+'</div>'}).join('');
   var hist=(t.history||[]).map(function(a){return '<div class="tmsg reporter"><div class="a">'+ageS(a.created_at)+' ago'+(a.actor?(' · '+H(a.actor)):'')+'</div>'+H(a.field)+': '+H(a.old_val||'—')+' → '+H(a.new_val||'—')+'</div>'}).join('');
   var rel=STATE.tickets.filter(function(o){return o.id!==t.id&&(o.who===t.who||sim(o.title,t.title)>=0.4);}).slice(0,4);
-  var relHtml=rel.length?('<div class="thread"><div class="sec">// RELATED</div>'+rel.map(function(o){var why=o.who===t.who?'same reporter':'similar';return '<div class="rel" onclick="openT('+o.id+')"><span class="tid">#'+o.id+'</span><span class="rt">'+(o.kind==='bug'?'🐛 ':'✨ ')+H(o.title)+'</span><span class="rwhy">'+why+'</span></div>';}).join('')+'</div>'):'';
+  var relHtml=rel.length?('<div class="thread"><div class="sec">// RELATED</div>'+rel.map(function(o){var why=o.who===t.who?'same reporter':'similar';return '<div class="rel" onclick="openT('+Number(o.id)+')"><span class="tid">#'+Number(o.id)+'</span><span class="rt">'+(o.kind==='bug'?'🐛 ':'✨ ')+H(o.title)+'</span><span class="rwhy">'+why+'</span></div>';}).join('')+'</div>'):'';
   var _pr=priClass(t.priority);
-  var pbtn=function(v,lab){return '<button class="act pbtn'+(_pr===v?' on '+v:'')+'" onclick="setPriority('+id+',\''+v+'\')">'+lab+'</button>';};
-  var prioCtl='<div class="ctlrow"><span class="ctll">PRIORITY</span>'+pbtn('high','⚑ High')+pbtn('med','Med')+pbtn('low','Low')+(_pr?'<button class="act" onclick="setPriority('+id+',\'\')">clear</button>':'')+'</div>';
+  var pbtn=function(v,lab){return '<button class="act pbtn'+(_pr===v?' on '+v:'')+'" onclick="setPriority('+Number(id)+',\''+v+'\')">'+lab+'</button>';};
+  var prioCtl='<div class="ctlrow"><span class="ctll">PRIORITY</span>'+pbtn('high','⚑ High')+pbtn('med','Med')+pbtn('low','Low')+(_pr?'<button class="act" onclick="setPriority('+Number(id)+',\'\')">clear</button>':'')+'</div>';
   var _di=dueInfo(t.due);
-  var dueCtl='<div class="ctlrow"><span class="ctll">DUE</span><button class="act" onclick="setDue('+id+',0)">Today</button><button class="act" onclick="setDue('+id+',1)">+1d</button><button class="act" onclick="setDue('+id+',3)">+3d</button><button class="act" onclick="setDue('+id+',7)">+1w</button>'+(t.due?'<button class="act" onclick="setDue('+id+',null)">clear</button><span class="duenow'+(_di&&_di.overdue?' over':'')+'">'+(_di?_di.txt:'')+'</span>':'')+'</div>';
+  var dueCtl='<div class="ctlrow"><span class="ctll">DUE</span><button class="act" onclick="setDue('+Number(id)+',0)">Today</button><button class="act" onclick="setDue('+Number(id)+',1)">+1d</button><button class="act" onclick="setDue('+Number(id)+',3)">+3d</button><button class="act" onclick="setDue('+Number(id)+',7)">+1w</button>'+(t.due?'<button class="act" onclick="setDue('+Number(id)+',null)">clear</button><span class="duenow'+(_di&&_di.overdue?' over':'')+'">'+(_di?_di.txt:'')+'</span>':'')+'</div>';
   var asnOpts='<option value="">— unassigned —</option>'+(STATE.team||[]).map(function(mm){return '<option value="'+H(mm.name)+'"'+(t.assignee===mm.name?' selected':'')+'>'+H(mm.name)+(mm.username?(' (@'+H(mm.username)+')'):'')+'</option>';}).join('');
-  var asnCtl='<div class="ctlrow"><span class="ctll">ASSIGNEE</span><select class="asnsel" onchange="assign('+id+',this.value)">'+asnOpts+'</select></div>';
+  var asnCtl='<div class="ctlrow"><span class="ctll">ASSIGNEE</span><select class="asnsel" onchange="assign('+Number(id)+',this.value)">'+asnOpts+'</select></div>';
   var acts='<div class="acts">'+
-    '<button class="act hand" onclick="handoff('+id+')">⎘ Hand to Terminal</button>'+
-    '<button class="act" onclick="togglePin('+id+')">'+(isPinned(id)?'★ Unpin':'☆ Pin')+'</button>'+
-    '<button class="act" onclick="copyLink('+id+')">🔗 Copy link</button>'+
-    (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+id+',\'in_progress\')">▸ In progress</button>':'')+
-    (t.status!=='done'?'<button class="act go" onclick="setStatus('+id+',\'done\')">✓ Mark done</button>':'')+
-    (t.status==='done'?'<button class="act warn" onclick="setStatus('+id+',\'reopened\')">↻ Reopen</button>':'')+
-    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+id+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+id+',1)">😴 1d</button><button class="act" onclick="snooze('+id+',3)">😴 3d</button><button class="act" onclick="snooze('+id+',7)">😴 1w</button>'):'')+'</div>'+asnCtl+prioCtl+dueCtl;
+    '<button class="act hand" onclick="handoff('+Number(id)+')">⎘ Hand to Terminal</button>'+
+    '<button class="act" onclick="togglePin('+Number(id)+')">'+(isPinned(id)?'★ Unpin':'☆ Pin')+'</button>'+
+    '<button class="act" onclick="copyLink('+Number(id)+')">🔗 Copy link</button>'+
+    (t.status!=='in_progress'?'<button class="act" onclick="setStatus('+Number(id)+',\'in_progress\')">▸ In progress</button>':'')+
+    (t.status!=='done'?'<button class="act go" onclick="setStatus('+Number(id)+',\'done\')">✓ Mark done</button>':'')+
+    (t.status==='done'?'<button class="act warn" onclick="setStatus('+Number(id)+',\'reopened\')">↻ Reopen</button>':'')+
+    (!t.done?(isSnoozed(t)?'<button class="act warn" onclick="unsnooze('+Number(id)+')">⏰ Wake now</button>':'<button class="act" onclick="snooze('+Number(id)+',1)">😴 1d</button><button class="act" onclick="snooze('+Number(id)+',3)">😴 3d</button><button class="act" onclick="snooze('+Number(id)+',7)">😴 1w</button>'):'')+'</div>'+asnCtl+prioCtl+dueCtl;
   var actl=(t.activity||[]).map(function(a){
     var ic=a.action==='status'?'🔄':a.action==='priority'?'⚑':a.action==='assignee'?'👤':a.action==='reply'?'💬':'•';
     var lab2=a.action==='status'?('moved to <b>'+H(a.detail)+'</b>'):a.action==='priority'?('set priority <b>'+H(a.detail)+'</b>'):a.action==='assignee'?('assigned <b>'+H(a.detail)+'</b>'):a.action==='reply'?('replied · '+H(a.detail)):(H(a.action)+' '+H(a.detail));
@@ -1774,7 +1782,7 @@ function copyText(b){
 }
 function legacyCopy(b){try{var ta=document.createElement('textarea');ta.value=b;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 handoff copied');}catch(e){toast('select + copy manually');}}
 /* ── access gating (team members) ── */
-function showOnly(which){['app','deny','signup','pending'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=(id===which)?(id==='app'?'flex':'block'):'none';});if(which==='signup')_signupEnv();}
+function showOnly(which){['app','deny','signup','pending'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=(id===which)?(id==='app'?'flex':'block'):'none';});if(which==='signup')_signupEnv();if(which==='pending')paintDevLine();}
 function _signupEnv(){try{
   var ua=navigator.userAgent||'';
   var inApp=/FBAN|FBAV|Instagram|Telegram|WhatsApp|Line\/|LinkedInApp|GSA\//i.test(ua);
@@ -1809,7 +1817,7 @@ function boot(){
   }).catch(function(){showOnly('app');load();});
 }
 /* ── invite QR (scan -> create profile -> request access) ── */
-function openQR(){var url='https://johanvelo.github.io/qz31-cache/ticketapp/';var img=document.getElementById('qrimg');if(img)img.removeAttribute('src');document.getElementById('qrovl').style.display='flex';api('/qr?u='+encodeURIComponent(url)).then(function(r){if(r.j&&r.j.dataurl&&img)img.src=r.j.dataurl;}).catch(function(){toast('QR failed')});}
+function openQR(){var url='https://johanvelo.github.io/qz31-cache/ticketapp/';var img=document.getElementById('qrimg');if(img)img.removeAttribute('src');document.getElementById('qrovl').style.display='flex';paintDevLine();api('/qr?u='+encodeURIComponent(url)).then(function(r){if(r.j&&img&&safeQr(r.j.dataurl))img.src=safeQr(r.j.dataurl);}).catch(function(){toast('QR failed')});}
 function closeQR(){document.getElementById('qrovl').style.display='none';}
 /* ── Team admin panel (owner/admin) ── */
 function openTeam(){document.getElementById('teamovl').style.display='flex';renderTeamList();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light');}
@@ -1821,15 +1829,15 @@ function renderTeamList(){var box=document.getElementById('teamlist');box.innerH
   api('/members').then(function(res){
     if(!res.ok){box.innerHTML='<div class="tmuted">not allowed</div>';return;}
     var ms=(res.j&&res.j.members)||[];
-    if(!ms.length){box.innerHTML=_crewRow()+'<div class="tmuted">No one yet.<br>Share Relay with the team — when they open it inside Telegram they\'ll appear here for you to approve.</div>';_loadCrew();return;}
+    if(!ms.length){box.innerHTML=_crewRow()+'<div class="tmuted">No one yet.<br>Share Relay with the team (the QR button) — when they request access they\'ll appear here for you to approve.</div>';_loadCrew();return;}
     ms.sort(function(a,b){return (a.active?1:0)-(b.active?1:0)||(b.telegram_id-a.telegram_id);});
     box.innerHTML=_crewRow()+ms.map(function(m){
       var st=m.active?'<span class="tok">● active</span>':'<span class="tpend">● pending</span>';
-      var act=m.active?'<button class="tbtn tdeact" onclick="memberSet(\''+m.telegram_id+'\',{active:false})">Deactivate</button>':'<button class="tbtn tappr" onclick="memberSet(\''+m.telegram_id+'\',{active:true})">Approve</button>';
-      var roleBtn=(m.active&&m.role!=='owner')?(m.role==='admin'?'<button class="tbtn" title="demote to member" onclick="memberSet(\''+m.telegram_id+'\',{role:\'member\'})">↓ member</button>':'<button class="tbtn" title="promote to admin (can approve others)" onclick="memberSet(\''+m.telegram_id+'\',{role:\'admin\'})">↑ admin</button>'):'';
+      var act=m.active?'<button class="tbtn tdeact" onclick="memberSet('+Number(m.telegram_id)+',{active:false})">Deactivate</button>':'<button class="tbtn tappr" onclick="memberSet('+Number(m.telegram_id)+',{active:true})">Approve</button>';
+      var roleBtn=(m.active&&m.role!=='owner')?(m.role==='admin'?'<button class="tbtn" title="demote to member" onclick="memberSet('+Number(m.telegram_id)+',{role:\'member\'})">↓ member</button>':'<button class="tbtn" title="promote to admin (can approve others)" onclick="memberSet('+Number(m.telegram_id)+',{role:\'admin\'})">↑ admin</button>'):'';
       act=roleBtn+act;
       var sub=(m.username?('@'+H(m.username)):('id '+H(m.telegram_id)))+' · '+H(m.role||'member');
-      return '<div class="tmrow"><div class="tmname">'+H(m.name||m.username||m.telegram_id)+'<small>'+sub+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet(\''+m.telegram_id+'\',{remove:true})">✕</button></div></div>';
+      return '<div class="tmrow"><div class="tmname">'+H(m.name||m.username||m.telegram_id)+'<small>'+sub+'</small></div>'+st+'<div class="tmact">'+act+'<button class="tbtn trm" title="remove" onclick="memberSet('+Number(m.telegram_id)+',{remove:true})">✕</button></div></div>';
     }).join('');
     _loadCrew();
   });

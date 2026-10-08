@@ -1,7 +1,7 @@
 // Velocity Relay service worker — network-first shell + Web Push.
 // Network-first on navigation so the app is ALWAYS the latest build (no stale UI);
 // falls back to the last good copy only when offline. Push works app-closed.
-var SHELL = 'vr-shell-v1';
+var SHELL = 'vr-jj-shell-v2';
 self.addEventListener('install', function (e) { self.skipWaiting(); });
 self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim()); });
 

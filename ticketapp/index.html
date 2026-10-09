@@ -346,9 +346,21 @@ body.dense .kc{padding:6px 6px 7px}
 /* the app toast sits over the key row; even faded out it took the taps meant for 1/2/3/Esc */
 body:has(#laptop.lp-on) .toast{pointer-events:none}
 #laptop.lp-on{position:fixed;left:0;right:0;top:0;height:100%;z-index:5;background:var(--bg)}
-.lpcol{display:flex;flex-direction:column;height:100%;max-width:920px;margin:0 auto;color:var(--txt);overflow:hidden}
-.lphead{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 12px 4px;font-family:var(--m);font-size:12px;color:var(--txt2);letter-spacing:1px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.lpconn{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:72%;background:var(--cell);border:1px solid var(--line);border-radius:999px;padding:3px 10px;letter-spacing:0}
+.lpcol{position:relative;display:flex;flex-direction:column;height:100%;max-width:920px;margin:0 auto;color:var(--txt);overflow:hidden}
+.lphead{position:relative;flex:0 0 auto;display:flex;align-items:center;gap:8px;min-height:48px;padding:2px 10px;font-family:var(--m);font-size:12px;color:var(--txt2);letter-spacing:1px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border-bottom:1px solid var(--line)}
+body.fs.lp-compact .lphead{padding-top:calc(2px + var(--safe-top,0px))}
+/* page commit B (D100): while LAPTOP is open the app's top bar folds into this one row: mark, the app's own view strip
+   (moved here, LAPTOP first; put back exactly on leave), connection pill */
+body.lp-compact #app>.top{display:none}
+.lpmark{flex:0 0 auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1;
+ background:radial-gradient(circle at 50% 38%,rgba(255,59,92,.18),var(--cell));border:1px solid rgba(255,59,92,.4);color:#FF3B5C}
+.lphead .vtoggle{flex:1 1 0;min-width:0;margin:0;padding:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;border-radius:10px;
+ -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
+.lphead .vtoggle::-webkit-scrollbar{display:none}
+.lphead .vtoggle div{flex:0 0 auto;display:flex;align-items:center;min-height:44px;min-width:44px;padding:0 12px;font-size:12px;white-space:nowrap;touch-action:manipulation}
+.lphead .vtoggle #vP{order:-1}
+.lpconn{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:44%;min-height:30px;background:var(--cell);border:1px solid var(--line);border-radius:999px;padding:3px 10px;letter-spacing:0}
+.lphead .lpconn{margin-left:auto}
 .lpconn span:last-child{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .lpdot{display:inline-block;flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--txt2)}
 .lpd-w{background:var(--red)}.lpd-b{background:var(--amber)}.lpd-i{background:var(--green)}.lpd-o{background:var(--txt2)}
@@ -422,6 +434,52 @@ body:has(#laptop.lp-on) .toast{pointer-events:none}
 #lpSend.lp-inert,#lpSend:disabled{background:transparent;color:var(--txt2);border:1px dashed var(--line2);cursor:default}
 #lpConfirm{position:absolute;left:10px;right:10px;bottom:calc(100% + 10px);z-index:3;display:none;align-items:center;justify-content:center;min-height:48px;padding:0 14px;background:var(--cell);color:var(--txt);border:2px solid var(--cyan);border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 22px rgba(0,0,0,.35);touch-action:manipulation;cursor:pointer}
 #lpConfirm.on{display:flex}
+/* page commit B: Copy (F7), long-press sheet, Select mode, Paste (F8), mic (F9) */
+#laptop button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.lpcopy{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:0 8px;background:transparent;color:var(--txt2);border:0;border-radius:8px;
+ font-family:var(--m);font-size:12px;line-height:1;cursor:pointer;touch-action:manipulation;transition:color .12s ease,background-color .12s ease}
+.lpcopy::before{content:'';flex:0 0 auto;width:8px;height:10px;border:1.5px solid currentColor;border-radius:2px;box-shadow:-3px 3px 0 -1.5px var(--bg),-3px 3px 0 0 currentColor;margin:3px 0 0 3px}
+.lpcopy::after{content:'Copy'}
+.lpcopy:active{background:var(--cell)}
+.lpcopy.lpok{color:var(--txt)}
+.lpcopy.lpok::before{content:'\2713';width:auto;height:auto;border:0;box-shadow:none;margin:0}
+.lpcopy.lpok::after{content:'Copied'}
+.lpm-a>.lpcopy{display:flex;margin:-4px 0 -8px auto}
+.lpm-u{position:relative}
+.lpm-u>.lpcopy{position:absolute;right:calc(100% + 4px);bottom:0}
+.lpm-u>.lpcopy::after{content:none}
+.lpm-a,.lpm-u{-webkit-touch-callout:none}
+.lpm-a.lpheld,.lpm-u.lpheld{outline:2px solid var(--cyan);outline-offset:4px;border-radius:10px}
+.lpcbar{display:flex;align-items:center;min-height:44px;padding:0 0 0 10px}
+.lpcbar .lplang{flex:1 1 auto;min-width:0;padding:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.lpcbar .lpcopy{margin-left:auto}
+.lpcode .lpcbar+pre{padding-top:0}
+#lpSheetBg{position:absolute;left:0;right:0;top:0;bottom:0;z-index:8;display:none;background:color-mix(in srgb,var(--bg) 55%,transparent)}
+#lpSheet{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:9;display:none;flex-direction:column;gap:2px;max-width:560px;margin:0 auto;
+ background:var(--cell);border:1px solid var(--line2);border-radius:14px;padding:6px;box-shadow:0 18px 44px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.2)}
+#laptop.lp-sheet #lpSheetBg{display:block}
+#laptop.lp-sheet #lpSheet{display:flex;animation:lpUp .16s cubic-bezier(.2,.8,.2,1)}
+@keyframes lpUp{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+#lpSheetQ{padding:8px 10px 6px;font-size:12px;line-height:1.4;color:var(--txt2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.lpsi{display:flex;align-items:center;min-height:48px;padding:0 14px;background:transparent;color:var(--txt);border:0;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer;touch-action:manipulation}
+.lpsi:active{background:var(--bg)}
+.lpsi[hidden]{display:none}
+.lpsi.lpsx{color:var(--txt2);font-weight:500;border-top:1px solid var(--line);border-radius:0 0 10px 10px}
+#lpSelBar{position:absolute;left:0;right:0;top:0;z-index:3;display:none;align-items:center;gap:6px;min-height:52px;padding:4px 10px;background:var(--bg);border-bottom:1px solid var(--line2)}
+#lpSelBar span{flex:1 1 auto;min-width:0;font-family:var(--m);font-size:12px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lpSelB{display:none;font-size:15px;line-height:1.5;color:var(--txt);white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+#lpSelB::selection,#lpSelB ::selection{background:color-mix(in srgb,var(--cyan) 35%,transparent)}
+#laptop.lp-sel #lpSelBar{display:flex}
+#laptop.lp-sel #lpPane{top:52px}
+#laptop.lp-sel #lpSelB{display:block}
+#laptop.lp-sel #lpConv,#laptop.lp-sel #lpCmds,#laptop.lp-sel #lpPill{display:none}
+.lpsep{flex:0 0 1px;align-self:stretch;margin:6px 2px;background:var(--line2)}
+.lpkeys .lptool{flex:0 0 48px;min-width:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--txt2);font-family:inherit}
+.lptool svg{width:20px;height:20px;display:block;pointer-events:none}
+.lptool[hidden]{display:none}
+#lpMic.lp-rec{color:var(--txt);border-color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan)}
+#lpMicPrev{position:absolute;left:10px;right:10px;bottom:calc(100% + 8px);z-index:3;display:none;padding:10px 12px;background:var(--cell);border:1px solid var(--cyan);border-radius:12px;font-size:15px;line-height:1.4;color:var(--txt2);box-shadow:0 6px 22px rgba(0,0,0,.3)}
+#lpMicPrev.on{display:block}
 @media (prefers-reduced-motion:reduce){#laptop *{transition:none!important;animation:none!important}}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
@@ -923,7 +981,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='A-20261009-1';
+var LP_BUILD='B-20261009-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},firstPicked:false,userPicked:false,
@@ -931,7 +989,11 @@ var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fi
   queued:false,textOff:false,textBusy:false,keyBusy:false,locked:false,started:false,built:false,meta:null,vv:null,
   prevSids:{},stick:true,anchor:null,newCount:0,rowEls:{},convSid:null,tabEls:{},sigs:{},promptEid:'',note:null,
   dbgOn:false,draftT:null,cacheLoaded:false,cacheP:null,cacheShown:false,connErr:'',keysOn:false,meChecked:false,
+  fails:0,kick:false,selMode:null,sheet:null,press:null,mic:null,micDead:false,nav:null,quoteAt:0,
   dbg:{sends:[],attempts:0,errs:0,codes:{},typed:0,ages:[],switches:0}};
+/* F10: a failed sync retries after 2, 4, 8, 16, then every 30 s (never faster than the normal cadence); back online or
+   back in view retries at once */
+var LP_BACKOFF=[2000,4000,8000,16000,30000];
 try{window.addEventListener('error',function(){LP.dbg.errs++;});window.addEventListener('unhandledrejection',function(){LP.dbg.errs++;});}catch(e){}
 try{var _lpq=new URLSearchParams(location.search);if(_lpq.get('lpdebug')==='1')LP.dbgOn=true;
   if(_lpq.get('lpthrow')==='1')setTimeout(function(){throw new Error('lpthrow: planted test error');},0);}catch(e){}
@@ -1045,11 +1107,16 @@ function lpDraftSweep(){try{var ks=[];for(var i=0;i<localStorage.length;i++){var
 var LP_FS=(function(){try{return !!(window.CSS&&CSS.supports&&CSS.supports('field-sizing','content'));}catch(e){return false;}})();
 function lpGrow(){if(LP_FS)return;var ta=lpG('lpIn'),m=lpG('lpMirror');if(!ta||!m)return;m.style.width=Math.round(ta.offsetWidth)+'px';m.value=ta.value;
   var mx=parseFloat(getComputedStyle(ta).maxHeight)||140,h=Math.min(mx,Math.max(44,Math.ceil(m.scrollHeight)+2));if(Math.abs(ta.offsetHeight-h)>1)ta.style.height=Math.round(h)+'px';}
-function lpBoxApply(op){var ta=lpG('lpIn');if(!ta)return '';var v=op.replace!=null?String(op.replace):(ta.value.trim()?op.prepend+'\n'+ta.value:op.prepend);
+function lpBoxApply(op){var ta=lpG('lpIn');if(!ta)return '';
+  if(op.ins!=null){var n=ta.value.length,a=Math.min(n,Math.max(0,op.s==null?n:op.s)),b=Math.min(n,Math.max(a,op.e==null?a:op.e));
+    try{ta.setRangeText(String(op.ins),a,b,'end');}catch(e){ta.value=ta.value.slice(0,a)+op.ins+ta.value.slice(b);}lpGrow();if(op.then)op.then(ta.value);return ta.value;}
+  var v=op.replace!=null?String(op.replace):(ta.value.trim()?op.prepend+'\n'+ta.value:op.prepend);
   if(ta.value!==v){ta.value=v;if(document.activeElement===ta){try{ta.setSelectionRange(v.length,v.length);}catch(e){}}}lpGrow();if(op.then)op.then(ta.value);return v;}
 /* writes wait in order while an IME composition is open; a tab switch's write first saves the box as the old tab's draft */
 function lpBox(v,then,prevSid){var op={replace:String(v==null?'':v),then:then,prev:prevSid||null};if(LP.composing){LP.pendingBox.push(op);return;}lpBoxApply(op);}
 function lpPrepend(text,then){var op={prepend:String(text),then:then};if(LP.composing){LP.pendingBox.push(op);return;}lpBoxApply(op);}
+/* insert at a caret (Paste, mic): queued like every other write while an IME composition is open */
+function lpInsert(text,s,e,then){var op={ins:String(text),s:s,e:e,then:then};if(LP.composing){LP.pendingBox.push(op);return;}lpBoxApply(op);}
 function lpBoxFlush(){while(!LP.composing&&LP.pendingBox.length){var op=LP.pendingBox.shift();if(op.prev&&!(LP.sess[op.prev]&&LP.sess[op.prev].movedTo))lpDraftPut(op.prev,lpBoxVal());lpBoxApply(op);}}
 
 /* ── per-terminal model: the messages this phone has seen, keyed (F4) ── */
@@ -1086,14 +1153,19 @@ function lpLoad(){
   api('/laptop/state').then(function(r){
     if(STATE.view!=='laptop')return;
     if(r.status===403||r.status===401){lpCode(r);lpDenied();return;}
-    if(!r.ok||!r.j){lpCode(r);LP.connErr=(r.j&&r.j.code==='link_off')?'link off':'Relay offline';lpPaintHead();lpKeysState();lpPaintStat();return;}
-    LP.connErr='';LP.lastOk=Date.now();var sn=lpT(r.j.server_now);LP.offset=sn?sn-Date.now():0;
+    if(!r.ok||!r.j){lpCode(r);LP.fails++;LP.connErr=(r.j&&r.j.code==='link_off')?'link off':'reconnecting';lpPaintHead();lpKeysState();lpPaintStat();return;}
+    LP.connErr='';LP.fails=0;LP.lastOk=Date.now();var sn=lpT(r.j.server_now);LP.offset=sn?sn-Date.now():0;
     lpIngest(r.j);
-  }).catch(function(){LP.connErr='Relay offline';lpPaintHead();lpKeysState();lpPaintStat();}).then(function(){
+  }).catch(function(){LP.fails++;LP.connErr='reconnecting';lpPaintHead();lpKeysState();lpPaintStat();}).then(function(){
     LP.inflight=false;
-    if(STATE.view==='laptop'&&!LP.timer)LP.timer=setTimeout(lpLoad,document.visibilityState==='visible'?LP_POLL_MS:15000);
+    if(STATE.view!=='laptop'||LP.timer)return;
+    if(LP.kick){LP.kick=false;LP.timer=setTimeout(lpLoad,0);return;}
+    var d=LP.fails?Math.max(LP_POLL_MS,LP_BACKOFF[Math.min(LP.fails,LP_BACKOFF.length)-1]):LP_POLL_MS;
+    LP.timer=setTimeout(lpLoad,document.visibilityState==='visible'?d:Math.max(d,15000));
   });
 }
+/* back online / back in view: retry now (a sync still in flight retries the moment it ends) */
+function lpRetryNow(){if(STATE.view!=='laptop')return;if(LP.inflight){LP.kick=true;return;}lpLoad();}
 function lpCode(r){var k=String(r&&r.status||0)+((r&&r.j&&r.j.code)?' '+String(r.j.code).replace(/[^a-z_]/g,'').slice(0,24):'');LP.dbg.codes[k]=(LP.dbg.codes[k]||0)+1;}
 function lpCmp(a,b){var x=String(a.name||'').toLowerCase(),y=String(b.name||'').toLowerCase();if(x!==y)return x<y?-1:1;var s=String(a.session_id),t=String(b.session_id);return s<t?-1:s>t?1:0;}
 function lpIngest(d){
@@ -1130,7 +1202,7 @@ function lpAutoPick(vis){var w=vis.filter(function(s){return s.status==='waiting
   var last=lpLS('lp_last'),l=vis.filter(function(s){return s.session_id===last;});
   var pick=(w[0]||l[0]||vis[0]);if(pick)lpSelect(pick.session_id,false);}
 function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel)return;
-  lpDisarm();lpDraftNow();lpSaveScroll();var old=LP.sess[LP.sel];if(old&&old.ghost){old.ghost=false;if(!old.movedTo&&lpBoxVal().trim())old.goneDraft=true;}
+  lpSheetClose();lpSelOff();lpDisarm();lpDraftNow();lpSaveScroll();var old=LP.sess[LP.sel];if(old&&old.ghost){old.ghost=false;if(!old.movedTo&&lpBoxVal().trim())old.goneDraft=true;}
   var prev=LP.sel;LP.sel=sid;LP.dbg.switches++;lpLSset('lp_last',sid);lpBox(lpDraftGet(sid),null,LP.composing?prev:null);LP.guardAt=performance.now();LP.newCount=0;
   if(STATE.view==='laptop'&&LP.built)lpPaint();}
 
@@ -1138,7 +1210,9 @@ function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel
 function lpPaint(){if(STATE.view!=='laptop'||!LP.built)return;lpPaintHead();lpPaintTabs(lpTabList());var S=LP.sess[LP.sel];
   lpPaintPrompt(S);lpPaintConv(false);lpPaintCmds();lpPaintChips();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
 function lpPaintHead(){var t,cls='lpdot lpd-o',d=LP.data;
-  if(LP.locked)t='owner only';else if(LP.connErr)t=LP.connErr;else if(!d)t=LP.cacheShown?'saved · connecting':'connecting';
+  if(LP.locked)t='owner only';
+  else if(LP.connErr){t=LP.connErr;cls='lpdot lpd-b';if(t==='reconnecting'&&LP.lastOk)t+=' · '+lpAge(new Date(LP.lastOk).toISOString())+' ago';}
+  else if(!d)t=LP.cacheShown?'saved · connecting':'connecting';
   else{var now=lpSrvNow(),live=(d.machines||[]).filter(function(m){return m&&now-lpT(m.seen_at)<60000;});
     if(live.length){t='LIVE · '+String((live[0].info&&live[0].info.host)||'laptop');cls='lpdot lpd-i';}
     else if(d.machines&&d.machines.length)t='laptop offline · seen '+lpAge(d.machines[0].seen_at,now)+' ago';else t='not paired yet';}
@@ -1224,7 +1298,8 @@ function lpMd(el,text){var lines=String(text).split('\n'),buf=[],i=0;
   while(i<lines.length){var f=/^\s*\x60\x60\x60\s*([^\x60]*?)\s*$/.exec(lines[i]);
     if(!f){buf.push(lines[i]);i++;continue;}
     flush();var body=[];i++;while(i<lines.length&&!/^\s*\x60\x60\x60\s*$/.test(lines[i])){body.push(lines[i]);i++;}i++;
-    var box=lpEl('div','lpcode');if(f[1])box.appendChild(lpEl('div','lplang',f[1]));var pre=lpEl('pre');pre.appendChild(lpEl('code',null,body.join('\n')));box.appendChild(pre);el.appendChild(box);}
+    var box=lpEl('div','lpcode'),bar=lpEl('div','lpcbar'),raw=body.join('\n'),cb=lpCopyBtn('Copy code');cb._raw=raw;if(f[1])bar.appendChild(lpEl('div','lplang',f[1]));bar.appendChild(cb);box.appendChild(bar);
+    var pre=lpEl('pre');pre.appendChild(lpEl('code',null,raw));box.appendChild(pre);el.appendChild(box);}
   flush();}
 function lpRowEl(r){var el;
   if(r.kind==='gap')el=lpEl('div','lpgap','Earlier messages may be missing here');
@@ -1233,7 +1308,9 @@ function lpRowEl(r){var el;
   el.dataset.k=r.k;lpRowFill(el,r);return el;}
 function lpRowFill(el,r){el._sig=r.sig;
   if(r.kind==='steps'){lpSetText(el.firstChild,r.sum);var ls=el.lastChild;ls.textContent='';r.labels.forEach(function(x){ls.appendChild(lpEl('div',null,x));});}
-  else if(r.kind==='msg'){el.textContent='';if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);}}
+  else if(r.kind==='msg'){el.textContent='';el._it=r.it;if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);el.appendChild(lpCopyBtn('Copy message'));}}
+/* F7: a Copy button with no text of its own (its words are CSS), so a message's textContent stays its text */
+function lpCopyBtn(label){var b=lpEl('button','lpcopy');b.type='button';b.dataset.lptap='copy';b.setAttribute('aria-label',label);return b;}
 function lpAtBottom(){var p=lpG('lpPane');return !p||p.scrollHeight-p.scrollTop-p.clientHeight<=LP_STICK_PX;}
 function lpAnchorNow(){var pane=lpG('lpPane'),conv=lpG('lpConv');if(!pane||!conv||!conv.children.length)return null;
   var pt=pane.getBoundingClientRect().top,kids=conv.children,lo=0,hi=kids.length-1,a=-1;
@@ -1241,7 +1318,7 @@ function lpAnchorNow(){var pane=lpG('lpPane'),conv=lpG('lpConv');if(!pane||!conv
   if(a<0)return null;var el=kids[a];return {k:el.dataset.k,off:el.getBoundingClientRect().top-pt};}
 function lpAnchorFix(a){if(!a)return;var el=LP.rowEls[a.k],pane=lpG('lpPane');if(!el||!pane||!el.parentNode)return;
   var d=el.getBoundingClientRect().top-pane.getBoundingClientRect().top-a.off;if(Math.abs(d)>=0.5)pane.scrollTop=pane.scrollTop+d;}
-function lpFrozen(){try{var s=window.getSelection();if(!s||s.isCollapsed||!s.rangeCount)return false;var p=lpG('lpPane');return !!(p&&(p.contains(s.anchorNode)||p.contains(s.focusNode)));}catch(e){return false;}}
+function lpFrozen(){if(LP.selMode)return true;try{var s=window.getSelection();if(!s||s.isCollapsed||!s.rangeCount)return false;var p=lpG('lpPane');return !!(p&&(p.contains(s.anchorNode)||p.contains(s.focusNode)));}catch(e){return false;}}
 function lpSaveScroll(){var S=LP.sess[LP.convSid];if(!S)return;var a=lpAnchorNow();S.scroll={stick:lpAtBottom(),k:a&&a.k,off:a?a.off:0};}
 function lpPaintConv(rebuild){var conv=lpG('lpConv'),pane=lpG('lpPane');if(!conv||!pane)return;var S=LP.sess[LP.sel];
   if(!S){if(LP.convSid!==null||conv.firstChild){conv.textContent='';LP.rowEls={};LP.convSid=null;}LP.newCount=0;lpPill();return;}
@@ -1264,16 +1341,16 @@ function lpPaintConv(rebuild){var conv=lpG('lpConv'),pane=lpG('lpPane');if(!conv
   else{lpAnchorFix(anc);LP.newCount+=added;}
   if(added&&document.activeElement===lpG('lpIn'))LP.dbg.typed+=added;
   LP.stick=lpAtBottom();LP.anchor=lpAnchorNow();if(LP.stick)LP.newCount=0;lpPill();}
-function lpPill(){var p=lpG('lpPill');if(!p)return;var on=!LP.stick&&!!LP.convSid;lpTog(p,'on',on);
+function lpPill(){var p=lpG('lpPill');if(!p)return;var on=!LP.stick&&!!LP.convSid&&!LP.selMode;lpTog(p,'on',on);
   if(on)lpSetText(p,'Jump to latest'+(LP.newCount?' · '+LP.newCount+' new':''));}
 function lpJump(){var p=lpG('lpPane');if(!p)return;p.scrollTop=p.scrollHeight;LP.newCount=0;LP.stick=true;lpPill();}
 var LP_SCROLLQ=false;
-function lpOnScroll(){var st=lpAtBottom();if(st!==LP.stick||(st&&LP.newCount)){LP.stick=st;if(st)LP.newCount=0;lpPill();}
+function lpOnScroll(){if(LP.selMode)return;var st=lpAtBottom();if(st!==LP.stick||(st&&LP.newCount)){LP.stick=st;if(st)LP.newCount=0;lpPill();}
   if(LP_SCROLLQ)return;LP_SCROLLQ=true;requestAnimationFrame(function(){LP_SCROLLQ=false;LP.stick=lpAtBottom();LP.anchor=lpAnchorNow();
     var S=LP.sess[LP.convSid],p=lpG('lpPane');if(S)S.scroll={stick:LP.stick,k:LP.anchor&&LP.anchor.k,off:LP.anchor?LP.anchor.off:0};
     if(S&&p&&p.scrollTop<300&&S.renderFrom>0&&!lpFrozen()){S.renderFrom=lpFromFor(S,S.items.length-S.renderFrom+LP_MORE_N);lpPaintConv(false);}});}
-function lpPaneResized(){var p=lpG('lpPane');if(!p||!LP.convSid)return;if(LP.stick)p.scrollTop=p.scrollHeight;else lpAnchorFix(LP.anchor);LP.anchor=lpAnchorNow();}
-function lpPaintCmds(){var box=lpG('lpCmds');if(!box)return;var d=LP.data||{};
+function lpPaneResized(){var p=lpG('lpPane');if(!p||!LP.convSid||LP.selMode)return;if(LP.stick)p.scrollTop=p.scrollHeight;else lpAnchorFix(LP.anchor);LP.anchor=lpAnchorNow();}
+function lpPaintCmds(){var box=lpG('lpCmds');if(!box||LP.selMode)return;var d=LP.data||{};
   var cs=LP.sel?(d.commands||[]).filter(function(c){return c&&c.session_id===LP.sel;}).slice(0,5):[];
   var sig=JSON.stringify(cs.map(function(c){return [c.id,c.status,c.kind,c.body,c.result&&c.result.reason];}));
   if(sig===LP.sigs.cmds)return;LP.sigs.cmds=sig;var stick=lpAtBottom();box.textContent='';if(!cs.length)return;
@@ -1379,22 +1456,116 @@ function lpPaintDbg(){var el=lpG('lpDbg');if(!el)return;lpTog(el,'on',LP.dbgOn);
 function lpAges(){var now=lpSrvNow(),xs=document.querySelectorAll('#laptop .lpage');for(var i=0;i<xs.length;i++)lpSetText(xs[i],lpAge(xs[i].dataset.at,now)+' ago');}
 function lpTickFn(){if(STATE.view!=='laptop')return;if(LP.arm&&performance.now()-LP.arm.at>LP_ARM_MS)lpDisarm();
   lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
-function lpDenied(){lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
+function lpDenied(){lpSheetClose();lpSelOff();lpMicStop();lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
   ['lpConv','lpPend','lpCmds','lpChips'].forEach(function(id){var e=lpG(id);if(e)e.textContent='';});
   lpBox('');lpDisarm();lpPaintTabs([]);lpPaintHead();lpPaintStat();lpComposerState();lpKeysState();lpPill();}
+
+/* ── page commit B, F7: Copy on every message and code block; writeText inside the tap, else the text is selected ── */
+function lpCopied(b){if(!b){toast('Copied');return;}if(b._okT)clearTimeout(b._okT);if(b._lbl==null)b._lbl=b.getAttribute('aria-label')||'Copy';
+  lpTog(b,'lpok',true);b.setAttribute('aria-label','Copied');b._okT=setTimeout(function(){b._okT=null;lpTog(b,'lpok',false);b.setAttribute('aria-label',b._lbl);},1200);}
+function lpSelectNode(el){if(!el)return;try{var r=document.createRange();r.selectNodeContents(el);var lc=el.lastChild;if(lc&&lc.classList&&lc.classList.contains('lpcopy'))r.setEndBefore(lc);var g=getSelection();g.removeAllRanges();g.addRange(r);}catch(e){}}
+function lpCopy(text,btn,selEl){var no=function(){lpSelectNode(selEl);toast('Copy was blocked here: the text is selected, use your phone’s Copy');};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(String(text)).then(function(){lpCopied(btn);},no);return;}}catch(e){}no();}
+function lpOnCopy(b){var cb=b.closest('.lpcode');if(cb&&b._raw!=null){lpCopy(b._raw,b,cb.querySelector('pre code'));return;}
+  var m=b.closest('.lpm-a,.lpm-u');if(m&&m._it)lpCopy(String(m._it.text),b,m);}
+
+/* long-press (500 ms, cancelled by 10 px of movement or a scroll) opens Copy / Quote / Resend / Select text */
+var LP_HOLD_MS=500,LP_HOLD_PX=10;
+function lpPressEnd(){var p=LP.press;if(p){clearTimeout(p.t);LP.press=null;}}
+function lpPressDown(e){if(LP.selMode||LP.sheet||(e.button!=null&&e.button>0))return;var t=e.target;if(!t||!t.closest||t.closest('button,summary,.lpcbar'))return;
+  var m=t.closest('.lpm-a,.lpm-u');if(!m||!m._it)return;lpPressEnd();
+  var p={m:m,pid:e.pointerId,x:e.clientX,y:e.clientY,t:0};p.t=setTimeout(function(){if(LP.press!==p)return;LP.press=null;lpSheetOpen(m);},LP_HOLD_MS);LP.press=p;}
+function lpPressMove(e){var p=LP.press;if(!p||e.pointerId!==p.pid)return;var dx=e.clientX-p.x,dy=e.clientY-p.y;if(dx*dx+dy*dy>LP_HOLD_PX*LP_HOLD_PX)lpPressEnd();}
+function lpSheetOpen(m){var it=m&&m._it;if(!it||!m.isConnected)return;lpSheetClose();
+  try{var g=getSelection(),pn=lpG('lpPane');if(g&&!g.isCollapsed&&pn&&pn.contains(g.anchorNode))g.removeAllRanges();}catch(e){}
+  var red=String(it.text).indexOf('[redacted]')>=0;LP.sheet={m:m,it:it,red:red};
+  lpSetText(lpG('lpSheetQ'),String(it.text).slice(0,240));var rs=lpG('lpSheetResend');if(rs)rs.hidden=!(it.role==='user'&&!red);
+  lpTog(m,'lpheld',true);lpTog(lpG('laptop'),'lp-sheet',true);}
+function lpSheetClose(){var S=LP.sheet;if(!S)return;LP.sheet=null;lpTog(S.m,'lpheld',false);lpTog(lpG('laptop'),'lp-sheet',false);}
+/* Quote and Resend only fill the box (never send): a Resend still needs Send and F3T's confirm; repeats within 1 s do nothing */
+function lpOnSheet(act){var S=LP.sheet;if(!S)return;var it=S.it,txt=String(it.text);
+  if(act==='copy'){lpSheetClose();lpCopy(txt,null,S.m);return;}
+  if(act==='select'){var k=S.m.dataset.k;lpSheetClose();lpSelOn(k);return;}
+  lpSheetClose();if(act!=='quote'&&act!=='resend')return;
+  var now=performance.now();if(now-LP.quoteAt<1000)return;LP.quoteAt=now;
+  if(act==='quote'){var q=txt.split('\n').map(function(l){return '> '+l;}).join('\n')+'\n';
+    lpPrepend(q,function(){var ta=lpG('lpIn');if(ta){try{ta.focus({preventScroll:true});ta.setSelectionRange(q.length,q.length);}catch(e){}}lpDraftSoon();});
+    if(S.red)toast('Part of this message was redacted on this phone: the quote shows [redacted]');return;}
+  if(it.role!=='user'||S.red)return;
+  if(LP.arm)lpDisarm();var fill=function(){lpDraftSoon();toast('In the box: tap Send, then confirm, to send it again');};
+  if(lpBoxVal().trim())lpPrepend(txt,fill);else lpBox(txt,fill);}
+
+/* Select mode: the conversation as one plain-text block native selection can cross; the pane is frozen while it is on
+   and catches up (same reading place) when it goes off */
+function lpSelOn(k){if(LP.selMode||!LP.convSid)return;var S=LP.sess[LP.convSid],pane=lpG('lpPane'),blk=lpG('lpSelB');if(!S||!pane||!blk)return;
+  lpSheetClose();lpPressEnd();var anc=lpAnchorNow(),ref=(k&&LP.rowEls[k])||(anc&&LP.rowEls[anc.k])||null,pt=pane.getBoundingClientRect().top,off=ref?ref.getBoundingClientRect().top-pt:0;
+  LP.selMode={sid:LP.convSid,top:pane.scrollTop,anc:anc,stick:lpAtBottom()};
+  try{getSelection().removeAllRanges();}catch(e){}
+  blk.textContent='';var at=null,rk=ref?ref.dataset.k:null;
+  lpRows(S).forEach(function(r,i){if(i)lpTxt(blk,'\n\n');var sp=lpEl('span',null,r.kind==='msg'?String(r.it.text):r.kind==='steps'?r.sum:'Earlier messages may be missing here');blk.appendChild(sp);if(r.k===rk)at=sp;});
+  lpTog(lpG('laptop'),'lp-sel',true);lpPill();
+  if(LP.selMode.stick||!at)pane.scrollTop=LP.selMode.stick?pane.scrollHeight:0;
+  else{pane.scrollTop=0;pane.scrollTop=Math.max(0,at.getBoundingClientRect().top-pane.getBoundingClientRect().top-Math.max(8,off-52));}}
+function lpSelOff(){var m=LP.selMode;if(!m)return;LP.selMode=null;var pane=lpG('lpPane'),blk=lpG('lpSelB');
+  try{var g=getSelection();if(g&&blk&&(blk.contains(g.anchorNode)||blk.contains(g.focusNode)))g.removeAllRanges();}catch(e){}
+  lpTog(lpG('laptop'),'lp-sel',false);if(blk)blk.textContent='';
+  if(pane&&m.sid===LP.convSid){if(m.stick)pane.scrollTop=pane.scrollHeight;else{pane.scrollTop=m.top;lpAnchorFix(m.anc);}LP.stick=lpAtBottom();LP.anchor=lpAnchorNow();}
+  LP.sigs.cmds=null;lpPaintCmds();lpPaintConv(false);lpPill();}
+function lpSelCopy(b){var blk=lpG('lpSelB');if(!blk)return;var g=null;try{g=getSelection();}catch(e){}
+  var part=g&&!g.isCollapsed&&blk.contains(g.anchorNode)&&blk.contains(g.focusNode)?String(g):'';lpCopy(part||blk.textContent,null,blk);}
+
+/* ── F8: Paste at the caret through the Clipboard API; refused: say how to paste by hand, box unchanged ── */
+function lpPaste(){var ta=lpG('lpIn');if(!ta)return;var s=ta.selectionStart,e=ta.selectionEnd;
+  var no=function(){toast('Paste was blocked: long-press the box and choose Paste');};
+  try{if(!(navigator.clipboard&&navigator.clipboard.readText)){no();return;}
+    navigator.clipboard.readText().then(function(t){t=String(t==null?'':t);if(!t){toast('The clipboard is empty');return;}
+      lpInsert(t,s,e,function(){if(LP.arm)lpDisarm();lpDraftSoon();});},no);}catch(x){no();}}
+
+/* ── F9: the mic fills the box at the caret and never sends; hidden with no API, in an iPhone home-screen app, and for
+   good after the browser blocks it. Interim words show in a preview above the box; only final words go in ── */
+function lpMicApi(){return window.SpeechRecognition||window.webkitSpeechRecognition||null;}
+function lpMicOk(){if(LP.micDead||!lpMicApi()||lpLS('lp_mic_off')==='1')return false;var sa=false;
+  try{sa=navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}catch(e){}return !(sa&&lpAppleWebKit());}
+function lpMicShow(){var b=lpG('lpMic');if(!b)return;var h=!lpMicOk();if(b.hidden!==h)b.hidden=h;}
+function lpMicPrev(t){var p=lpG('lpMicPrev');if(!p)return;lpTog(p,'on',!!LP.mic);lpSetText(p,LP.mic?(t||'Listening…'):'');}
+function lpMicState(){var b=lpG('lpMic');if(b){lpTog(b,'lp-rec',!!LP.mic);b.setAttribute('aria-pressed',LP.mic?'true':'false');}lpMicPrev('');}
+function lpMicStop(){var m=LP.mic;if(!m)return;LP.mic=null;try{m.r.abort();}catch(e){}lpMicState();}
+function lpMic(){if(LP.mic){var m0=LP.mic;try{m0.r.stop();}catch(e){lpMicStop();}return;}
+  var R=lpMicApi(),ta=lpG('lpIn');if(!R||!ta||!lpMicOk())return;var r;try{r=new R();}catch(e){toast('Voice input is not available here');return;}
+  var m={r:r,s:ta.selectionStart,e:ta.selectionEnd};LP.mic=m;
+  try{r.lang=navigator.language||'en-US';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;}catch(e){}
+  r.onresult=function(ev){if(LP.mic!==m)return;var fin='',mid='',rs=ev.results||[];
+    for(var i=ev.resultIndex||0;i<rs.length;i++){var x=rs[i],w=String((x&&x[0]&&x[0].transcript)||'');if(x&&x.isFinal)fin+=w;else mid+=w;}
+    if(fin){var foc=document.activeElement===ta,s=foc?ta.selectionStart:m.s,e=foc?ta.selectionEnd:m.e;
+      lpInsert(fin,s,e,function(){m.s=m.e=ta.selectionEnd;if(LP.arm)lpDisarm();lpDraftSoon();});}
+    lpMicPrev(mid);};
+  r.onerror=function(ev){var c=String((ev&&ev.error)||'').replace(/[^a-z-]/g,'').slice(0,30);
+    if(c==='not-allowed'||c==='service-not-allowed'){LP.micDead=true;lpLSset('lp_mic_off','1');lpMicShow();toast('The microphone is blocked in this browser: use the keyboard’s mic (Wispr) instead');}
+    else if(c&&c!=='no-speech'&&c!=='aborted')toast('Voice input stopped ('+c+')');};
+  r.onend=function(){if(LP.mic===m){LP.mic=null;lpMicState();}};
+  try{r.start();}catch(e){LP.mic=null;toast('Voice input could not start');}lpMicState();if(LP.mic)lpMicPrev('');}
+
+/* ── D100: compact header: the app's own view strip moves into the LAPTOP head row and goes back exactly on leave ── */
+function lpNavIn(){if(LP.nav)return;var vt=document.querySelector('#app>.top .vtoggle'),head=lpG('lpHead'),pill=lpG('lpConnW');if(!vt||!head||!pill)return;
+  LP.nav={vt:vt,parent:vt.parentNode,next:vt.nextSibling,sl:vt.scrollLeft};head.insertBefore(vt,pill);vt.scrollLeft=0;}
+function lpNavOut(){var n=LP.nav;if(!n)return;LP.nav=null;try{if(n.next&&n.next.parentNode===n.parent)n.parent.insertBefore(n.vt,n.next);else n.parent.appendChild(n.vt);n.vt.scrollLeft=n.sl;}catch(e){}}
+function lpKeyDown(e){if(e.key!=='Escape')return;if(LP.sheet){lpSheetClose();e.preventDefault();}else if(LP.selMode){lpSelOff();e.preventDefault();}}
 
 /* ── taps (F3T): own tap detection on pointerup inside the element's box, never click; keeps the keyboard up ── */
 var LPT=null;
 function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-lptap]'):null;if(!el)return;
   if(e.type!=='mousedown'&&(e.type==='pointerdown'||!LPT||LPT.el!==el||performance.now()-LPT.t>600))LPT={el:el,pid:e.type==='pointerdown'?e.pointerId:null,t:performance.now(),done:false};
-  if(el.getAttribute('data-lptap')!=='pill'&&e.cancelable)e.preventDefault();}
+  /* a Copy button inside the conversation lets a touch start a scroll (its mousedown is still held, so focus stays) */
+  var w=el.getAttribute('data-lptap');if(w!=='pill'&&!(w==='copy'&&e.type==='touchstart')&&e.cancelable)e.preventDefault();}
 function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   if(e.type==='touchend'){var c=e.changedTouches&&e.changedTouches[0];if(!c)return;x=c.clientX;y=c.clientY;}
   else{if(t.pid!=null&&e.pointerId!==t.pid)return;x=e.clientX;y=e.clientY;}
   t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;
   var w=t.el.getAttribute('data-lptap');
   if(w==='send')lpOnSend();else if(w==='confirm')lpOnConfirm(t.t);else if(w==='key')lpOnKey(t.el.getAttribute('data-lpk'),t.t);
-  else if(w==='pill')lpJump();else if(w==='chip')lpOnChip(t.el);}
+  else if(w==='pill')lpJump();else if(w==='chip')lpOnChip(t.el);
+  else if(w==='copy')lpOnCopy(t.el);else if(w==='sheet')lpOnSheet(t.el.getAttribute('data-act'));else if(w==='sheetbg')lpSheetClose();
+  else if(w==='selcopy')lpSelCopy(t.el);else if(w==='seldone')lpSelOff();else if(w==='paste')lpPaste();else if(w==='mic')lpMic();}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
@@ -1402,28 +1573,38 @@ function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started
   el.style.top=Math.round(top)+'px';el.style.height=Math.max(160,Math.round(h))+'px';
   /* a small visible area (keyboard up under the top bar) caps the box so the composer never slides under the keyboard */
   var mx=Math.max(44,Math.min(140,Math.round(Math.max(160,h)*0.28)));if(el.style.getPropertyValue('--lpinmax')!==String(mx))el.style.setProperty('--lpinmax',Number(mx));}
-function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();}else if(STATE.view==='laptop')lpLoad();}
+function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else lpRetryNow();}
 function lpOnSelChange(){if(LP.arm&&!lpSelSame(lpSelSnap(),LP.arm.sel))lpDisarm();if(LP.queued&&!lpFrozen())lpPaintConv(false);}
 function lpStart(){if(LP.started)return;LP.started=true;
   var m=document.querySelector('meta[name="viewport"]');if(m){LP.meta=m.getAttribute('content');if(!/interactive-widget/.test(LP.meta||'')&&!lpAppleWebKit())m.setAttribute('content',(LP.meta||'')+',interactive-widget=resizes-content');}
   var vv=window.visualViewport;LP.vv=vv||null;if(vv){vv.addEventListener('resize',lpFit);vv.addEventListener('scroll',lpFit);}
   window.addEventListener('resize',lpFit);document.addEventListener('visibilitychange',lpVis);window.addEventListener('pagehide',lpDisarm);document.addEventListener('selectionchange',lpOnSelChange);
+  window.addEventListener('online',lpRetryNow);document.addEventListener('keydown',lpKeyDown);
+  document.body.classList.add('lp-compact');lpNavIn();lpMicShow();
   lpG('laptop').classList.add('lp-on');lpFit();LP.tick=setInterval(lpTickFn,1000);}
-function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.started)return;LP.started=false;lpDisarm();lpDraftNow();lpSaveScroll();
+function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.started)return;LP.started=false;lpSheetClose();lpPressEnd();lpSelOff();lpMicStop();lpDisarm();lpDraftNow();lpSaveScroll();
+  window.removeEventListener('online',lpRetryNow);document.removeEventListener('keydown',lpKeyDown);lpNavOut();document.body.classList.remove('lp-compact');
   if(LP.tick){clearInterval(LP.tick);LP.tick=null;}
   var m=document.querySelector('meta[name="viewport"]');if(m&&LP.meta!=null)m.setAttribute('content',LP.meta);LP.meta=null;
   var vv=LP.vv;if(vv){vv.removeEventListener('resize',lpFit);vv.removeEventListener('scroll',lpFit);}LP.vv=null;
   window.removeEventListener('resize',lpFit);document.removeEventListener('visibilitychange',lpVis);window.removeEventListener('pagehide',lpDisarm);document.removeEventListener('selectionchange',lpOnSelChange);
   var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-armed');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
-  el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span>// LAPTOP</span><span class="lpconn"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
+  el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
     '<div id="lpDbg"></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div>'+
-    '<div class="lppw"><div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
-    '<div class="lpcomp" id="lpComp"><button type="button" id="lpConfirm" data-lptap="confirm"></button><div id="lpStat"></div><div id="lpChips"></div>'+
+    '<div class="lppw"><div id="lpSelBar"><span>Select text: drag across messages</span><button type="button" class="lpbtn" data-lptap="selcopy">Copy all</button><button type="button" class="lpbtn" data-lptap="seldone">Done</button></div>'+
+    '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
+    '<div class="lpcomp" id="lpComp"><button type="button" id="lpConfirm" data-lptap="confirm"></button><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChips"></div>'+
     '<div class="lpkeys"><button type="button" class="lpbtn" data-lptap="key" data-lpk="1">1</button><button type="button" class="lpbtn" data-lptap="key" data-lpk="2">2</button>'+
-    '<button type="button" class="lpbtn" data-lptap="key" data-lpk="3">3</button><button type="button" class="lpbtn" data-lptap="key" data-lpk="Esc">Esc</button></div>'+
+    '<button type="button" class="lpbtn" data-lptap="key" data-lpk="3">3</button><button type="button" class="lpbtn" data-lptap="key" data-lpk="Esc">Esc</button><span class="lpsep" aria-hidden="true"></span>'+
+    '<button type="button" class="lpbtn lptool" id="lpPaste" data-lptap="paste" aria-label="Paste into the box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="4.5" width="13" height="16.5" rx="2.2"/><path d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5"/><path d="M9 11h6M9 15h4"/></svg></button>'+
+    '<button type="button" class="lpbtn lptool" id="lpMic" data-lptap="mic" aria-label="Dictate into the box (never sends)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5M8.5 21h7"/></svg></button></div>'+
     '<div class="lprow"><textarea id="lpIn" rows="1" placeholder="Message this terminal" autocapitalize="sentences" autocorrect="on" spellcheck="true" enterkeyhint="enter" aria-label="Message this terminal"></textarea>'+
-    '<button type="button" id="lpSend" data-lptap="send">Send</button></div><textarea id="lpMirror" class="lpmirror" rows="1" tabindex="-1" aria-hidden="true"></textarea></div></div>';
+    '<button type="button" id="lpSend" data-lptap="send">Send</button></div><textarea id="lpMirror" class="lpmirror" rows="1" tabindex="-1" aria-hidden="true"></textarea></div>'+
+    '<div id="lpSheetBg" data-lptap="sheetbg"></div><div id="lpSheet" role="dialog" aria-label="Message actions"><div id="lpSheetQ"></div>'+
+    '<button type="button" class="lpsi" data-lptap="sheet" data-act="copy">Copy</button><button type="button" class="lpsi" data-lptap="sheet" data-act="quote">Quote in a reply</button>'+
+    '<button type="button" class="lpsi" id="lpSheetResend" data-lptap="sheet" data-act="resend">Resend</button><button type="button" class="lpsi" data-lptap="sheet" data-act="select">Select text</button>'+
+    '<button type="button" class="lpsi lpsx" data-lptap="sheet" data-act="cancel">Cancel</button></div></div>';
   ['pointerdown','mousedown'].forEach(function(ev){el.addEventListener(ev,lpTapDown);});el.addEventListener('touchstart',lpTapDown,{passive:false});
   el.addEventListener('pointerup',lpTapUp);el.addEventListener('touchend',lpTapUp);el.addEventListener('pointercancel',function(){LPT=null;});
   lpG('lpTerms').addEventListener('click',function(e){var c=e.target&&e.target.closest?e.target.closest('.lptab'):null;if(c&&c.dataset.sid!=null)lpSelect(c.dataset.sid,true);});
@@ -1433,7 +1614,10 @@ function lpBuild(el){
   ta.addEventListener('compositionend',function(){LP.composing=false;setTimeout(lpBoxFlush,0);});
   lpG('lpPane').addEventListener('scroll',lpOnScroll,{passive:true});
   try{if(window.ResizeObserver)new ResizeObserver(lpPaneResized).observe(lpG('lpPane'));}catch(e){}
-  var head=lpG('lpHead'),hold=null,clr=function(){if(hold){clearTimeout(hold);hold=null;}};
+  var pn=lpG('lpPane');pn.addEventListener('pointerdown',lpPressDown);pn.addEventListener('pointermove',lpPressMove,{passive:true});
+  ['pointerup','pointercancel','pointerleave','scroll'].forEach(function(ev){pn.addEventListener(ev,lpPressEnd,{passive:true});});
+  pn.addEventListener('contextmenu',function(e){if(LP.selMode)return;var m=e.target&&e.target.closest?e.target.closest('.lpm-a,.lpm-u'):null;if(!m)return;e.preventDefault();if(!LP.sheet){lpPressEnd();lpSheetOpen(m);}});
+  var head=lpG('lpConnW'),hold=null,clr=function(){if(hold){clearTimeout(hold);hold=null;}};
   head.addEventListener('pointerdown',function(){clr();hold=setTimeout(function(){hold=null;LP.dbgOn=!LP.dbgOn;lpPaintDbg();},600);});
   ['pointerup','pointercancel','pointerleave'].forEach(function(ev){head.addEventListener(ev,clr);});
   head.addEventListener('contextmenu',function(e){e.preventDefault();});
@@ -1444,7 +1628,8 @@ function renderLaptop(){
   lpStart();lpFit();
   if(!LP.cacheLoaded&&!LP.cacheP&&!LP.locked)LP.cacheP=lpCacheLoad().then(lpCacheApply,function(){LP.cacheLoaded=true;});
   lpPaint();
-  if(LP.cacheLoaded||LP.locked||LP.data)lpLoad();
+  /* an app re-render (the ticket refresh) must not cut a pending retry short: only start a sync when none is due */
+  if(LP.cacheLoaded||LP.locked||LP.data){if(!LP.timer&&!LP.inflight)lpLoad();}
   else Promise.race([LP.cacheP,new Promise(function(r){setTimeout(r,1200);})]).then(function(){if(!LP.data)lpPaint();lpLoad();});
 }
 function agEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}

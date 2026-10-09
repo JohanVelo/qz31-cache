@@ -981,10 +981,10 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='B-20261009-1';
+var LP_BUILD='P1-20261009-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
-  LP_STICK_PX=80,LP_POLL_MS=2000,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
-var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},firstPicked:false,userPicked:false,
+  LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
+var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
   arm:null,armTimer:null,outbox:[],risky:{},handled:{},guardAt:0,lastOk:0,offset:0,composing:false,pendingBox:[],
   queued:false,textOff:false,textBusy:false,keyBusy:false,locked:false,started:false,built:false,meta:null,vv:null,
   prevSids:{},stick:true,anchor:null,newCount:0,rowEls:{},convSid:null,tabEls:{},sigs:{},promptEid:'',note:null,
@@ -1089,7 +1089,7 @@ function lpCacheWrite(S,added,row){if(LP.locked)return;var t=Date.now(),recs=[];
 function lpWipe(){LP.locked=true;try{if(LPDB.db)LPDB.db.close();}catch(e){}LPDB.db=null;LPDB.p=Promise.resolve(null);
   try{if(window.indexedDB)indexedDB.deleteDatabase('lp_cache');}catch(e){}
   try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('lp_')===0)ks.push(k);}ks.forEach(lpLSdel);}catch(e){}
-  if(LP.draftT){clearTimeout(LP.draftT);LP.draftT=null;}LP.sess={};LP.outbox=[];LP.risky={};LP.cacheShown=false;}
+  if(LP.draftT){clearTimeout(LP.draftT);LP.draftT=null;}LP.sess={};LP.fullOnce=false;LP.outbox=[];LP.risky={};LP.cacheShown=false;}
 function lpCheckMe(me){if(!me||me.auth===undefined)return;
   if(!me.auth||me.active===false||me.role!=='owner'){lpWipe();return;}
   var uid=String(me.id||lpUid()||''),own=lpLS('lp_owner');
@@ -1149,12 +1149,13 @@ function lpMerge(S,W){var L=S.items,map={},added=[],changed=false,lk=null,i;
 function lpLoad(){
   if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}
   if(STATE.view!=='laptop'||LP.inflight)return;
-  LP.inflight=true;
-  api('/laptop/state').then(function(r){
+  LP.inflight=true;var wasAll=!LP.fullOnce;
+  api(lpStateUrl()).then(function(r){
     if(STATE.view!=='laptop')return;
     if(r.status===403||r.status===401){lpCode(r);lpDenied();return;}
     if(!r.ok||!r.j){lpCode(r);LP.fails++;LP.connErr=(r.j&&r.j.code==='link_off')?'link off':'reconnecting';lpPaintHead();lpKeysState();lpPaintStat();return;}
     LP.connErr='';LP.fails=0;LP.lastOk=Date.now();var sn=lpT(r.j.server_now);LP.offset=sn?sn-Date.now():0;
+    if(wasAll)LP.fullOnce=true;
     lpIngest(r.j);
   }).catch(function(){LP.fails++;LP.connErr='reconnecting';lpPaintHead();lpKeysState();lpPaintStat();}).then(function(){
     LP.inflight=false;
@@ -1164,6 +1165,12 @@ function lpLoad(){
     LP.timer=setTimeout(lpLoad,document.visibilityState==='visible'?d:Math.max(d,15000));
   });
 }
+/* RELAY P1: ask only for what this phone has not got. First load: every session's messages (all=1);
+   after that only the open session's, and only when its fingerprint (fp) changed. An older server
+   ignores the extra parameters and sends the full list, which lpIngest still takes. */
+function lpStateUrl(){var q='/laptop/state?v=2';if(!LP.fullOnce)return q+'&all=1';
+  if(LP.sel){var S=LP.sess[LP.sel];q+='&sel='+encodeURIComponent(LP.sel)+'&fp='+encodeURIComponent(S&&S.fp||'');}
+  return q;}
 /* back online / back in view: retry now (a sync still in flight retries the moment it ends) */
 function lpRetryNow(){if(STATE.view!=='laptop')return;if(LP.inflight){LP.kick=true;return;}lpLoad();}
 function lpCode(r){var k=String(r&&r.status||0)+((r&&r.j&&r.j.code)?' '+String(r.j.code).replace(/[^a-z_]/g,'').slice(0,24):'');LP.dbg.codes[k]=(LP.dbg.codes[k]||0)+1;}
@@ -1180,8 +1187,9 @@ function lpIngest(d){
   vis.sort(lpCmp);LP.vis=vis;var seen={};
   vis.forEach(function(s){var S=lpS(s.session_id);seen[s.session_id]=1;S.row=s;S.ghost=false;S.cacheOnly=false;S.goneTicks=0;S.goneBase=null;
     S.cacheOk=lpVerGE(ver[s.machine_id],[0,6,4]);
-    var ms=Array.isArray(s.messages)?s.messages:[],sig=JSON.stringify(ms);
-    if(sig!==S.msgSig){S.msgSig=sig;var res=lpMerge(S,lpWin(ms));if(S.cacheOk&&!LP.locked)lpCacheWrite(S,res.added,s);}
+    /* v2 sends messages only when they changed: no messages = keep what this phone has */
+    var has=Array.isArray(s.messages),ms=has?s.messages:null,sig=has?JSON.stringify(ms):S.msgSig;if(has&&s.fp)S.fp=s.fp;
+    if(has&&sig!==S.msgSig){S.msgSig=sig;var res=lpMerge(S,lpWin(ms));if(S.cacheOk&&!LP.locked)lpCacheWrite(S,res.added,s);}
     else if(S.cacheOk&&!LP.locked)lpCacheWrite(S,[],s);});
   var cur=by[LP.sel];if(cur){LP.dbg.ages.push(Math.max(0,now-lpT(cur.updated_at)));if(LP.dbg.ages.length>300)LP.dbg.ages.shift();}
   if(!LP.firstPicked){if(vis.length){LP.firstPicked=true;if(!(LP.userPicked&&seen[LP.sel]))lpAutoPick(vis);}}
@@ -1204,7 +1212,8 @@ function lpAutoPick(vis){var w=vis.filter(function(s){return s.status==='waiting
 function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel)return;
   lpSheetClose();lpSelOff();lpDisarm();lpDraftNow();lpSaveScroll();var old=LP.sess[LP.sel];if(old&&old.ghost){old.ghost=false;if(!old.movedTo&&lpBoxVal().trim())old.goneDraft=true;}
   var prev=LP.sel;LP.sel=sid;LP.dbg.switches++;lpLSset('lp_last',sid);lpBox(lpDraftGet(sid),null,LP.composing?prev:null);LP.guardAt=performance.now();LP.newCount=0;
-  if(STATE.view==='laptop'&&LP.built)lpPaint();}
+  if(STATE.view==='laptop'&&LP.built)lpPaint();
+  if(byUser&&STATE.view==='laptop')lpRetryNow();}
 
 /* ── painting: each part repaints only what changed ── */
 function lpPaint(){if(STATE.view!=='laptop'||!LP.built)return;lpPaintHead();lpPaintTabs(lpTabList());var S=LP.sess[LP.sel];
@@ -1396,9 +1405,17 @@ function lpSend(kind,body,o){o=o||{};
   if(!row||S.ghost||S.cacheOnly){toast(S&&S.ghost?'terminal gone':'No terminal selected');return Promise.resolve({ok:false,status:0,j:{},refused:'no terminal'});}
   if(kind==='key'){if(LP.keyBusy)return Promise.resolve({ok:false,status:0,j:{},refused:'busy'});LP.keyBusy=true;}
   if(kind==='text')LP.dbg.attempts++;
-  return api('/laptop/send',{method:'POST',body:JSON.stringify({machine_id:row.machine_id,session_id:row.session_id,kind:kind,body:body,lp_build:LP_BUILD})}).then(function(r){
+  /* RELAY P1: every send carries a client_id, so the server queues it at most once. That makes one
+     automatic retry after a network error safe: if the first try did arrive, the retry gets 'dup'. */
+  var payload=JSON.stringify({machine_id:row.machine_id,session_id:row.session_id,kind:kind,body:body,lp_build:LP_BUILD,client_id:o.cid||lpCid()});
+  function once(){return api('/laptop/send',{method:'POST',body:payload}).then(function(r){
     if(!r.ok){lpCode(r);if(r.status===401||r.status===403)lpDenied();}return r;
-  },function(){LP.dbg.codes['network']=(LP.dbg.codes['network']||0)+1;return {ok:false,status:0,net:true,j:{}};}).then(function(r){if(kind==='key')LP.keyBusy=false;return r;});}
+  },function(){LP.dbg.codes['network']=(LP.dbg.codes['network']||0)+1;return {ok:false,status:0,net:true,j:{}};});}
+  return once().then(function(r){if(!r.net)return r;return new Promise(function(res){setTimeout(res,LP_RETRY_MS);}).then(once);})
+    .then(function(r){if(kind==='key')LP.keyBusy=false;return r;});}
+/* a fresh id for one send: crypto.randomUUID where it exists, else 16 random bytes as hex */
+function lpCid(){try{if(crypto.randomUUID)return crypto.randomUUID();}catch(e){}
+  var b=new Uint8Array(16);crypto.getRandomValues(b);return Array.prototype.map.call(b,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
 function lpFresh(){var S=LP.sess[LP.sel];if(!S||!S.row||S.ghost||S.cacheOnly||LP.locked)return false;if(Date.now()-LP.lastOk>=LP_FRESH_MS)return false;return lpSrvNow()-lpT(S.row.updated_at)<LP_FRESH_MS;}
 function lpKeysState(){var on=lpFresh(),bs=document.querySelectorAll('#laptop [data-lptap="key"]');for(var i=0;i<bs.length;i++){if(bs[i].disabled!==!on)bs[i].disabled=!on;}LP.keysOn=on;}
 function lpOnKey(k,downT){if(downT-LP.guardAt<LP_GUARD_MS||!lpFresh())return;
@@ -1414,14 +1431,16 @@ function lpOnSend(){if(LP.arm||LP.textBusy)return;var v=lpBoxVal().trim();if(!v)
   if(v.length>LP_TEXT_MAX){toast('Over 4,000 characters');return;}lpArm(v);}
 function lpConfirmLabel(){var a=LP.arm,c=lpG('lpConfirm');if(!a||!c)return;var S=LP.sess[a.sid],row=(S&&S.row)||{},list=lpTabList(),me=list.filter(function(t){return t.sid===a.sid;})[0];
   lpSetText(c,(a.ack?'Send again? It may already be typed · ':'Send to ')+String(row.name||'Claude')+' · '+lpBase(row.cwd)+(me&&lpTwin(list,me)?' · '+lpShortId(list,me):''));}
-function lpArm(v){LP.arm={sid:LP.sel,text:v,at:performance.now(),sel:lpSelSnap(),ack:false};lpConfirmLabel();
+function lpArm(v){LP.arm={sid:LP.sel,text:v,at:performance.now(),sel:lpSelSnap(),ack:false,cid:lpCid()};lpConfirmLabel();
   lpTog(lpG('lpConfirm'),'on',true);lpTog(lpG('lpSend'),'lp-inert',true);lpTog(lpG('laptop'),'lp-armed',true);
   if(LP.armTimer)clearTimeout(LP.armTimer);LP.armTimer=setTimeout(lpDisarm,LP_ARM_MS);}
 function lpDisarm(){if(LP.armTimer){clearTimeout(LP.armTimer);LP.armTimer=null;}var c=lpG('lpConfirm');if(!LP.arm&&!(c&&c.classList.contains('on')))return;
   LP.arm=null;lpTog(lpG('lpConfirm'),'on',false);lpTog(lpG('lpSend'),'lp-inert',false);lpTog(lpG('laptop'),'lp-armed',false);}
 function lpOnConfirm(downT){var a=LP.arm;if(!a||LP.textBusy)return;if(downT-a.at<LP_ARM_MIN_MS)return;
   if(a.sid!==LP.sel||lpBoxVal().trim()!==a.text||lpCantSend()){lpDisarm();return;}
-  if(LP.risky[a.sid+'\u0001'+a.text]&&!a.ack){a.ack=true;a.at=performance.now();lpConfirmLabel();if(LP.armTimer)clearTimeout(LP.armTimer);LP.armTimer=setTimeout(lpDisarm,LP_ARM_MS);return;}
+  if(LP.risky[a.sid+'\u0001'+a.text]&&!a.ack){a.ack=true;
+    /* after a network error the same id goes again: if the first one did arrive, the server answers 'already queued' */
+    if(typeof LP.risky[a.sid+'\u0001'+a.text]==='string')a.cid=LP.risky[a.sid+'\u0001'+a.text];a.at=performance.now();lpConfirmLabel();if(LP.armTimer)clearTimeout(LP.armTimer);LP.armTimer=setTimeout(lpDisarm,LP_ARM_MS);return;}
   lpDisarm();lpDoSend(a);}
 function lpDoSend(a){var S=LP.sess[a.sid],raw=lpBoxVal();lpBox(raw.trim()===a.text?'':raw);lpDraftNow();
   var o={sid:a.sid,text:a.text,t0:Date.now(),id:null,state:'sending',dbg:{n:LP.dbg.sends.length+1,len:a.text.length,sha:'',osha:'',refill:''}};
@@ -1429,10 +1448,10 @@ function lpDoSend(a){var S=LP.sess[a.sid],raw=lpBoxVal();lpBox(raw.trim()===a.te
   lpSha(a.text).then(function(h){o.dbg.sha=h;lpPaintDbg();});
   lpSha(a.text.indexOf('ORACLE: ')===0?a.text.slice(8):a.text).then(function(h){o.dbg.osha=h;lpPaintDbg();});
   LP.outbox.push(o);LP.textBusy=true;lpPaintStat();
-  lpSend('text',a.text,{armed:true,sid:a.sid}).then(function(r){LP.textBusy=false;
+  lpSend('text',a.text,{armed:true,sid:a.sid,cid:a.cid}).then(function(r){LP.textBusy=false;
     if(r.ok){o.id=(r.j&&r.j.id!=null)?r.j.id:null;o.state='queued';if(o.id==null)lpOutDel(o);LP.textOff=false;
-      toast('Sent to '+String((S&&S.row&&S.row.name)||'Claude'));if(a.sid===LP.sel&&!lpBoxVal().trim())lpLSdel('lp_draft_'+a.sid);lpLoad();}
-    else if(r.net){lpOutDel(o);LP.risky[a.sid+'\u0001'+a.text]=1;LP.note={sid:a.sid,text:'Network error: it may have been typed. Check the terminal.',until:Date.now()+30000};toast('Network error: it may have been typed');}
+      toast((r.j&&r.j.dup?'Already queued, not sent twice: ':'Sent to ')+String((S&&S.row&&S.row.name)||'Claude'));if(a.sid===LP.sel&&!lpBoxVal().trim())lpLSdel('lp_draft_'+a.sid);lpLoad();}
+    else if(r.net){lpOutDel(o);LP.risky[a.sid+'\u0001'+a.text]=a.cid||1;LP.note={sid:a.sid,text:'Network error: it may have been typed. Check the terminal.',until:Date.now()+30000};toast('Network error: it may have been typed');}
     else if(r.status===401||r.status===403)lpOutDel(o);
     else{lpOutDel(o);if(r.j&&r.j.code==='text_off')LP.textOff=true;lpRefill(o,r.refused?'Not sent: '+r.refused:String((r.j&&r.j.error)||('Refused ('+r.status+')')));}
     lpPaintStat();lpComposerState();});}

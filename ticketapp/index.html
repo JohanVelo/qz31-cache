@@ -393,6 +393,7 @@ body.lp-compact #app>.top{display:none}
 .lpm-a{font-size:15px;line-height:1.5;color:var(--txt);white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;min-width:0}
 .lpm-u{align-self:flex-end;max-width:85%;background:color-mix(in srgb,var(--cyan) 16%,var(--cell));border:1px solid var(--line2);border-radius:14px 14px 4px 14px;padding:8px 12px;font-size:15px;line-height:1.5;color:var(--txt);white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
 .lpm-a b,.lph{font-weight:700}
+.lplink{color:var(--cyan);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
 .lpm-a code{font-family:var(--m);font-size:15px;background:var(--cell);border-radius:4px;padding:0 3px}
 .lpli{display:block;padding-left:16px;text-indent:-12px}
 .lpcode{margin:4px 0;background:var(--cell);border:1px solid var(--line);border-radius:8px;white-space:normal;max-width:100%}
@@ -981,7 +982,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='P1-20261009-1';
+var LP_BUILD='P1-20261009-2';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1192,7 +1193,9 @@ function lpIngest(d){
     if(has&&sig!==S.msgSig){S.msgSig=sig;var res=lpMerge(S,lpWin(ms));if(S.cacheOk&&!LP.locked)lpCacheWrite(S,res.added,s);}
     else if(S.cacheOk&&!LP.locked)lpCacheWrite(S,[],s);});
   var cur=by[LP.sel];if(cur){LP.dbg.ages.push(Math.max(0,now-lpT(cur.updated_at)));if(LP.dbg.ages.length>300)LP.dbg.ages.shift();}
-  if(!LP.firstPicked){if(vis.length){LP.firstPicked=true;if(!(LP.userPicked&&seen[LP.sel]))lpAutoPick(vis);}}
+  var want=lpWant();
+  if(want&&seen[want]){LP.want=null;LP.firstPicked=true;LP.userPicked=true;if(LP.sel!==want)lpSelect(want,false);}
+  else if(!LP.firstPicked){if(vis.length){LP.firstPicked=true;if(!(LP.userPicked&&seen[LP.sel]))lpAutoPick(vis);}}
   else if(LP.sel&&!seen[LP.sel]){
     var G=LP.sess[LP.sel];
     if(!lpBoxVal().trim()&&!LP.composing&&!LP.pendingBox.length){if(vis.length)lpAutoPick(vis);else{if(G)G.ghost=false;LP.sel=null;}}
@@ -1201,10 +1204,19 @@ function lpIngest(d){
         /* exactly one live terminal with that (machine, name, folder), and it is new: the /clear successor; two matches: nothing moves */
         if(c.length===1&&!(G.goneBase||{})[c[0].session_id]){lpDraftPut(c[0].session_id,lpBoxVal());G.movedTo=c[0].session_id;lpLSdel('lp_draft_'+LP.sel);}}}
   } else if(!LP.sel&&vis.length)lpAutoPick(vis);
-  LP.prevSids=seen;
+  LP.prevSids=seen;if(want&&!seen[want]&&++LP.wantTries>5)LP.want=null;
+  lpBadge(vis.filter(function(s){return s.status==='waiting'&&now-lpT(s.updated_at)<LP_OFFLINE_MS;}).length);
   lpOutboxCheck(d.commands||[]);
   lpPaint();
 }
+/* RELAY P1: a laptop notification opens ./index.html?lps=<session>#laptop: pick that terminal once it is listed
+   (its question card is then on screen). The parameter is dropped from the address bar so a reload does not re-pick. */
+function lpWant(){if(LP.want===undefined){var w='';LP.wantTries=0;
+  try{var sp=new URLSearchParams(location.search);w=(sp.get('lps')||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);
+    if(sp.has('lps')){sp.delete('lps');var qs=sp.toString();history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);}}catch(e){}
+  LP.want=w||null;}return LP.want;}
+/* RELAY P1: the home-screen icon shows how many terminals wait for an answer (iOS 16.4+, Chrome); 0 clears it */
+function lpBadge(n){if(n===LP.badgeN)return;LP.badgeN=n;try{if(!('setAppBadge' in navigator))return;(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(function(){});}catch(e){}}
 function lpAutoPick(vis){var w=vis.filter(function(s){return s.status==='waiting';}).sort(function(a,b){
     var x=lpT(a.pending&&a.pending.at)||lpT(a.updated_at),y=lpT(b.pending&&b.pending.at)||lpT(b.updated_at);return y-x;});
   var last=lpLS('lp_last'),l=vis.filter(function(s){return s.session_id===last;});
@@ -1292,15 +1304,22 @@ function lpRows(S){var L=S.items,rows=[],i=Math.max(0,S.renderFrom);
   return rows;}
 function lpInline(p,s){var parts=String(s).split(/(\*\*[^*\n]+?\*\*|\x60[^\x60\n]+\x60)/);
   for(var i=0;i<parts.length;i++){var x=parts[i];if(!x)continue;
-    if(x.length>4&&x.slice(0,2)==='**'&&x.slice(-2)==='**')p.appendChild(lpEl('b',null,x.slice(2,-2)));
+    if(x.length>4&&x.slice(0,2)==='**'&&x.slice(-2)==='**'){var b=lpEl('b');lpLinks(b,x.slice(2,-2));p.appendChild(b);}
     else if(x.length>2&&x.charAt(0)==='\x60'&&x.charAt(x.length-1)==='\x60')p.appendChild(lpEl('code',null,x.slice(1,-1)));
-    else lpTxt(p,x);}}
+    else lpLinks(p,x);}}
+/* RELAY P1: bare http(s) links become tappable; the visible text stays exactly the message text.
+   Only http and https; anything else (javascript:, data:) stays plain text. */
+function lpLinks(p,s){var re=/https?:\/\/[^\s<>"'()\x60]+[^\s<>"'()\x60.,;:!?]/g,m,last=0;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)lpTxt(p,s.slice(last,m.index));var a=lpEl('a','lplink',m[0]);
+    a.href=m[0];a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);last=m.index+m[0].length;}
+  if(last<s.length)lpTxt(p,s.slice(last));}
 function lpMdLines(el,lines){var i=0,first=true;
   function nl(){if(!first)lpTxt(el,'\n');first=false;}
   while(i<lines.length){var ln=lines[i],m;
     if(/^\s*\|.*\|\s*$/.test(ln)){var tb=[];while(i<lines.length&&/^\s*\|.*\|\s*$/.test(lines[i])){tb.push(lines[i]);i++;}el.appendChild(lpEl('span','lpmono',tb.join('\n')));first=true;continue;}
     if((m=/^\s{0,3}#{1,6}\s+(.*)$/.exec(ln))){nl();var h=lpEl('span','lph');lpInline(h,m[1]);el.appendChild(h);i++;continue;}
     if((m=/^(\s*)[-*]\s+(.*)$/.exec(ln))){var li=lpEl('span','lpli');lpTxt(li,'• ');lpInline(li,m[2]);el.appendChild(li);first=true;i++;continue;}
+    if((m=/^(\s*)(\d{1,3})[.)]\s+(.*)$/.exec(ln))){var ol=lpEl('span','lpli');lpTxt(ol,m[2]+'. ');lpInline(ol,m[3]);el.appendChild(ol);first=true;i++;continue;}
     nl();lpInline(el,ln);i++;}}
 function lpMd(el,text){var lines=String(text).split('\n'),buf=[],i=0;
   function flush(){if(buf.length){lpMdLines(el,buf);buf=[];}}

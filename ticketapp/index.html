@@ -1013,7 +1013,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='N1-20261010-1';
+var LP_BUILD='N2-20261010-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1201,10 +1201,14 @@ function lpLoad(){
     LP.inflight=false;
     if(STATE.view!=='laptop'||LP.timer)return;
     if(LP.kick){LP.kick=false;LP.timer=setTimeout(lpLoad,0);return;}
-    var d=LP.fails?Math.max(LP_POLL_MS,LP_BACKOFF[Math.min(LP.fails,LP_BACKOFF.length)-1]):LP_POLL_MS;
+    var d=LP.fails?Math.max(LP_POLL_MS,LP_BACKOFF[Math.min(LP.fails,LP_BACKOFF.length)-1]):lpPollMs();
     LP.timer=setTimeout(lpLoad,document.visibilityState==='visible'?d:Math.max(d,15000));
   });
 }
+/* RELAY N2: refresh twice as often (1 s) while the open terminal is live and working, so its steps arrive as they
+   happen; idle, offline, a cached or ghost tab, and errors keep the normal pace and backoff. Hidden stays >= 15 s. */
+function lpPollMs(){var S=LP.sess[LP.sel],r=S&&S.row;
+  return r&&!S.ghost&&!S.cacheOnly&&r.status==='busy'&&lpSrvNow()-lpT(r.updated_at)<=LP_OFFLINE_MS?LP_POLL_MS/2:LP_POLL_MS;}
 /* RELAY P1: ask only for what this phone has not got. First load: every session's messages (all=1);
    after that only the open session's, and only when its fingerprint (fp) changed. An older server
    ignores the extra parameters and sends the full list, which lpIngest still takes. */

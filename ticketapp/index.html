@@ -376,6 +376,22 @@ body.lp-compact #app>.top{display:none}
 .lptab.off .lptn{color:var(--txt2)}
 .lptf{font-size:12px;line-height:1.4;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lpts{display:flex;align-items:center;gap:6px;margin-top:3px;font-family:var(--m);font-size:12px;line-height:1.4;color:var(--txt2)}
+/* RELAY N1: the card's "now" line (current step + timer) and the bar over the open terminal */
+.lpnw{display:flex;align-items:center;gap:6px;min-width:0;height:17px;margin-top:1px;font-size:12px;line-height:17px;color:var(--txt)}
+.lpnw .lpnt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpnw.dim,.lptab.off .lpnw{color:var(--txt2)}
+.lpnm{flex:0 0 auto;width:12px;text-align:center;font-weight:700;font-size:12px}
+.lpnm.ok{color:var(--txt2)}.lpnm.err,.lpnm.ask{color:var(--txt)}
+.lpntm{flex:0 0 auto;font-family:var(--m);font-size:12px;color:var(--txt2);font-variant-numeric:tabular-nums}
+.lpspin{flex:0 0 auto;display:inline-block;width:10px;height:10px;box-sizing:border-box;border-radius:50%;border:2px solid color-mix(in srgb,var(--amber) 30%,transparent);border-top-color:var(--amber);animation:lpspin .9s linear infinite}
+@keyframes lpspin{to{transform:rotate(360deg)}}
+#lpNow{flex:0 0 auto;display:none;margin:0 10px 6px;min-height:44px;padding:6px 10px;background:var(--cell);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;cursor:pointer;touch-action:manipulation;text-align:left;font:inherit;color:var(--txt);width:calc(100% - 20px);box-sizing:border-box}
+#lpNow.on{display:block}
+.lpnb1{display:flex;align-items:center;gap:8px;min-width:0;font-size:15px;line-height:1.35}
+.lpnb1 .lpnt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.lpnb1 .lpntm{font-size:12px}
+.lpnb2{margin:2px 0 0 18px;font-family:var(--m);font-size:12px;line-height:1.4;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#laptop.lp-kb .lpnw,#laptop.lp-kb .lpnb2{display:none}
 .lpbadge{margin-left:auto;font-size:12px;line-height:16px;color:var(--red);border:1px solid var(--red);border-radius:6px;padding:0 5px;white-space:nowrap}
 #lpPend{flex:0 1 auto;min-height:0;max-height:38%;overflow-y:auto;overscroll-behavior:contain;padding:0 10px}
 .lpcard{background:var(--cell);border:1px solid var(--red);border-radius:10px;padding:10px 12px;margin:0 0 8px}
@@ -402,10 +418,11 @@ body.lp-compact #app>.top{display:none}
 .lpcode code{font-family:var(--m);font-size:12px}
 .lpmono{display:block;margin:4px 0;overflow-x:auto;white-space:pre;background:var(--cell);border-radius:8px;padding:6px 8px;font-family:var(--m);font-size:12px;line-height:1.5;color:var(--txt)}
 .lpsteps{color:var(--txt2)}
-.lpsteps summary{min-height:44px;display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font-family:var(--m);font-size:12px;line-height:1.4;color:var(--txt2)}
-.lpsteps summary::-webkit-details-marker{display:none}
-.lpsteps summary::before{content:'\25B8';flex:0 0 auto}
-.lpsteps[open] summary::before{content:'\25BE'}
+.lpsteps>summary{min-height:44px;display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font-family:var(--m);font-size:12px;line-height:1.4;color:var(--txt2)}
+.lpsteps>summary::-webkit-details-marker{display:none}
+/* RELAY N1: child selectors, so a step's own summary inside the group gets no stray arrow line */
+.lpsteps>summary::before{content:'\25B8';flex:0 0 auto}
+.lpsteps[open]>summary::before{content:'\25BE'}
 .lpslist{padding:0 0 6px 18px;font-family:var(--m);font-size:12px;line-height:1.6;color:var(--txt2)}
 .lpst{display:block;padding:3px 0;border-top:1px solid var(--line);min-width:0}
 .lpst:first-child{border-top:0}
@@ -996,7 +1013,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='P3-20261010-1';
+var LP_BUILD='N1-20261010-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1241,8 +1258,11 @@ function lpWant(){if(LP.want===undefined){var w='';LP.wantTries=0;
 function lpBadge(n){if(n===LP.badgeN)return;LP.badgeN=n;try{if(!('setAppBadge' in navigator))return;(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(function(){});}catch(e){}}
 function lpAutoPick(vis){var w=vis.filter(function(s){return s.status==='waiting';}).sort(function(a,b){
     var x=lpT(a.pending&&a.pending.at)||lpT(a.updated_at),y=lpT(b.pending&&b.pending.at)||lpT(b.updated_at);return y-x;});
-  var last=lpLS('lp_last'),l=vis.filter(function(s){return s.session_id===last;});
-  var pick=(w[0]||l[0]||vis[0]);if(pick)lpSelect(pick.session_id,false);}
+  var last=lpLS('lp_last'),now=lpSrvNow(),live=function(s){return now-lpT(s.updated_at)<=LP_OFFLINE_MS;},
+    l=vis.filter(function(s){return s.session_id===last&&live(s);}),b=vis.filter(function(s){return s.status==='busy'&&live(s);}),
+    on=vis.filter(live),old=vis.filter(function(s){return s.session_id===last;});
+  /* RELAY N1: a waiting terminal, else the last one viewed while it is still live, else one at work, else any live one */
+  var pick=(w[0]||l[0]||b[0]||on[0]||old[0]||vis[0]);if(pick)lpSelect(pick.session_id,false);}
 function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel)return;
   lpSheetClose();lpSelOff();lpDisarm();lpDraftNow();lpSaveScroll();var old=LP.sess[LP.sel];if(old&&old.ghost){old.ghost=false;if(!old.movedTo&&lpBoxVal().trim())old.goneDraft=true;}
   var prev=LP.sel;LP.sel=sid;LP.dbg.switches++;lpLSset('lp_last',sid);lpBox(lpDraftGet(sid),null,LP.composing?prev:null);LP.guardAt=performance.now();LP.newCount=0;
@@ -1251,7 +1271,7 @@ function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel
 
 /* ── painting: each part repaints only what changed ── */
 function lpPaint(){if(STATE.view!=='laptop'||!LP.built)return;lpPaintHead();lpPaintTabs(lpTabList());var S=LP.sess[LP.sel];
-  lpPaintPrompt(S);lpPaintConv(false);lpPaintCmds();lpPaintChips();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
+  lpPaintPrompt(S);lpPaintNow();lpPaintConv(false);lpPaintCmds();lpPaintChips();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
 function lpPaintHead(){var t,cls='lpdot lpd-o',d=LP.data;
   if(LP.locked)t='owner only';
   else if(LP.connErr){t=LP.connErr;cls='lpdot lpd-b';if(t==='reconnecting'&&LP.lastOk)t+=' · '+lpAge(new Date(LP.lastOk).toISOString())+' ago';}
@@ -1284,7 +1304,8 @@ function lpPaintTabs(list){var box=lpG('lpTerms');if(!box)return;
   list.forEach(function(t,i){var sid=String(t.sid);want[sid]=1;var c=LP.tabEls[sid];
     if(!c){c=lpEl('div','lptab');c.setAttribute('role','tab');c.dataset.sid=sid;c._n=lpEl('div','lptn');c._f=lpEl('div','lptf');var st=lpEl('div','lpts');
       c._d=lpEl('span','lpdot');c._d.setAttribute('aria-hidden','true');c._w=lpEl('span','lptw');st.appendChild(c._d);st.appendChild(c._w);st.appendChild(lpEl('span','lpbadge','no prompts'));
-      c.appendChild(c._n);c.appendChild(c._f);c.appendChild(st);LP.tabEls[sid]=c;}
+      c._nw=lpEl('div','lpnw');c.appendChild(c._n);c.appendChild(c._nw);c.appendChild(c._f);c.appendChild(st);LP.tabEls[sid]=c;}
+    lpNowFill(c._nw,lpNowView(sid,t.row,t.off||t.ghost||t.cache),false);
     var stt=String(t.row.status||'idle'),word=t.ghost?'GONE':t.cache?'SAVED':t.off?'OFFLINE':(words[stt]||stt.toUpperCase().slice(0,12)),
       folder=lpBase(t.row.cwd)+(lpTwin(list,t)?' · '+lpShortId(list,t):'');
     lpSetText(c._n,t.row.name||'Claude');lpSetText(c._f,folder);lpSetText(c._w,word);lpSetCls(c._d,t.off?'lpdot lpd-o':(dots[stt]||'lpdot lpd-o'));
@@ -1292,6 +1313,48 @@ function lpPaintTabs(list){var box=lpG('lpTerms');if(!box)return;
     var a=sid===LP.sel?'true':'false';if(c.getAttribute('aria-selected')!==a)c.setAttribute('aria-selected',a);
     if(box.children[i]!==c)box.insertBefore(c,box.children[i]||null);});
   Object.keys(LP.tabEls).forEach(function(sid){if(!want[sid]){var c=LP.tabEls[sid];if(c.parentNode)c.parentNode.removeChild(c);delete LP.tabEls[sid];}});}
+/* RELAY N1: what a terminal is doing right now. The server's per-session "now" (v2) is fresh on every poll for
+   every terminal; an older server has none, so fall back to the newest message this phone holds. */
+function lpNowOf(sid,row){if(row&&row.now!==undefined)return row.now&&typeof row.now==='object'?row.now:null;
+  var S=LP.sess[sid],it=S&&S.items.length?S.items[S.items.length-1]:null;if(!it||it.gap)return null;
+  if(it.role==='tool'){var x=it.x||{};return {k:'tool',l:lpLabel(it),d:x.d||null,st:x.st||null,at:it.at||null};}
+  var l=String(it.text||'').slice(0,400).replace(/\s+/g,' ').trim();return l?{k:it.role==='user'?'user':'say',l:l,at:it.at||null}:null;}
+/* elapsed since an ISO time on the server clock: 12s · 4:07 · 1h 05m */
+function lpDur(at,now){var t=lpT(at);if(!t)return '';var s=Math.max(0,Math.floor(((now||lpSrvNow())-t)/1000));
+  if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+':'+('0'+s%60).slice(-2);return Math.floor(s/3600)+'h '+('0'+Math.floor(s%3600/60)).slice(-2)+'m';}
+/* one view for both the card line and the bar: mark (spin / ok / err / none), main words, detail, timer start */
+function lpNowView(sid,row,off){var n=lpNowOf(sid,row),busy=!off&&row&&row.status==='busy',k=n&&n.k,str=function(v){return v==null?'':String(v);};
+  var pd=!off&&row&&row.status==='waiting'&&row.pending&&typeof row.pending==='object'?row.pending:null;
+  if(pd)return {mk:'ask',t:pd.kind==='question'?str(pd.question||pd.message)||'Has a question':'Allow '+(str(pd.tool)||'a tool')+'?',d:'',at:null,live:false};
+  if(busy&&k==='tool'&&n.st==='run')return {mk:'spin',t:str(n.l)||'Used a tool',d:str(n.d),at:n.at,live:true};
+  if(busy){var last=k==='tool'?(n.st==='err'?'✕ ':n.st==='ok'?'✓ ':'')+str(n.l):k==='say'?str(n.l):'';
+    return {mk:'spin',t:k==='user'?'Reading your message':'Thinking…',d:last,at:n&&n.at,live:true};}
+  if(!n)return {mk:'',t:'',d:'',at:null,live:false};
+  if(k==='tool')return {mk:n.st==='err'?'err':n.st==='ok'?'ok':'',t:str(n.l),d:str(n.d),at:null,live:false};
+  return {mk:'',t:(k==='user'?'You: ':'')+str(n.l),d:'',at:null,live:false,dim:true};}
+/* paint a view into a card line (bar=false) or the bar (bar=true). The nodes are built once and only what changed is
+   touched: a poll that only moves the newest step's time costs no layout, and a running spinner is never restarted. */
+/* set a line's text through its one text node, so a changed word is not a child-list change */
+function lpNowTx(el,s){s=String(s);var n=el.firstChild;if(n&&n.nodeType===3&&!n.nextSibling){if(n.data!==s)n.data=s;}else el.textContent=s;}
+function lpNowFill(el,v,bar){var k=el._k;
+  if(!k){var row=bar?lpEl('div','lpnb1'):el;k=el._k={mk:lpEl('span',''),t:lpEl('span','lpnt',' '),tm:lpEl('span',''),d:bar?lpEl('div','lpnb2',' '):null,m:null,live:null};
+    k.mk.hidden=true;k.tm.hidden=true;row.appendChild(k.mk);row.appendChild(k.t);row.appendChild(k.tm);
+    if(bar){el.appendChild(row);el.appendChild(k.d);}}
+  if(k.m!==v.mk){k.m=v.mk;var mk=k.mk;mk.hidden=!v.mk;mk.removeAttribute('aria-hidden');mk.removeAttribute('aria-label');
+    if(v.mk==='spin'){mk.className='lpspin';mk.textContent='';mk.setAttribute('aria-hidden','true');}
+    else if(v.mk){mk.className='lpnm '+v.mk;mk.textContent=v.mk==='err'?'✕':v.mk==='ask'?'?':'✓';mk.setAttribute('aria-label',v.mk==='err'?'failed':v.mk==='ask'?'waiting for you':'done');}
+    else{mk.className='';mk.textContent='';}}
+  lpNowTx(k.t,v.t||' ');if(bar)lpNowTx(k.d,v.d||' ');
+  var live=!!(v.live&&v.at);if(k.live!==live){k.live=live;k.tm.hidden=!live;k.tm.className=live?'lpntm':'';if(!live)k.tm.textContent='';}
+  if(!bar)lpTog(el,'dim',!!v.dim);
+  if(live)lpNowTx(k.tm,lpDur(v.at));}
+/* the bar over the open terminal: shown only while it works; a tap jumps to the newest step and opens it */
+function lpPaintNow(){var b=lpG('lpNow');if(!b)return;var S=LP.sess[LP.sel],r=S&&S.row,
+    off=!S||S.ghost||S.cacheOnly||!r||lpSrvNow()-lpT(r.updated_at)>LP_OFFLINE_MS,on=!off&&r.status==='busy';
+  lpTog(b,'on',on);if(!on)return;var v=lpNowView(LP.sel,r,false);lpNowFill(b,v,true);
+  var al='Working now: '+v.t+(v.d?' — '+v.d:'');if(b.getAttribute('aria-label')!==al)b.setAttribute('aria-label',al);}
+function lpNowGo(){lpJump();var g=document.querySelectorAll('#lpConv details.lpsteps'),last=g.length?g[g.length-1]:null;
+  if(last&&last===lpG('lpConv').lastElementChild){last.open=true;lpJump();}}
 function lpKeyBtn(k,label){var b=lpEl('button','lpbtn',label);b.type='button';b.dataset.lptap='key';b.dataset.lpk=String(k);return b;}
 function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
   var p=(S&&S.row&&!S.ghost&&!S.cacheOnly&&S.row.pending&&typeof S.row.pending==='object')?S.row.pending:null;
@@ -1533,10 +1596,10 @@ function lpPaintDbg(){var el=lpG('lpDbg');if(!el)return;lpTog(el,'on',LP.dbgOn);
   lpSetText(el,lines.join('\n'));}
 function lpAges(){var now=lpSrvNow(),xs=document.querySelectorAll('#laptop .lpage');for(var i=0;i<xs.length;i++)lpSetText(xs[i],lpAge(xs[i].dataset.at,now)+' ago');}
 function lpTickFn(){if(STATE.view!=='laptop')return;if(LP.arm&&performance.now()-LP.arm.at>LP_ARM_MS)lpDisarm();
-  lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
+  lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpPaintNow();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
 function lpDenied(){lpSheetClose();lpSelOff();lpMicStop();lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
   ['lpConv','lpPend','lpCmds','lpChips'].forEach(function(id){var e=lpG(id);if(e)e.textContent='';});
-  lpBox('');lpDisarm();lpPaintTabs([]);lpPaintHead();lpPaintStat();lpComposerState();lpKeysState();lpPill();}
+  lpBox('');lpDisarm();lpPaintTabs([]);lpPaintNow();lpPaintHead();lpPaintStat();lpComposerState();lpKeysState();lpPill();}
 
 /* ── page commit B, F7: Copy on every message and code block; writeText inside the tap, else the text is selected ── */
 function lpCopied(b){if(!b){toast('Copied');return;}if(b._okT)clearTimeout(b._okT);if(b._lbl==null)b._lbl=b.getAttribute('aria-label')||'Copy';
@@ -1641,7 +1704,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;
   var w=t.el.getAttribute('data-lptap');
   if(w==='send')lpOnSend();else if(w==='confirm')lpOnConfirm(t.t);else if(w==='key')lpOnKey(t.el.getAttribute('data-lpk'),t.t);
-  else if(w==='pill')lpJump();else if(w==='chip')lpOnChip(t.el);
+  else if(w==='pill')lpJump();else if(w==='now')lpNowGo();else if(w==='chip')lpOnChip(t.el);
   else if(w==='copy')lpOnCopy(t.el);else if(w==='sheet')lpOnSheet(t.el.getAttribute('data-act'));else if(w==='sheetbg')lpSheetClose();
   else if(w==='selcopy')lpSelCopy(t.el);else if(w==='seldone')lpSelOff();else if(w==='paste')lpPaste();else if(w==='mic')lpMic();}
 
@@ -1669,7 +1732,7 @@ function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.star
   var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-armed');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
   el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
-    '<div id="lpDbg"></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div>'+
+    '<div id="lpDbg"></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><button type="button" id="lpNow" data-lptap="now"></button>'+
     '<div class="lppw"><div id="lpSelBar"><span>Select text: drag across messages</span><button type="button" class="lpbtn" data-lptap="selcopy">Copy all</button><button type="button" class="lpbtn" data-lptap="seldone">Done</button></div>'+
     '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
     '<div class="lpcomp" id="lpComp"><button type="button" id="lpConfirm" data-lptap="confirm"></button><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChips"></div>'+

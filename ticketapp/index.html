@@ -407,6 +407,20 @@ body.lp-compact #app>.top{display:none}
 .lpsteps summary::before{content:'\25B8';flex:0 0 auto}
 .lpsteps[open] summary::before{content:'\25BE'}
 .lpslist{padding:0 0 6px 18px;font-family:var(--m);font-size:12px;line-height:1.6;color:var(--txt2)}
+.lpst{display:block;padding:3px 0;border-top:1px solid var(--line);min-width:0}
+.lpst:first-child{border-top:0}
+.lpst>summary{list-style:none;cursor:pointer;min-height:44px;display:block;padding:4px 0}
+.lpst>summary::-webkit-details-marker{display:none}
+.lpsth{display:flex;gap:6px;align-items:baseline;min-width:0}
+.lpstm{flex:0 0 auto;width:14px;text-align:center;font-weight:700}
+.lpstm.run{color:var(--cyan)}.lpstm.ok{color:var(--green)}.lpstm.err{color:var(--red)}
+.lpstl{color:var(--txt);min-width:0;overflow-wrap:anywhere}
+.lpstd{display:block;margin:2px 0 0 20px;color:var(--txt2);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.lpstx{margin-left:auto;flex:0 0 auto;color:var(--txt2);font-size:11px}
+.lpst[open] .lpstx{visibility:hidden}
+.lpout,.lpdiff{margin:4px 0 4px 20px;background:var(--cell);border:1px solid var(--line);border-radius:8px;padding:6px 8px;overflow-x:auto;white-space:pre;font-family:var(--m);font-size:12px;line-height:1.5;color:var(--txt);-webkit-overflow-scrolling:touch}
+.lpdiff span{display:block}
+.lpdiff .lpdm{color:var(--red)}.lpdiff .lpdp{color:var(--green)}.lpdiff .lpdn{color:var(--txt2)}
 .lpgap{padding-top:6px;border-top:1px dashed var(--line2);text-align:center;font-size:12px;color:var(--txt2)}
 .lpsent{margin-top:12px;background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
 .lpsh{font-family:var(--m);font-size:12px;letter-spacing:.5px;color:var(--txt2)}
@@ -982,7 +996,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='P1-20261009-2';
+var LP_BUILD='P3-20261010-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1126,8 +1140,16 @@ function lpS(sid){return LP.sess[sid]||(LP.sess[sid]={sid:sid,items:[],row:null,
 function lpWin(ms){var out=[],cnt={};for(var i=ms.length-1;i>=0;i--){var m=ms[i]||{},at=String(m.at||''),pos=cnt[at]||0;cnt[at]=pos+1;
   var role=m.role==='user'||m.role==='tool'?m.role:'assistant',txt=String(m.text==null?'':m.text),id=(m.id!=null&&m.id!=='')?String(m.id):'';
   var mt=(role==='tool'||id)?'':lpMaskMemo(txt);
-  out.unshift({k:id?'i:'+id:'n:'+at+'|'+role+'|'+pos+'|'+mt,loose:id?'':at+'|'+role+'|'+(role==='tool'?pos:mt),id:id,role:role,text:txt,at:at});}
+  var x=role==='tool'?lpX(m):null;
+  out.unshift({k:id?'i:'+id:'n:'+at+'|'+role+'|'+pos+'|'+mt,loose:id?'':at+'|'+role+'|'+(role==='tool'?pos:mt),id:id,role:role,text:txt,at:at,x:x,xs:x?JSON.stringify(x):''});}
   return out;}
+/* RELAY P3: what a step acted on (d), how it ended (st), its first output lines (out), an edit's -/+ lines (diff).
+   Savepoint >= 0.6.5 sends them; anything else is ignored. Plain strings only, capped, device token masked;
+   they are only ever put on screen as text. */
+function lpX(m){var str=function(v,n){return typeof v==='string'?lpMask(v.slice(0,n)):'';};
+  var x={tool:str(m.tool,80),d:str(m.d,400),st:(m.st==='run'||m.st==='ok'||m.st==='err')?m.st:'',out:str(m.out,1600),diff:[]};
+  if(Array.isArray(m.diff))for(var i=0;i<m.diff.length&&x.diff.length<26;i++)if(typeof m.diff[i]==='string')x.diff.push(lpMask(m.diff[i].slice(0,220)));
+  return (x.d||x.st||x.out||x.diff.length)?x:null;}
 function lpLooseOf(L,j){var it=L[j],n=0;for(var q=j+1;q<L.length&&L[q].at===it.at&&!L[q].gap;q++)n++;return it.at+'|'+it.role+'|'+(it.role==='tool'?n:lpMaskMemo(it.text));}
 function lpMerge(S,W){var L=S.items,map={},added=[],changed=false,lk=null,i;
   for(i=0;i<L.length;i++)map[L[i].k]=i;
@@ -1138,9 +1160,9 @@ function lpMerge(S,W){var L=S.items,map={},added=[],changed=false,lk=null,i;
   var pos=first>=0?known(W[first]):L.length;
   if(first<0&&L.length&&W.length){var last=L[L.length-1];if(!last.gap){var g={k:'gap:'+W[0].k,gap:true,role:'gap',o:last.o+0.5};L.push(g);map[g.k]=L.length-1;}pos=L.length;changed=true;}
   for(i=0;i<W.length;i++){var x=W[i],p=known(x);
-    if(p>=0){pos=p+1;if(L[p].k===x.k&&L[p].text!==x.text){L[p].text=x.text;changed=true;}continue;}
+    if(p>=0){pos=p+1;if(L[p].k===x.k&&(L[p].text!==x.text||(L[p].xs||'')!==(x.xs||''))){L[p].text=x.text;L[p].x=x.x;L[p].xs=x.xs;changed=true;}continue;}
     var prev=L[pos-1],next=L[pos],o=prev&&next?(prev.o+next.o)/2:prev?prev.o+1:next?next.o-1:0;
-    var ni={k:x.k,id:x.id,role:x.role,text:x.text,at:x.at,o:o};L.splice(pos,0,ni);
+    var ni={k:x.k,id:x.id,role:x.role,text:x.text,at:x.at,o:o,x:x.x,xs:x.xs};L.splice(pos,0,ni);
     if(pos<L.length-1){for(var q=pos;q<L.length;q++)map[L[q].k]=q;if(S.renderFrom>pos)S.renderFrom++;}else map[ni.k]=pos;
     lk=null;added.push(ni);pos++;changed=true;}
   if(L.length>LP_MAX){var drop=L.length-LP_MAX;L.splice(0,drop);if(S.renderFrom>=0)S.renderFrom=Math.max(0,S.renderFrom-drop);}
@@ -1299,7 +1321,10 @@ function lpRows(S){var L=S.items,rows=[],i=Math.max(0,S.renderFrom);
       var trailing=j>=L.length,cnt={},order=[];steps.forEach(function(s){var l=lpLabel(s);if(!cnt[l]){cnt[l]=0;order.push(l);}cnt[l]++;});
       var lab=function(l){return cnt[l]>1?l+' ×'+cnt[l]:l;},n=steps.length,head=n+(n===1?' step':' steps');
       var sum=trailing?head+' · now: '+lpLabel(steps[n-1]):head+' · '+order.slice(0,3).map(lab).join(', ')+(order.length>3?'…':'');
-      var labels=order.map(lab);rows.push({k:'g:'+it.k,kind:'steps',sum:sum,labels:labels,sig:sum+'\u0001'+labels.join('\u0001')});i=j;continue;}
+      var bad=steps.filter(function(s){return s.x&&s.x.st==='err';}).length;if(bad)sum+=' · '+bad+' failed';
+      var labels=order.map(lab),det=steps.some(function(s){return !!s.x;});
+      rows.push({k:'g:'+it.k,kind:'steps',sum:sum,labels:labels,steps:det?steps:null,
+        sig:sum+'\u0001'+labels.join('\u0001')+(det?'\u0002'+steps.map(function(s){return s.k+'\u0003'+s.text+'\u0003'+(s.xs||'');}).join('\u0001'):'')});i=j;continue;}
     rows.push({k:it.k,kind:'msg',it:it,sig:it.role+'\u0001'+it.text});i++;}
   return rows;}
 function lpInline(p,s){var parts=String(s).split(/(\*\*[^*\n]+?\*\*|\x60[^\x60\n]+\x60)/);
@@ -1335,8 +1360,23 @@ function lpRowEl(r){var el;
   else el=lpEl('div',r.it.role==='user'?'lpm-u':'lpm-a');
   el.dataset.k=r.k;lpRowFill(el,r);return el;}
 function lpRowFill(el,r){el._sig=r.sig;
-  if(r.kind==='steps'){lpSetText(el.firstChild,r.sum);var ls=el.lastChild;ls.textContent='';r.labels.forEach(function(x){ls.appendChild(lpEl('div',null,x));});}
+  if(r.kind==='steps'){lpSetText(el.firstChild,r.sum);var ls=el.lastChild,open={};
+    Array.prototype.forEach.call(ls.querySelectorAll('details.lpst[open]'),function(d){open[d.dataset.sk]=1;});ls.textContent='';
+    if(r.steps)r.steps.forEach(function(s){ls.appendChild(lpStepEl(s,open[s.k]));});
+    else r.labels.forEach(function(x){ls.appendChild(lpEl('div',null,x));});}
   else if(r.kind==='msg'){el.textContent='';el._it=r.it;if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);el.appendChild(lpCopyBtn('Copy message'));}}
+/* RELAY P3: one step: mark (running / done / failed), its plain label, then what it acted on; output or edit lines open on tap */
+var LP_MARK={run:'\u2022',ok:'\u2713',err:'\u2715'},LP_MARKW={run:'running',ok:'done',err:'failed'};
+function lpStepEl(s,isOpen){var x=s.x||{},more=!!(x.out||(x.diff&&x.diff.length)),el=lpEl(more?'details':'div','lpst'),hd=more?lpEl('summary'):el;
+  el.dataset.sk=s.k;var top=lpEl('span','lpsth'),mk=lpEl('span','lpstm'+(x.st?' '+x.st:''),LP_MARK[x.st]||'\u00b7');
+  if(x.st)mk.setAttribute('aria-label',LP_MARKW[x.st]);top.appendChild(mk);top.appendChild(lpEl('span','lpstl',lpLabel(s)));
+  if(more)top.appendChild(lpEl('span','lpstx',x.diff&&x.diff.length?'changes':'output'));hd.appendChild(top);
+  if(x.d)hd.appendChild(lpEl('span','lpstd',x.d));
+  if(more){el.appendChild(hd);
+    if(x.diff&&x.diff.length){var df=lpEl('div','lpdiff');x.diff.forEach(function(l){var c=l.charAt(0);df.appendChild(lpEl('span',c==='-'?'lpdm':c==='+'?'lpdp':'lpdn',l));});el.appendChild(df);}
+    if(x.out)el.appendChild(lpEl('div','lpout',x.out));
+    if(isOpen)el.open=true;}
+  return el;}
 /* F7: a Copy button with no text of its own (its words are CSS), so a message's textContent stays its text */
 function lpCopyBtn(label){var b=lpEl('button','lpcopy');b.type='button';b.dataset.lptap='copy';b.setAttribute('aria-label',label);return b;}
 function lpAtBottom(){var p=lpG('lpPane');return !p||p.scrollHeight-p.scrollTop-p.clientHeight<=LP_STICK_PX;}

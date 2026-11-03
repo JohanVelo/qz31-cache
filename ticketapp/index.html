@@ -549,6 +549,8 @@ body.lp-compact #app>.top{display:none}
 @keyframes lpin{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes lpdots{0%,80%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-4px);opacity:1}}
 @media (prefers-reduced-motion:reduce){.lpq,.lptyping{animation:none}.lptyping i{animation:none;opacity:.8}#lpSend{transition:none}}
+#laptop.lp-chat #lpConv>.lpm-a>.lpcopy,#laptop.lp-chat #lpConv>.lpm-u>.lpcopy{display:none}
+#laptop.lp-chat #lpConv>.lpq{align-self:flex-end}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -1473,7 +1475,7 @@ var LP_DIVW={handoff:'Handed off · fresh context, same chat',new_terminal:'New 
 /* date pills and grouping are marks ON the message rows (data attributes drawn by CSS), never extra rows, so the
    conversation's rows and their text stay exactly the transcript's */
 function lpDecorate(rows){var prevDay='',prev=null;
-  rows.forEach(function(r){var it=r.it||r.first;if(!it){prev=null;return;}var dk=lpDayKey(it.at);
+  rows.forEach(function(r){var it=r.it||r.first||(r.kind==='send'?{at:r.at}:null);if(!it){prev=null;return;}var dk=lpDayKey(it.at);
     r.day=dk&&dk!==prevDay?lpDayLabel(it.at):'';if(dk)prevDay=dk;
     r.grp=!!(r.kind==='msg'&&prev&&prev.kind==='msg'&&prev.it.role===r.it.role&&!r.day&&Math.abs(lpT(r.it.at)-lpT(prev.it.at))<180000);
     r.hm=r.kind==='msg'?lpHm(it.at):'';r.sig+='\u0004'+r.day+'\u0004'+(r.grp?1:0)+'\u0004'+r.hm;prev=r;});
@@ -1489,10 +1491,20 @@ function lpRows(S){var L=S.items,rows=[],i=Math.max(0,S.renderFrom);
       var sum=trailing?head+' · now: '+lpLabel(steps[n-1]):head+' · '+order.slice(0,3).map(lab).join(', ')+(order.length>3?'…':'');
       var bad=steps.filter(function(s){return s.x&&s.x.st==='err';}).length;if(bad)sum+=' · '+bad+' failed';
       var labels=order.map(lab),det=steps.some(function(s){return !!s.x;});
-      rows.push({k:'g:'+it.k,kind:'steps',sum:sum,labels:labels,steps:det?steps:null,
+      rows.push({k:'g:'+it.k,kind:'steps',at:it.at,sum:sum,labels:labels,steps:det?steps:null,
         sig:sum+'\u0001'+labels.join('\u0001')+(det?'\u0002'+steps.map(function(s){return s.k+'\u0003'+s.text+'\u0003'+(s.xs||'');}).join('\u0001'):'')});i=j;continue;}
     rows.push({k:it.k,kind:'msg',it:it,sig:it.role+'\u0001'+it.text});i++;}
-  return lpDecorate(rows);}
+  return lpDecorate(lpWithSends(S,rows));}
+/* RELAY CHAT: your sends sit IN the conversation at the time you sent them (WhatsApp order), not in a list under it.
+   A send Claude's transcript already shows is drawn once (the transcript copy). Chat mode only. */
+function lpRowAt(r){return lpT(r.it?r.it.at:r.first?r.first.at:r.at);}
+function lpWithSends(S,rows){if(!S||!lpChatOf(S.sid))return rows;
+  var first=0;for(var i=0;i<rows.length;i++){var t=lpRowAt(rows[i]);if(t){first=t;break;}}
+  var cs=lpCmdsFor(S.sid).filter(function(c){return c.kind==='text'&&!(c.status==='done'&&lpShown(S,c))&&!(S.renderFrom>0&&first&&lpT(c.created_at)<first);});
+  if(!cs.length)return rows;var out=[],j=0;
+  rows.forEach(function(r){var t=lpRowAt(r);while(j<cs.length&&t&&lpT(cs[j].created_at)<t){out.push(lpSendRow(cs[j]));j++;}out.push(r);});
+  while(j<cs.length){out.push(lpSendRow(cs[j]));j++;}return out;}
+function lpSendRow(c){return {k:'c:'+c.id,kind:'send',c:c,at:c.created_at,sig:'send\u0001'+[c.status,c.body,c.result&&c.result.reason,(c.attachments||[]).length].join('\u0001')};}
 function lpInline(p,s){var parts=String(s).split(/(\*\*[^*\n]+?\*\*|\x60[^\x60\n]+\x60)/);
   for(var i=0;i<parts.length;i++){var x=parts[i];if(!x)continue;
     if(x.length>4&&x.slice(0,2)==='**'&&x.slice(-2)==='**'){var b=lpEl('b');lpLinks(b,x.slice(2,-2));p.appendChild(b);}
@@ -1523,6 +1535,7 @@ function lpMd(el,text){var lines=String(text).split('\n'),buf=[],i=0;
 function lpRowEl(r){var el;
   if(r.kind==='gap')el=lpEl('div','lpgap',r.text||'Earlier messages may be missing here');
   else if(r.kind==='div')el=lpEl('div','lpdivr',r.text);
+  else if(r.kind==='send')el=lpEl('div','lpq');
   else if(r.kind==='steps'){el=lpEl('details','lpsteps');el.appendChild(lpEl('summary'));el.appendChild(lpEl('div','lpslist'));}
   else el=lpEl('div',r.it.role==='user'?'lpm-u':'lpm-a');
   el.dataset.k=r.k;lpRowFill(el,r);return el;}
@@ -1530,6 +1543,7 @@ function lpRowFill(el,r){el._sig=r.sig;
   if(r.day)el.dataset.day=r.day;else if(el.dataset.day!=null)delete el.dataset.day;
   if(r.hm)el.dataset.t=r.hm;else if(el.dataset.t!=null)delete el.dataset.t;
   lpTog(el,'lpg',!!r.grp);
+  if(r.kind==='send'){var dy=el.dataset.day;lpQFill(el,r.c);if(dy)el.dataset.day=dy;return;}
   if(r.kind==='steps'){lpSetText(el.firstChild,r.sum);var ls=el.lastChild,open={};
     Array.prototype.forEach.call(ls.querySelectorAll('details.lpst[open]'),function(d){open[d.dataset.sk]=1;});ls.textContent='';
     if(r.steps)r.steps.forEach(function(s){ls.appendChild(lpStepEl(s,open[s.k]));});
@@ -1603,18 +1617,21 @@ function lpShown(S,c){if(!S)return false;var L=S.items,b=lpMaskMemo(String(c.bod
   for(var i=L.length-1;i>=0;i--){var it=L[i];if(it.role!=='user')continue;if(it.cmd!=null&&String(it.cmd)===String(c.id))return true;
     if(b&&lpT(it.at)>=t0&&String(it.text||'').trim().slice(0,160)===b)return true;}
   return false;}
+function lpQFill(q,c){var st=String(c.status||'queued'),tk=LP_TICK[st]||['\u2713',st],bad=st==='failed'||st==='expired';
+  q.className='lpq lpq-'+st.replace(/[^a-z]/g,'');q.dataset.cmd=String(c.id);q.textContent='';
+  var n=(c.attachments||[]).length;if(String(c.body||'').trim())lpTxt(q,String(c.body));else if(n)lpTxt(q,n+(n===1?' file':' files'));
+  var meta=lpEl('span','lpqm'),qd=lpEl('span',({done:'lpdot lpd-i',queued:'lpdot lpd-b',delivered:'lpdot lpd-b',failed:'lpdot lpd-w',expired:'lpdot lpd-w'})[st]||'lpdot lpd-o');qd.setAttribute('aria-hidden','true');meta.appendChild(qd);meta.appendChild(lpEl('span','lpqt',lpHm(c.created_at)));var tick=lpEl('span','lpqk');tick.dataset.tk=tk[0];tick.setAttribute('role','img');tick.setAttribute('aria-label',tk[1]);tick.title=tk[1];meta.appendChild(tick);q.appendChild(meta);
+  if(bad){q.appendChild(lpEl('div','lpqw',st==='failed'?'Failed: '+String((c.result&&c.result.reason)||'the laptop refused it'):tk[1]));
+    var rb=lpEl('button','lpbtn lpqr','Retry');rb.type='button';rb.dataset.lptap='retry';rb.dataset.cmd=String(c.id);q.appendChild(rb);}
+  return q;}
 function lpPaintCmds(){var box=lpG('lpCmds');if(!box||LP.selMode)return;var S=LP.sess[LP.sel],now=lpSrvNow();
-  var cs=LP.sel?lpCmdsFor(LP.sel).filter(function(c){return c.kind==='text'&&now-lpT(c.created_at)<864e5&&!(c.status==='done'&&lpShown(S,c));}).slice(-8):[];
+  /* chat mode: the sends are rows in the conversation (lpRows); this box only holds the working dots */
+  var chat=!!(S&&lpChatOf(S.sid));lpTog(lpG('laptop'),'lp-chat',chat);
+  var cs=chat?[]:LP.sel?lpCmdsFor(LP.sel).filter(function(c){return c.kind==='text'&&now-lpT(c.created_at)<864e5&&!(c.status==='done'&&lpShown(S,c));}).slice(-8):[];
   var r=S&&S.row,work=!!(r&&!S.ghost&&!S.cacheOnly&&r.status==='busy'&&!lpOff(r));
-  var sig=JSON.stringify([work,cs.map(function(c){return [c.id,c.status,c.body,c.result&&c.result.reason,(c.attachments||[]).length];})]);
-  if(sig===LP.sigs.cmds)return;LP.sigs.cmds=sig;var stick=lpAtBottom();box.textContent='';
-  cs.forEach(function(c){var st=String(c.status||'queued'),tk=LP_TICK[st]||['✓',st],bad=st==='failed'||st==='expired';
-    var q=lpEl('div','lpq lpq-'+st.replace(/[^a-z]/g,''));q.dataset.cmd=String(c.id);
-    var n=(c.attachments||[]).length;if(String(c.body||'').trim())lpTxt(q,String(c.body));else if(n)lpTxt(q,n+(n===1?' file':' files'));
-    var meta=lpEl('span','lpqm'),qd=lpEl('span',({done:'lpdot lpd-i',queued:'lpdot lpd-b',delivered:'lpdot lpd-b',failed:'lpdot lpd-w',expired:'lpdot lpd-w'})[st]||'lpdot lpd-o');qd.setAttribute('aria-hidden','true');meta.appendChild(qd);meta.appendChild(lpEl('span','lpqt',lpHm(c.created_at)));var tick=lpEl('span','lpqk');tick.dataset.tk=tk[0];tick.setAttribute('role','img');tick.setAttribute('aria-label',tk[1]);tick.title=tk[1];meta.appendChild(tick);q.appendChild(meta);
-    if(bad){var why=lpEl('div','lpqw',st==='failed'?'Failed: '+String((c.result&&c.result.reason)||'the laptop refused it'):tk[1]);q.appendChild(why);
-      var rb=lpEl('button','lpbtn lpqr','Retry');rb.type='button';rb.dataset.lptap='retry';rb.dataset.cmd=String(c.id);q.appendChild(rb);}
-    box.appendChild(q);});
+  var sig=JSON.stringify([work,chat?lpCmdsFor(LP.sel).map(function(c){return [c.id,c.status];}):0,cs.map(function(c){return [c.id,c.status,c.body,c.result&&c.result.reason,(c.attachments||[]).length];})]);
+  if(sig===LP.sigs.cmds)return;LP.sigs.cmds=sig;if(chat&&LP.convSid===LP.sel)lpPaintConv(false);var stick=lpAtBottom();box.textContent='';
+  cs.forEach(function(c){box.appendChild(lpQFill(lpEl('div'),c));});
   if(work){var ty=lpEl('div','lptyping');ty.setAttribute('role','status');ty.setAttribute('aria-label','Claude is working');for(var i=0;i<3;i++)ty.appendChild(lpEl('i'));box.appendChild(ty);}
   if(stick){var p=lpG('lpPane');if(p)p.scrollTop=p.scrollHeight;}}
 /* Retry: the words go back into the box (a new send, new id); the server never resends a dead row */

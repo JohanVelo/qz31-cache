@@ -476,6 +476,15 @@ body.lp-compact #app>.top{display:none}
 .lprow .lptool svg{width:22px;height:22px}
 #lpAttMenu{position:absolute;left:8px;bottom:calc(100% + 8px);z-index:9;display:none;flex-direction:column;gap:2px;min-width:200px;background:var(--cell);border:1px solid var(--line2);border-radius:14px;padding:6px;box-shadow:0 18px 44px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.2)}
 #laptop.lp-attm #lpAttMenu{display:flex;animation:lpUp .16s cubic-bezier(.2,.8,.2,1)}
+/* Item 9 quick replies (JJ 2026-11-04): one tap sends a saved reply; editable, kept on this phone */
+#lpQk{position:absolute;left:8px;right:8px;bottom:calc(100% + 8px);z-index:9;display:none;flex-direction:column;gap:2px;max-width:420px;max-height:min(60vh,520px);overflow-y:auto;background:var(--cell);border:1px solid var(--line2);border-radius:14px;padding:6px;box-shadow:0 18px 44px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.2)}
+#laptop.lp-qk #lpQk{display:flex;animation:lpUp .16s cubic-bezier(.2,.8,.2,1)}
+.lpqkh{font-size:12px;font-weight:600;color:var(--txt2);padding:6px 14px 2px}
+.lpqks{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;line-height:48px}
+.lpqke{display:flex;flex-direction:column;gap:8px;padding:6px}
+#lpQkT{box-sizing:border-box;width:100%;min-height:160px;padding:10px 12px;font-family:inherit;font-size:16px;line-height:1.4;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--txt);resize:vertical}
+.lpqkb{display:flex;gap:8px;justify-content:flex-end}
+.lpqkb .lpbtn{min-height:44px;min-width:88px}
 #lpIn,.lpmirror{box-sizing:border-box;width:100%;min-height:44px;max-height:140px;padding:10px 14px;border:1px solid var(--line);border-radius:22px;font-family:inherit;font-size:16px;line-height:1.4;letter-spacing:normal}
 #lpIn{flex:1 1 auto;min-width:0;max-height:calc(var(--lpinmax,140) * 1px);resize:none;overflow-y:auto;background:var(--cell);color:var(--txt);field-sizing:content}
 .lpmirror{position:absolute;left:-9999px;top:0;height:0;min-height:0;visibility:hidden;overflow:hidden;resize:none;pointer-events:none}
@@ -663,6 +672,44 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 #lpViewO{font-size:15px;color:#fff;min-height:44px;display:inline-flex;align-items:center;padding:0 12px}
 #laptop.lp-drop .lppw{outline:2px dashed var(--cyan);outline-offset:-6px}
 .lptool.lp-off{opacity:.45}
+/* New ticket (items 1-3, 2026-11-04). Below the toast (z 99) so its messages show over the sheet. */
+#ntFab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:var(--cyan);color:#04141A;border:0;box-shadow:0 8px 24px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:50;cursor:pointer;touch-action:manipulation}
+#ntFab[hidden]{display:none}
+#ntOut{display:none;margin:8px 12px 0;padding:8px 8px 8px 14px;border-radius:12px;background:var(--cell);border:1px solid var(--line2);color:var(--txt);font-size:14px;align-items:center;gap:10px}
+#ntOut.on{display:flex}
+#ntOut>span{flex:1;min-width:0}
+#ntSheet{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column}
+#ntSheet.on{display:flex}
+.nthd{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line)}
+.ntht{flex:1;font-size:17px;font-weight:700;color:var(--txt)}
+.ntbd{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:16px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.ntlab{display:block;font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:6px}
+.nttpl{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.ntkind{display:flex;gap:8px}
+.ntchip{flex:0 0 auto;min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line2);background:var(--cell);color:var(--txt);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation}
+.ntchip.on{background:var(--cyan);color:#04141A;border-color:transparent}
+.ntin,.ntta{box-sizing:border-box;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--cell);color:var(--txt);font-family:inherit;font-size:16px;line-height:1.4}
+.ntta{min-height:160px;resize:vertical}
+.ntph{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ntph img{max-width:120px;max-height:120px;border-radius:10px;border:1px solid var(--line2);object-fit:cover}
+.ntbtn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line2);background:var(--cell);color:var(--txt);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation}
+.ntbtn:disabled{opacity:.5}
+.ntsend{background:var(--cyan);color:#04141A;border-color:transparent;min-width:140px}
+.ntft{padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;justify-content:flex-end;background:var(--bg)}
+.ntnote{font-size:13px;color:var(--txt2)}
+#ntMk{position:fixed;inset:0;z-index:70;background:#000;display:none;flex-direction:column}
+#ntMk.on{display:flex}
+.ntmkbar{display:flex;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;background:#111;flex-wrap:wrap;align-items:center}
+.ntmkbar .ntbtn{min-height:44px;padding:0 12px;font-size:14px;background:#222;color:#fff;border-color:#333}
+.ntmkbar .ntbtn.on{background:var(--cyan);color:#04141A}
+.ntmkbar .ntsend{background:var(--cyan);color:#04141A}
+.ntcol{width:44px;padding:0!important;display:inline-flex;align-items:center;justify-content:center}
+.ntcol i{display:block;width:20px;height:20px;border-radius:50%;border:2px solid #000}
+.ntmkbar .ntcol.on{background:#222;outline:2px solid #fff;outline-offset:1px}
+#ntMkT{flex:1 1 220px;min-width:160px}
+.ntmkc{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+#ntMkC{max-width:100%;max-height:100%;touch-action:none;cursor:crosshair}
+body.nt-on #ntFab{display:none}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -781,6 +828,160 @@ function workingDaysSince(iso){try{var s=new Date(iso);if(isNaN(s))return 0;var 
 var PAL=["#1AE5FF","#3DFF9A","#FFB020","#9D8CFF","#FF6FB5","#2DD4BF","#5B9DFF","#FF4D5E"];
 function color(n){var h=0,s=String(n||'?');for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on')},1900)}
+/* ── NEW TICKET (JJ 2026-11-04, plan next16 items 1-3): file a ticket from the phone.
+   3 OFFLINE DRAFTS: the form keeps itself while you type; Send stores the ticket on this phone FIRST (insert-first: never drop),
+     then sends. No signal = it waits and sends itself when the signal is back. Every ticket carries one random key, so a resend
+     is answered with the first ticket's id by the server: a ticket is filed once, never twice.
+   2 TEMPLATES: one tap fills the title and the details skeleton for the common reports. Typed text is never overwritten.
+   1 PHOTO MARKUP: draw, arrow, circle and text on the photo before it goes in. ── */
+var NT={open:false,key:'',kind:'bug',tpl:'',shot:'',busy:false,timer:null,saveT:null,out:[],mk:null};
+var NT_TPL=[
+  {id:'crash',label:'QGIS crash',kind:'bug',title:'QGIS crashed',body:'Project:\nWhat I was doing:\nWhat happened:\nPlugin version:'},
+  {id:'label',label:'Wrong label',kind:'bug',title:'Wrong label',body:'Project:\nLayer:\nLabel now:\nShould be:'},
+  {id:'boq',label:'BOQ mismatch',kind:'bug',title:'BOQ mismatch',body:'Project:\nBOQ line:\nBOQ says:\nMap shows:'},
+  {id:'splice',label:'Splice plan',kind:'bug',title:'Splice plan issue',body:'Project:\nEnclosure / PON:\nWhat is wrong:'},
+  {id:'feature',label:'Feature idea',kind:'feature',title:'',body:'What I want:\nWhy it helps:'}];
+var NT_RETRY_MS=30000,NT_SHOT_MAX=5500000;
+function ntEl(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function ntG(id){return document.getElementById(id);}
+function ntNewKey(){var a=new Uint8Array(12);try{crypto.getRandomValues(a);}catch(e){for(var i=0;i<12;i++)a[i]=Math.floor(Math.random()*256);}
+  return 'nt_'+Array.prototype.map.call(a,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
+
+/* storage: IndexedDB 'nt_out' (store 'out' = waiting tickets, 'form' = the open form); localStorage when IndexedDB is missing */
+var NTDB={p:null};
+function ntDb(){if(NTDB.p)return NTDB.p;NTDB.p=new Promise(function(res){try{if(!window.indexedDB)return res(null);var rq=indexedDB.open('nt_out',1);
+  rq.onupgradeneeded=function(){var d=rq.result;if(!d.objectStoreNames.contains('out'))d.createObjectStore('out',{keyPath:'key'});if(!d.objectStoreNames.contains('form'))d.createObjectStore('form',{keyPath:'id'});};
+  rq.onsuccess=function(){res(rq.result);};rq.onerror=function(){res(null);};rq.onblocked=function(){res(null);};}catch(e){res(null);}});return NTDB.p;}
+function ntLs(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return v===undefined?null:false;}}
+function ntTx(store,mode,fn){return ntDb().then(function(db){if(!db)return null;return new Promise(function(res){try{var tx=db.transaction([store],mode),st=tx.objectStore(store),out=fn(st);
+  tx.oncomplete=function(){res(out&&out.result!==undefined?out.result:true);};tx.onerror=tx.onabort=function(){res(null);};}catch(e){res(null);}});});}
+function ntOutAll(){return ntTx('out','readonly',function(s){return s.getAll();}).then(function(r){if(r===null)return ntLs('nt_out_v1')||[];return (r||[]).sort(function(a,b){return a.at-b.at;});});}
+function ntOutPut(d){return ntTx('out','readwrite',function(s){s.put(d);}).then(function(ok){if(ok)return true;
+  var a=ntLs('nt_out_v1')||[];a=a.filter(function(x){return x.key!==d.key;});a.push(d);if(ntLs('nt_out_v1',a))return true;
+  var lite=Object.assign({},d,{shot:''});a[a.length-1]=lite;return ntLs('nt_out_v1',a)?'noshot':false;});}
+function ntOutDel(key){return ntTx('out','readwrite',function(s){s['delete'](key);}).then(function(ok){var a=ntLs('nt_out_v1');if(a)ntLs('nt_out_v1',a.filter(function(x){return x.key!==key;}));return ok;});}
+function ntFormSave(){clearTimeout(NT.saveT);NT.saveT=setTimeout(ntFormSaveNow,300);}
+function ntFormSaveNow(){var t=ntG('ntTitle'),b=ntG('ntBody');if(!t||!b)return;var f={id:'cur',key:NT.key,kind:NT.kind,tpl:NT.tpl,title:t.value,body:b.value,shot:NT.shot,at:Date.now()};
+  ntTx('form','readwrite',function(s){s.put(f);}).then(function(ok){if(!ok)ntLs('nt_form_v1',Object.assign({},f,{shot:''}));});}
+function ntFormLoad(){return ntTx('form','readonly',function(s){return s.get('cur');}).then(function(f){return f||ntLs('nt_form_v1');});}
+function ntFormClear(){ntTx('form','readwrite',function(s){s['delete']('cur');});ntLs('nt_form_v1',null);}
+
+/* ui */
+function ntInit(){if(ntG('ntFab'))return;var b=document.body;
+  var fab=ntEl('button');fab.id='ntFab';fab.type='button';fab.setAttribute('aria-label','New ticket');fab.title='New ticket';fab.hidden=true;
+  fab.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  fab.onclick=function(){ntOpen();};b.appendChild(fab);
+  var out=ntEl('div');out.id='ntOut';out.setAttribute('role','status');var ot=ntEl('span');ot.id='ntOutT';out.appendChild(ot);
+  var ob=ntEl('button','ntbtn','Send now');ob.type='button';ob.id='ntOutB';ob.onclick=function(){ntFlush(true);};out.appendChild(ob);
+  var list=ntG('list');if(list&&list.parentNode)list.parentNode.insertBefore(out,list);else b.appendChild(out);
+  var sh=ntEl('div');sh.id='ntSheet';sh.setAttribute('role','dialog');sh.setAttribute('aria-modal','true');sh.setAttribute('aria-label','New ticket');
+  sh.innerHTML='<div class="nthd"><button type="button" class="ntbtn" id="ntClose">Close</button><div class="ntht">New ticket</div></div>'+
+    '<div class="ntbd"><div><div class="ntlab">Start from</div><div class="nttpl" id="ntTpl"></div></div>'+
+    '<div><div class="ntlab">Type</div><div class="ntkind"><button type="button" class="ntchip" id="ntKBug">Bug</button><button type="button" class="ntchip" id="ntKFeat">Feature</button></div></div>'+
+    '<div><label class="ntlab" for="ntTitle">Title</label><input class="ntin" id="ntTitle" maxlength="140" autocomplete="off" placeholder="What is wrong, in a few words"></div>'+
+    '<div><label class="ntlab" for="ntBody">Details</label><textarea class="ntta" id="ntBody" maxlength="4000" placeholder="Project, layer, what happened"></textarea></div>'+
+    '<div><div class="ntlab">Photo</div><div class="ntph" id="ntPh"></div><input type="file" id="ntFile" accept="image/*" hidden></div>'+
+    '<div class="ntnote" id="ntNote">Saved on this phone as you type. With no signal it sends itself when you are back online.</div></div>'+
+    '<div class="ntft"><button type="button" class="ntbtn ntsend" id="ntSend">Send ticket</button></div>';
+  b.appendChild(sh);
+  ntG('ntClose').onclick=ntClose;ntG('ntSend').onclick=ntSubmit;
+  ntG('ntKBug').onclick=function(){ntKind('bug');};ntG('ntKFeat').onclick=function(){ntKind('feature');};
+  ntG('ntTitle').addEventListener('input',ntFormSave);ntG('ntBody').addEventListener('input',ntFormSave);
+  ntG('ntFile').addEventListener('change',function(){var f=this.files&&this.files[0];this.value='';if(f)ntPhotoIn(f);});
+  var tp=ntG('ntTpl');NT_TPL.forEach(function(t){var c=ntEl('button','ntchip',t.label);c.type='button';c.dataset.tpl=t.id;c.onclick=function(){ntTemplate(t.id);};tp.appendChild(c);});
+  ntMkInit();
+  window.addEventListener('online',function(){ntFlush(false);});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')ntFlush(false);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&NT.open&&!NT.mk){ntClose();}});
+  try{ntFabShow(!STATE.view||STATE.view==='list'||STATE.view==='board');}catch(e){}
+  ntOutPaint();ntFlush(false);}
+function ntFabShow(on){var app=ntG('app');on=!!on&&!!app&&app.style.display!=='none';var f=ntG('ntFab');if(f)f.hidden=!on;var o=ntG('ntOut');if(o)o.style.display=on?'':'none';}
+function ntKind(k){NT.kind=k==='feature'?'feature':'bug';var a=ntG('ntKBug'),b=ntG('ntKFeat');if(a)a.classList.toggle('on',NT.kind==='bug');if(b)b.classList.toggle('on',NT.kind==='feature');ntFormSave();}
+function ntTplPaint(){var tp=ntG('ntTpl');if(!tp)return;Array.prototype.forEach.call(tp.children,function(c){c.classList.toggle('on',c.dataset.tpl===NT.tpl);});}
+/* a template fills a field only while it is empty or still holds the previous template's text: what you typed stays */
+function ntTemplate(id){var t=NT_TPL.filter(function(x){return x.id===id;})[0];if(!t)return;var prev=NT_TPL.filter(function(x){return x.id===NT.tpl;})[0]||{title:'',body:''};
+  var ti=ntG('ntTitle'),bo=ntG('ntBody'),kept=false;
+  if(!ti.value.trim()||ti.value===prev.title)ti.value=t.title;else kept=true;
+  if(!bo.value.trim()||bo.value===prev.body)bo.value=t.body;else kept=true;
+  NT.tpl=t.id;ntKind(t.kind);ntTplPaint();ntFormSave();if(kept)toast('Kept what you typed');
+  if(!ti.value.trim())ti.focus();}
+function ntPhPaint(){var ph=ntG('ntPh');if(!ph)return;ph.textContent='';
+  if(NT.shot){var im=ntEl('img');im.alt='Photo for this ticket';im.src=NT.shot;ph.appendChild(im);
+    var m=ntEl('button','ntbtn','Mark up');m.type='button';m.id='ntMkB';m.onclick=function(){ntMkOpen();};ph.appendChild(m);
+    var r=ntEl('button','ntbtn','Remove');r.type='button';r.id='ntPhX';r.onclick=function(){NT.shot='';ntPhPaint();ntFormSave();};ph.appendChild(r);}
+  else{var a=ntEl('button','ntbtn','Add photo');a.type='button';a.id='ntPhA';a.onclick=function(){ntG('ntFile').click();};ph.appendChild(a);}}
+/* a photo is scaled to at most 1600 px, then smaller until it fits the server's limit */
+function ntPhotoIn(f){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){URL.revokeObjectURL(u);var s=1600,d='';
+    for(var i=0;i<4;i++){var k=Math.min(1,s/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);d=c.toDataURL('image/png');if(d.length<=NT_SHOT_MAX)break;s=Math.round(s*0.7);}
+    if(d.length>NT_SHOT_MAX){toast('That photo is too big to send');return;}NT.shot=d;ntPhPaint();ntFormSave();};
+  var fail=function(){toast('That photo could not be read here: send a screenshot instead');};
+  /* a browser that will not draw a blob: link gets the photo as a data: URL instead, once (as lpShrink does) */
+  im.onerror=function(){URL.revokeObjectURL(u);im.onerror=fail;try{var fr=new FileReader();fr.onload=function(){im.src=String(fr.result||'');};fr.onerror=fail;fr.readAsDataURL(f);}catch(e){fail();}};im.src=u;}
+function ntOpen(){ntInit();var sh=ntG('ntSheet');ntFormLoad().then(function(f){f=f||{};NT.key=f.key||ntNewKey();NT.tpl=f.tpl||'';NT.shot=f.shot||'';
+  ntG('ntTitle').value=f.title||'';ntG('ntBody').value=f.body||'';ntKind(f.kind||'bug');ntTplPaint();ntPhPaint();
+  sh.classList.add('on');NT.open=true;document.body.classList.add('nt-on');});}
+function ntClose(){ntFormSaveNow();var sh=ntG('ntSheet');if(sh)sh.classList.remove('on');NT.open=false;document.body.classList.remove('nt-on');}
+function ntSubmit(){var ti=ntG('ntTitle'),bo=ntG('ntBody'),title=ti.value.replace(/\s+/g,' ').trim();if(!title){toast('Add a title');ti.focus();return;}
+  var d={key:NT.key||ntNewKey(),kind:NT.kind,title:title.slice(0,140),body:bo.value.trim().slice(0,4000),shot:NT.shot||'',at:Date.now(),tries:0,err:''};
+  var btn=ntG('ntSend');btn.disabled=true;
+  ntOutPut(d).then(function(ok){btn.disabled=false;
+    if(!ok){/* nowhere to keep it on this phone: send now and keep the form until the server says yes */
+      ntSendOne(d).then(function(r){if(r==='ok'){ntFormClear();NT.key='';NT.shot='';ntClose();}else toast('Not sent and this phone cannot keep it: keep this screen open and try again');});return;}
+    if(ok==='noshot')toast('The photo is too big to keep on this phone: it goes only if this send works');
+    ntFormClear();NT.key='';NT.tpl='';NT.shot='';ti.value='';bo.value='';ntClose();ntOutPaint();ntFlush(true);});}
+/* one send; 'ok' (filed or already filed) | 'later' (no signal / server down) | 'stop' (refused: kept, shown) */
+function ntSendOne(d){return api('/new-ticket',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',kind:d.kind,title:d.title,body:d.body,shot:d.shot||undefined,client_key:d.key})})
+  .then(function(res){if(res.ok&&res.j&&res.j.ok)return {r:'ok',id:res.j.id,dup:!!res.j.dup};
+    if(res.status===401||res.status===403)return {r:'stop',err:'Sign in again to send it'};
+    if(res.status>=400&&res.status<500)return {r:'stop',err:'The server refused it: '+String((res.j&&res.j.error)||res.status)};
+    return {r:'later'};},function(){return {r:'later'};})
+  .then(function(x){if(x.r==='ok'){toast('Ticket #'+x.id+(x.dup?' was already filed':' filed'));try{load();}catch(e){}return ntOutDel(d.key).then(function(){return 'ok';});}
+    d.tries=(d.tries||0)+1;d.err=x.r==='stop'?x.err:'';return ntOutPut(d).then(function(){return x.r;});});}
+function ntFlush(manual){if(NT.busy)return;clearTimeout(NT.timer);NT.busy=true;
+  ntOutAll().then(function(list){NT.out=list;ntOutPaint();var i=0,later=false;
+    function next(){if(i>=list.length)return done();var d=list[i++];if(d.err&&!manual)return next();
+      if(navigator.onLine===false){later=true;return done();}
+      ntSendOne(d).then(function(r){if(r==='later'){later=true;return done();}next();});}
+    function done(){NT.busy=false;ntOutAll().then(function(l){NT.out=l;ntOutPaint();if(l.length&&(later||l.some(function(x){return !x.err;})))NT.timer=setTimeout(function(){ntFlush(false);},NT_RETRY_MS);
+      if(manual&&later)toast('No signal: it sends itself when you are back online');});}
+    next();});}
+function ntOutPaint(){var o=ntG('ntOut'),t=ntG('ntOutT');if(!o||!t)return;var l=NT.out||[],n=l.length;o.classList.toggle('on',n>0);if(!n)return;
+  var bad=l.filter(function(x){return x.err;});
+  t.textContent=bad.length?(bad.length===1?'1 ticket did not send: '+bad[0].err:bad.length+' tickets did not send: '+bad[0].err):(n===1?'1 ticket waiting to send':n+' tickets waiting to send')+(navigator.onLine===false?' (no signal)':'');}
+
+/* ── photo markup (item 1) ── */
+function ntMkInit(){if(ntG('ntMk'))return;var m=ntEl('div');m.id='ntMk';m.setAttribute('role','dialog');m.setAttribute('aria-label','Mark up the photo');
+  m.innerHTML='<div class="ntmkbar"><button type="button" class="ntbtn" data-mk="cancel">Cancel</button>'+
+    '<button type="button" class="ntbtn on" data-tool="pen">Draw</button><button type="button" class="ntbtn" data-tool="arrow">Arrow</button><button type="button" class="ntbtn" data-tool="circle">Circle</button><button type="button" class="ntbtn" data-tool="text">Text</button>'+
+    '<button type="button" class="ntbtn ntcol on" data-col="#FF3B30" aria-label="Red"><i style="background:#FF3B30"></i></button><button type="button" class="ntbtn ntcol" data-col="#FFD60A" aria-label="Yellow"><i style="background:#FFD60A"></i></button><button type="button" class="ntbtn ntcol" data-col="#FFFFFF" aria-label="White"><i style="background:#FFFFFF"></i></button>'+
+    '<button type="button" class="ntbtn" data-mk="undo">Undo</button><button type="button" class="ntbtn ntsend" data-mk="done">Done</button>'+
+    '<input class="ntin" id="ntMkT" maxlength="60" placeholder="Type, then tap the photo where it goes" hidden></div><div class="ntmkc"><canvas id="ntMkC"></canvas></div>';
+  document.body.appendChild(m);
+  m.querySelector('.ntmkbar').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.tool){NT.mk.tool=b.dataset.tool;m.querySelectorAll('[data-tool]').forEach(function(x){x.classList.toggle('on',x===b);});ntG('ntMkT').hidden=NT.mk.tool!=='text';if(NT.mk.tool==='text')ntG('ntMkT').focus();}
+    else if(b.dataset.col){NT.mk.col=b.dataset.col;m.querySelectorAll('[data-col]').forEach(function(x){x.classList.toggle('on',x===b);});}
+    else if(b.dataset.mk==='undo'){NT.mk.shapes.pop();ntMkDraw();}else if(b.dataset.mk==='cancel')ntMkClose(false);else if(b.dataset.mk==='done')ntMkClose(true);});
+  var c=ntG('ntMkC');
+  c.addEventListener('pointerdown',function(e){if(!NT.mk)return;e.preventDefault();var p=ntMkPt(e);
+    if(NT.mk.tool==='text'){var tx=ntG('ntMkT').value.trim();if(!tx){toast('Type the text first');return;}NT.mk.shapes.push({t:'text',c:NT.mk.col,a:p,s:tx});ntMkDraw();return;}
+    try{c.setPointerCapture(e.pointerId);}catch(x){}NT.mk.cur={t:NT.mk.tool,c:NT.mk.col,a:p,b:p,pts:[p]};});
+  c.addEventListener('pointermove',function(e){if(!NT.mk||!NT.mk.cur)return;e.preventDefault();var p=ntMkPt(e);NT.mk.cur.b=p;if(NT.mk.cur.t==='pen')NT.mk.cur.pts.push(p);ntMkDraw();});
+  var end=function(){if(!NT.mk||!NT.mk.cur)return;var s=NT.mk.cur;NT.mk.cur=null;if(s.t==='pen'?s.pts.length>1:Math.abs(s.a[0]-s.b[0])+Math.abs(s.a[1]-s.b[1])>4)NT.mk.shapes.push(s);ntMkDraw();};
+  c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);}
+function ntMkPt(e){var c=ntG('ntMkC'),r=c.getBoundingClientRect();return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height];}
+function ntMkOpen(){if(!NT.shot)return;var im=new Image();im.onload=function(){var c=ntG('ntMkC');c.width=im.naturalWidth;c.height=im.naturalHeight;
+  NT.mk={img:im,shapes:[],cur:null,tool:'pen',col:'#FF3B30',lw:Math.max(3,Math.round(Math.min(c.width,c.height)/140))};ntMkDraw();ntG('ntMk').classList.add('on');};im.src=NT.shot;}
+function ntMkClose(keep){var m=ntG('ntMk');if(keep&&NT.mk&&NT.mk.shapes.length){ntMkDraw();NT.shot=ntG('ntMkC').toDataURL('image/png');ntPhPaint();ntFormSave();}
+  if(m)m.classList.remove('on');NT.mk=null;}
+function ntMkDraw(){var k=NT.mk;if(!k)return;var c=ntG('ntMkC'),g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);g.drawImage(k.img,0,0);
+  var all=k.shapes.concat(k.cur?[k.cur]:[]);all.forEach(function(s){g.strokeStyle=s.c;g.fillStyle=s.c;g.lineWidth=k.lw;g.lineCap='round';g.lineJoin='round';g.beginPath();
+    if(s.t==='pen'){s.pts.forEach(function(p,i){if(i)g.lineTo(p[0],p[1]);else g.moveTo(p[0],p[1]);});g.stroke();}
+    else if(s.t==='arrow'){var a=s.a,b=s.b,ang=Math.atan2(b[1]-a[1],b[0]-a[0]),h=k.lw*4;g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.beginPath();g.moveTo(b[0],b[1]);
+      g.lineTo(b[0]-h*Math.cos(ang-0.45),b[1]-h*Math.sin(ang-0.45));g.lineTo(b[0]-h*Math.cos(ang+0.45),b[1]-h*Math.sin(ang+0.45));g.closePath();g.fill();}
+    else if(s.t==='circle'){g.ellipse((s.a[0]+s.b[0])/2,(s.a[1]+s.b[1])/2,Math.abs(s.b[0]-s.a[0])/2||1,Math.abs(s.b[1]-s.a[1])/2||1,0,0,Math.PI*2);g.stroke();}
+    else if(s.t==='text'){var fs=k.lw*7;g.font='700 '+fs+'px sans-serif';g.lineWidth=Math.max(2,k.lw/1.5);g.strokeStyle=s.c==='#FFFFFF'?'#000':'#FFF';g.strokeText(s.s,s.a[0],s.a[1]);g.fillText(s.s,s.a[0],s.a[1]);}});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ntInit);else setTimeout(ntInit,0);
 function devTok(){try{return localStorage.getItem('vr_devtoken')||''}catch(e){return ''}}
 /* device line: uid and expiry of this device's token, read locally from vr_devtoken and never sent anywhere */
 function devLine(){var p=devTok().split('.');if(p.length!==3||!/^[0-9]+$/.test(p[0])||!/^[0-9]+$/.test(p[1]))return '';var exp=parseInt(p[1],10),d=new Date(exp*1000);return 'Device id '+p[0]+' · token expires '+(isNaN(d.getTime())?'?':d.toISOString().slice(0,10))+' ('+exp+')';}
@@ -850,6 +1051,7 @@ function load(){
       if(!STATE.first && res.j.pending_count>_prevPend){beep();var _vis2=(typeof document!=='undefined'&&document.visibilityState==='visible');if(_vis2)accessCard(res.j.pending_count-_prevPend);}}
     try{localStorage.setItem('vr_lastdata',JSON.stringify(STATE.tickets));}catch(e){}
     document.getElementById('app').style.display='flex';
+    if(typeof ntFabShow==='function')ntFabShow(!STATE.view||STATE.view==='list'||STATE.view==='board');
     var mxId=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
     if(STATE.first && !STATE.lastSeen){STATE.lastSeen=mxId;try{localStorage.setItem('vr_lastseen',String(mxId))}catch(e){}}
     // new-ticket detection
@@ -1139,6 +1341,7 @@ function gReload(){GFX.fetched=true;gFetch();}
 
 function setView(v){
   STATE.view=v;
+  if(typeof ntFabShow==='function')ntFabShow(v==='list'||v==='board');
   try{localStorage.setItem('vr_view',v)}catch(e){}
   var ids={list:'vL',board:'vB',stats:'vS',agentic:'vA',agents:'vH',graph:'vG',laptop:'vP'};
   ['vL','vB','vS','vA','vH','vG','vP'].forEach(function(id){var el=document.getElementById(id);if(el)el.className=(ids[v]===id)?'on':'';});
@@ -1163,7 +1366,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-11';
+var LP_BUILD='CHAT-20261104-12';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1519,7 +1722,8 @@ function lpPaintTabs(list){var box=lpG('lpTerms');if(!box)return;
     var stt=String(t.row.status||'idle'),word=t.ghost?'GONE':t.cache?'SAVED':t.off?'OFFLINE':(words[stt]||stt.toUpperCase().slice(0,12)),
       folder=lpBase(t.row.cwd)+(lpTwin(list,t)?' · '+lpShortId(list,t):'');
     if(t.row._chat&&t.row._chat.task)folder=String(t.row._chat.task);
-    lpSetText(c._n,t.row.name||'Claude');lpSetText(c._f,folder);lpSetText(c._w,word);lpSetCls(c._d,t.off?'lpdot lpd-o':(dots[stt]||'lpdot lpd-o'));
+    var nq=lpNice(t.row.name);if(nq.slot)folder=nq.slot+' \u00b7 '+folder;
+    lpSetText(c._n,nq.title);lpSetText(c._f,folder);lpSetText(c._w,word);lpSetCls(c._d,t.off?'lpdot lpd-o':(dots[stt]||'lpdot lpd-o'));
     lpSetCls(c,'lptab'+(sid===LP.sel?' on':'')+(t.off?' off':'')+(lpPinned(sid)?' pin':''));
     if(c._u){var un=sid===LP.sel?0:lpUnread(sid);lpSetText(c._u,un?String(un>99?'99+':un):'');lpTog(c._u,'on',un>0);}
     var a=sid===LP.sel?'true':'false';if(c.getAttribute('aria-selected')!==a)c.setAttribute('aria-selected',a);
@@ -2102,7 +2306,7 @@ function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent=''
   var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);box.appendChild(hd);
   var list=lpTabList();if(!list.length)box.appendChild(lpEl('div','lpcn','No Claude terminal is open on the laptop.'));
   list.forEach(function(t){var sid=String(t.sid),r=lpEl('div','lpcr'+(sid===LP.sel?' on':''));r.dataset.lptap='chatgo';r.dataset.sid=sid;
-    var nm=String(t.row.name||'Claude'),av=lpEl('span','lpca',(nm.trim().charAt(0)||'C').toUpperCase());r.appendChild(av);
+    var nq=lpNice(t.row.name),nm=nq.title,av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());r.appendChild(av);
     var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));var la=lpLastAt(sid);top.appendChild(lpEl('span','lpcmh',la?lpHm(new Date(la).toISOString()):''));mid.appendChild(top);
     var bot=lpEl('div','lpcmb');bot.appendChild(lpEl('span','lpcmp',lpPreview(sid,t.row)||(t.row.status==='busy'?'working…':'')));var un=sid===LP.sel?0:lpUnread(sid);
     if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);r.appendChild(mid);
@@ -2111,7 +2315,7 @@ function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent=''
     if(lpMuted(sid))r.classList.add('muted');box.appendChild(r);});
   var stars=lpStarList();if(stars.length){box.appendChild(lpEl('div','lpchs','Starred messages'));
     stars.slice(-30).reverse().forEach(function(s){var sr=lpEl('div','lpcr lpcsr');sr.dataset.lptap='chatgo';sr.dataset.sid=String(s.sid||'');
-      var m2=lpEl('div','lpcm');var t2=lpEl('div','lpcmt');t2.appendChild(lpEl('span','lpcmn','\u2605 '+String(s.name||'Claude')));t2.appendChild(lpEl('span','lpcmh',s.at?lpHm(s.at):''));m2.appendChild(t2);
+      var m2=lpEl('div','lpcm');var t2=lpEl('div','lpcmt');t2.appendChild(lpEl('span','lpcmn','\u2605 '+lpNice(s.name).title));t2.appendChild(lpEl('span','lpcmh',s.at?lpHm(s.at):''));m2.appendChild(t2);
       m2.appendChild(lpEl('div','lpcmp',String(s.text||'').replace(/\s+/g,' ').slice(0,140)));sr.appendChild(m2);box.appendChild(sr);});}}
 
 /* ── CHAT-11: mute, stars, search, emoji, haptic, Chats first ── */
@@ -2204,11 +2408,19 @@ function lpKeysState(){var on=lpFresh(),bs=document.querySelectorAll('#laptop [d
   var need=ask&&!document.querySelector('#lpPend [data-lptap="key"],#lpPend [data-lptap="qpick"]'),ks=document.querySelectorAll('#lpKeys .lpbtn');void work;
   for(var j=0;j<ks.length;j++){if(ks[j].hidden!==!need)ks[j].hidden=!need;}
   var row=lpG('lpKeys');if(row&&row.hidden!==!need)row.hidden=!need;}
-function lpShortName(n){var p=String(n||'').split(' · ');return p.length>2?p.slice(0,2).join(' · '):String(n||'');}
+/* Item 18 (JJ 2026-11-04): a terminal is named by what it is building. The VS Code tab title arrives as
+   'D · CODEX · Velocity Relay phone': show only the work, the slot letter small, and never the handoff noise. */
+function lpNice(n){var s=String(n||'').replace(/\s+/g,' ').trim(),slot='',m=/^([A-H])\s*\u00b7\s*(?:([A-Z]{3,10})(?:\s*\u00b7\s*|$))?(.*)$/.exec(s);
+  if(m){slot=m[1];s=m[3]||'';}
+  s=s.replace(/\bterminal_[a-h]_sh\d+\b|\b[a-h]_sh\d+\b|\bsh\d{3,}\b|\bauto-?hand-?offs?\b|\bhand-?offs?\b|\bresum(?:e|ed|ing)\b|\bterminal\s+[a-h]\b/gi,' ').replace(/\s+/g,' ').replace(/^[\s·:|-]+|[\s·:|-]+$/g,'');
+  if(s.replace(/[^A-Za-z]/g,'').length<3)s=slot?'Terminal '+slot:(String(n||'').trim()||'Claude');
+  return {slot:slot,title:s};}
+function lpShortName(n){return lpNice(n).title;}
+function lpSlotName(n){var q=lpNice(n);return q.title+(q.slot?' \u00b7 '+q.slot:'');}
 function lpPh(){var ta=lpG('lpIn');if(!ta)return;var S=LP.sess[LP.sel],r=S&&S.row,t='Message this terminal';
   if(r&&r.name){var list=lpTabList(),n=lpShortName(r.name),oth=function(f){return list.some(function(x){return x.sid!==LP.sel&&!x.off&&x.row&&f(x);});};
     /* two terminals that read alike get the full name, then the folder, then a short session id (as the old confirm did) */
-    if(oth(function(x){return lpShortName(x.row.name)===n;})){n=String(r.name);if(oth(function(x){return String(x.row.name)===n;})){var me=list.filter(function(x){return x.sid===LP.sel;})[0];
+    if(oth(function(x){return lpShortName(x.row.name)===n;})){n=lpSlotName(r.name);if(oth(function(x){return lpSlotName(x.row.name)===n;})){var me=list.filter(function(x){return x.sid===LP.sel;})[0];
       n+=' · '+lpBase(r.cwd)+(me&&lpTwin(list,me)?' · '+lpShortId(list,me):'');}}
     t='Message '+n;}
   if(ta.placeholder!==t)ta.placeholder=t;}
@@ -2228,6 +2440,25 @@ function lpOnSend(){if(LP.rec||LP.recSwallow)return;if(LP.textBusy)return;var v=
   var a={sid:LP.sel,text:v,at:performance.now(),ack:true,cid:lpCid(),files:lpTrayIds(LP.sel),over:lpIsOver(v)&&!lpAttWhy()},rk=LP.risky[a.sid+'\u0001'+v];
   if(typeof rk==='string')a.cid=rk;lpAttMenu(false);lpDoSend(a);}
 function lpDisarm(){LP.arm=null;}
+/* Item 9 QUICK REPLIES (JJ 2026-11-04): the clip menu's 'Quick replies', or '/' typed in an empty box, opens a short list.
+   One tap sends that reply to the open terminal through the normal send (ticks, one id, retry-safe). With photos waiting in the
+   tray the reply goes into the box instead, so nothing is sent that was not meant to be. 'Edit quick replies': one per line. */
+var LP_QK_KEY='lp_qk_v1',LP_QK_DEF=['continue','run the tests','commit it','hand off'],LP_QK_MAX=12;
+function lpQkList(){try{var a=JSON.parse(localStorage.getItem(LP_QK_KEY)||'null');if(Array.isArray(a))return a.map(function(x){return String(x||'').replace(/\s+/g,' ').trim().slice(0,200);}).filter(Boolean).slice(0,LP_QK_MAX);}catch(e){}return LP_QK_DEF.slice();}
+function lpQkIsOpen(){var el=lpG('laptop');return !!(el&&el.classList.contains('lp-qk'));}
+function lpQkClose(){var el=lpG('laptop');if(el&&el.classList.contains('lp-qk'))lpTog(el,'lp-qk',false);}
+function lpQkOpen(edit){lpAttMenu(false);var el=lpG('laptop'),m=lpG('lpQk');if(!el||!m)return;m.textContent='';
+  if(edit){var w=lpEl('div','lpqke');w.appendChild(lpEl('div','lpqkh','One reply per line, up to '+LP_QK_MAX));var ta=lpEl('textarea');ta.id='lpQkT';ta.maxLength=2600;ta.value=lpQkList().join('\n');ta.setAttribute('aria-label','Quick replies, one per line');w.appendChild(ta);
+    var b=lpEl('div','lpqkb'),c=lpEl('button','lpbtn','Cancel'),sv=lpEl('button','lpbtn','Save');c.type='button';c.dataset.lptap='qkx';sv.type='button';sv.dataset.lptap='qksave';b.appendChild(c);b.appendChild(sv);w.appendChild(b);m.appendChild(w);}
+  else{m.appendChild(lpEl('div','lpqkh','Tap to send'));lpQkList().forEach(function(t,i){var it=lpEl('button','lpsi');it.type='button';it.dataset.lptap='qkgo';it.dataset.i=String(i);it.setAttribute('role','menuitem');it.appendChild(lpEl('span','lpqks',t));m.appendChild(it);});
+    var ed=lpEl('button','lpsi','Edit quick replies');ed.type='button';ed.dataset.lptap='qkedit';ed.setAttribute('role','menuitem');ed.style.color='var(--txt2)';m.appendChild(ed);}
+  if(!el.classList.contains('lp-qk'))lpTog(el,'lp-qk',true);}
+function lpQkSaveEd(){var ta=lpG('lpQkT');if(!ta)return;var a=String(ta.value||'').split(/\r?\n/).map(function(x){return x.replace(/\s+/g,' ').trim().slice(0,200);}).filter(Boolean).slice(0,LP_QK_MAX);
+  try{localStorage.setItem(LP_QK_KEY,JSON.stringify(a.length?a:LP_QK_DEF));}catch(e){toast('Could not save on this phone');return;}lpQkOpen(false);toast('Quick replies saved');}
+function lpQkGo(i){var t=lpQkList()[i];lpQkClose();if(!t)return;var raw=lpBoxVal();if(raw.trim()==='/'){lpBox('');raw='';}
+  if(lpTray().length){lpBox(raw.trim()?raw.replace(/\s+$/,'')+' '+t:t);lpGrow();lpDraftSoon();toast('Added to the message: tap Send');return;}
+  var why=lpCantSend();if(why){toast(why);return;}if(LP.textBusy){toast('The last message is still going');return;}
+  lpDoSend({sid:LP.sel,text:t,at:performance.now(),ack:true,cid:lpCid(),files:[],over:false});}
 function lpDoSend(a){var S=LP.sess[a.sid],raw=lpBoxVal();lpBox(raw.trim()===a.text?'':raw);lpDraftNow();
   var o={sid:a.sid,text:a.text,t0:Date.now(),id:null,state:'sending',dbg:{n:LP.dbg.sends.length+1,len:a.text.length,sha:'',osha:'',refill:''}};
   LP.dbg.sends.push(o.dbg);if(LP.dbg.sends.length>20)LP.dbg.sends.shift();
@@ -2381,11 +2612,11 @@ function lpMic(){if(LP.mic){var m0=LP.mic;try{m0.r.stop();}catch(e){lpMicStop();
 function lpNavIn(){if(LP.nav)return;var vt=document.querySelector('#app>.top .vtoggle'),head=lpG('lpHead'),pill=lpG('lpConnW');if(!vt||!head||!pill)return;
   LP.nav={vt:vt,parent:vt.parentNode,next:vt.nextSibling,sl:vt.scrollLeft};head.insertBefore(vt,pill);vt.scrollLeft=0;}
 function lpNavOut(){var n=LP.nav;if(!n)return;LP.nav=null;try{if(n.next&&n.next.parentNode===n.parent)n.parent.insertBefore(n.vt,n.next);else n.parent.appendChild(n.vt);n.vt.scrollLeft=n.sl;}catch(e){}}
-function lpKeyDown(e){if(e.key!=='Escape')return;var am=lpG('laptop');if(am&&am.classList.contains('lp-attm')){lpAttMenu(false);e.preventDefault();}else if(LP.viewOn){lpViewClose();e.preventDefault();}else if(LP.sheet){lpSheetClose();e.preventDefault();}else if(LP.selMode){lpSelOff();e.preventDefault();}}
+function lpKeyDown(e){if(e.key!=='Escape')return;var am=lpG('laptop');if(lpQkIsOpen()){lpQkClose();e.preventDefault();}else if(am&&am.classList.contains('lp-attm')){lpAttMenu(false);e.preventDefault();}else if(LP.viewOn){lpViewClose();e.preventDefault();}else if(LP.sheet){lpSheetClose();e.preventDefault();}else if(LP.selMode){lpSelOff();e.preventDefault();}}
 
 /* ── taps (F3T): own tap detection on pointerup inside the element's box, never click; keeps the keyboard up ── */
 var LPT=null;
-function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-lptap]'):null;if(!el){if(e.target&&e.target.closest&&!e.target.closest('#lpAttMenu'))lpAttMenu(false);return;}
+function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-lptap]'):null;if(!el){if(e.target&&e.target.closest&&!e.target.closest('#lpAttMenu'))lpAttMenu(false);if(e.target&&e.target.closest&&!e.target.closest('#lpQk'))lpQkClose();return;}
   if(e.type!=='mousedown'&&(e.type==='pointerdown'||!LPT||LPT.el!==el||performance.now()-LPT.t>600))LPT={el:el,pid:e.type==='pointerdown'?e.pointerId:null,t:performance.now(),done:false};
   /* a Copy button inside the conversation lets a touch start a scroll (its mousedown is still held, so focus stays) */
   var w=el.getAttribute('data-lptap');if(w!=='pill'&&!((w==='copy'||w==='view')&&e.type==='touchstart')&&e.cancelable)e.preventDefault();}
@@ -2395,6 +2626,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;
   var w=t.el.getAttribute('data-lptap');
   if(w!=='att'&&w!=='attfile'&&w!=='paste')lpAttMenu(false);
+  if(w!=='qk'&&w!=='qkgo'&&w!=='qkedit'&&w!=='qksave'&&w!=='qkx')lpQkClose();
   if(w==='send')lpOnSend();else if(w==='key')lpOnKey(t.el.getAttribute('data-lpk'),t.t);
   else if(w==='pill')lpJump();else if(w==='now')lpNowGo();else if(w==='chip')lpOnChip(t.el);
   else if(w==='copy')lpOnCopy(t.el);else if(w==='sheet')lpOnSheet(t.el.getAttribute('data-act'));else if(w==='sheetbg')lpSheetClose();
@@ -2405,7 +2637,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){lpChatsClose();lpSelect(t.el.dataset.sid,true);}
   else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
-  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
+  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
@@ -2444,7 +2676,8 @@ function lpBuild(el){
     '<div class="lpkeys" id="lpKeys" hidden><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="1" hidden>1</button><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="2" hidden>2</button>'+
     '<button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="3" hidden>3</button></div>'+
     '<div id="lpTray" aria-label="Files to send"></div><input type="file" id="lpFile" multiple hidden tabindex="-1" aria-hidden="true">'+
-    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button><button type="button" class="lpsi" id="lpSrchB" data-lptap="srch" role="menuitem">Search this chat</button></div>'+
+    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button><button type="button" class="lpsi" id="lpSrchB" data-lptap="srch" role="menuitem">Search this chat</button><button type="button" class="lpsi" id="lpQkB" data-lptap="qk" role="menuitem">Quick replies</button></div>'+
+    '<div id="lpQk" role="menu" aria-label="Quick replies"></div>'+
     '<div class="lprow"><button type="button" class="lptool" id="lpAtt" data-lptap="att" aria-label="Attach photos or files" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.2l-8.4 8.4a5.2 5.2 0 0 1-7.4-7.4l8.7-8.7a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.5l8-8"/></svg></button>'+
     '<button type="button" class="lptool" id="lpMic" data-lptap="mic" aria-label="Dictate into the box (never sends)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5M8.5 21h7"/></svg></button><textarea id="lpIn" rows="1" placeholder="Message this terminal" autocapitalize="sentences" autocorrect="on" spellcheck="true" enterkeyhint="enter" aria-label="Message this terminal"></textarea>'+
     '<button type="button" id="lpSend" data-lptap="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div><textarea id="lpMirror" class="lpmirror" rows="1" tabindex="-1" aria-hidden="true"></textarea></div>'+
@@ -2457,7 +2690,7 @@ function lpBuild(el){
   el.addEventListener('pointerup',lpTapUp);el.addEventListener('touchend',lpTapUp);el.addEventListener('pointercancel',function(){LPT=null;});
   lpG('lpTerms').addEventListener('click',function(e){var c=e.target&&e.target.closest?e.target.closest('.lptab'):null;if(c&&c.dataset.sid!=null)lpSelect(c.dataset.sid,true);});
   var ta=lpG('lpIn');
-  ta.addEventListener('input',function(){if(LP.arm)lpDisarm();lpGrow();lpDraftSoon();});
+  ta.addEventListener('input',function(){if(LP.arm)lpDisarm();lpGrow();lpDraftSoon();if(lpBoxVal()==='/'){if(!lpQkIsOpen())lpQkOpen(false);}else if(lpQkIsOpen()&&!lpG('lpQkT'))lpQkClose();});
   ta.addEventListener('compositionstart',function(){LP.composing=true;});
   /* S5: a pasted photo or file goes to the tray; text (even with a picture beside it, as Excel gives) pastes as text */
   ta.addEventListener('paste',function(e){var d=e.clipboardData;if(!d)return;if(String(d.getData('text/plain')||'').length)return;var fs=lpClipFiles(d);if(!fs.length)return;e.preventDefault();lpAddFiles(fs);});

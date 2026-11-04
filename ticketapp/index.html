@@ -587,6 +587,13 @@ body.lp-compact #app>.top{display:none}
 .lpfile[href]{cursor:pointer}
 .lpfn{font-size:15px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lpfs,.lpfp{font-size:12px;line-height:1.4;color:var(--txt2)}
+.lpqq{padding:8px 0;border-top:1px solid var(--line2)}.lpqq:first-of-type{border-top:0}
+.lpqq.done .lpcq,.lpqlater{color:var(--txt2)}
+.lpqh{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--txt2);margin-bottom:4px}.lpqm{font-size:12px}
+.lpqo{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.lpqb{display:flex!important;flex-direction:column;align-items:flex-start;text-align:left;width:100%;min-height:44px;white-space:normal}
+.lpqd{display:block;font-size:12px;color:var(--txt2);font-weight:400;margin-top:2px}
+.lpqx{font-size:15px;padding:4px 0}.lpqa{font-size:15px;margin-top:4px}
 .lpfcs{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .lpfc{border:1px solid var(--line2);border-radius:8px;background:var(--cell);overflow:hidden}
 .lpfco{display:flex;align-items:center;gap:10px;padding:8px 10px;color:var(--txt);text-decoration:none;min-height:44px;box-sizing:border-box}
@@ -1103,7 +1110,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-5';
+var LP_BUILD='CHAT-20261104-6';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1507,13 +1514,15 @@ function lpNowGo(){lpJump();var g=document.querySelectorAll('#lpConv details.lps
 function lpKeyBtn(k,label){var b=lpEl('button','lpbtn',label);b.type='button';b.dataset.lptap='key';b.dataset.lpk=String(k);return b;}
 function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
   var p=(S&&S.row&&!S.ghost&&!S.cacheOnly&&S.row.pending&&typeof S.row.pending==='object')?S.row.pending:null;
-  var sig=p?JSON.stringify([LP.sel,p.eid||p.at||'',S.row.status||'',p.options||null]):'';
+  var qst=p&&LP.qstep?LP.qstep[String(LP.sel)+'|'+String(p.eid||p.at||'')]:null;
+  var sig=p?JSON.stringify([LP.sel,p.eid||p.at||'',S.row.status||'',p.options||null,p.questions||null,qst||null]):'';
   if(sig===LP.sigs.prompt)return;LP.sigs.prompt=sig;
   var eid=p?String(LP.sel)+'|'+String(p.eid||p.at||'?'):'';if(eid!==LP.promptEid){LP.promptEid=eid;LP.guardAt=performance.now();}
   box.textContent='';if(!p)return;
   var card=lpEl('div','lpcard'),h=lpEl('div','lpch');lpTxt(h,'// '+(p.kind==='question'?'QUESTION':'PERMISSION')+' · ');
   var age=lpEl('span','lpage');age.dataset.at=String(p.at||'');lpTxt(age,lpAge(p.at,lpSrvNow())+' ago');h.appendChild(age);card.appendChild(h);
   var bs=lpEl('div','lpbtns');
+  if(p.kind==='question'&&Array.isArray(p.questions)&&p.questions.length){lpQCard(card,p,eid);box.appendChild(card);return;}
   if(p.kind==='question'){card.appendChild(lpEl('div','lpcq',p.question||p.message||''));
     (Array.isArray(p.options)?p.options:[]).forEach(function(o){if(o&&o.key!=null)bs.appendChild(lpKeyBtn(o.key,String(o.key)+'. '+String(o.label==null?'':o.label)));});
     if(!bs.children.length)card.appendChild(lpEl('div','lpcn','Use the number keys below.'));}
@@ -1523,6 +1532,25 @@ function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
     var al=lpKeyBtn('1','Allow');al.classList.add('go');bs.appendChild(al);bs.appendChild(lpKeyBtn('Esc','Deny'));}
   if(bs.children.length)card.appendChild(bs);box.appendChild(card);}
 
+/* QUESTIONS (CHAT-6, JJ 2026-11-04): every question in full; buttons for the one on screen; answered ones show the pick */
+function lpQCard(card,p,eid){var qs=p.questions,st=(LP.qstep=LP.qstep||{})[eid]||(LP.qstep[eid]={i:0,picks:[],at:0});
+  if(p.count>qs.length)card.appendChild(lpEl('div','lpcn',qs.length+' of '+p.count+' questions shown'));
+  qs.forEach(function(q,i){var w=lpEl('div','lpqq'+(i===st.i?' on':i<st.i?' done':''));
+    var hd=lpEl('div','lpqh');hd.appendChild(lpEl('span','lpqn',(qs.length>1?(i+1)+'/'+qs.length+' · ':'')+String(q.header||'Question')));if(q.multi)hd.appendChild(lpEl('span','lpqm','pick any'));w.appendChild(hd);
+    w.appendChild(lpEl('div','lpcq',String(q.question||'')));
+    if(i<st.i){w.appendChild(lpEl('div','lpqa','\u2713 '+String(st.picks[i]||'answered')));}
+    else if(i===st.i&&!q.multi){var bs=lpEl('div','lpqo');(q.options||[]).forEach(function(o){var b=lpKeyBtn(o.key,String(o.label==null?'':o.label));b.classList.add('lpqb');b.dataset.qi=String(i);
+        if(o.description)b.appendChild(lpEl('span','lpqd',String(o.description)));bs.appendChild(b);});w.appendChild(bs);}
+    else if(i===st.i){var ol=lpEl('div','lpqo');(q.options||[]).forEach(function(o){var x=lpEl('div','lpqx');x.appendChild(lpEl('b',null,o.key+'. '+String(o.label||'')));if(o.description)x.appendChild(lpEl('span','lpqd',String(o.description)));ol.appendChild(x);});
+      w.appendChild(ol);w.appendChild(lpEl('div','lpcn','Pick-any questions: answer this one on the laptop for now.'));}
+    else{var pl=lpEl('div','lpqo lpqlater');(q.options||[]).forEach(function(o){pl.appendChild(lpEl('div','lpqx',o.key+'. '+String(o.label||'')));});w.appendChild(pl);}
+    card.appendChild(w);});
+  if(st.i>=qs.length&&st.at&&Date.now()-st.at>3000){var bs2=lpEl('div','lpbtns'),sb=lpKeyBtn('Enter','Submit answers');sb.classList.add('go');bs2.appendChild(sb);card.appendChild(bs2);}
+  else if(st.i>=qs.length)setTimeout(function(){LP.sigs.prompt=null;var S=LP.sess[LP.sel];lpPaintPrompt(S);},3200);}
+/* a number key from a question card moves that card to the next question */
+function lpQStep(k){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p||p.kind!=='question'||!Array.isArray(p.questions))return;
+  var eid=String(LP.sel)+'|'+String(p.eid||p.at||''),st=(LP.qstep=LP.qstep||{})[eid]||(LP.qstep[eid]={i:0,picks:[],at:0}),q=p.questions[st.i];if(!q||q.multi)return;
+  var o=(q.options||[]).filter(function(x){return String(x.key)===String(k);})[0];if(!o)return;st.picks[st.i]=String(o.label||k);st.i++;st.at=Date.now();LP.sigs.prompt=null;lpPaintPrompt(S);}
 /* ── the conversation: Claude's words in full, steps folded into one grey line (F12), keyed patching (F4) ── */
 function lpLabel(it){return it.id?String(it.text||'').trim()||'Used a tool':'Used a tool';}
 function lpFromFor(S,n){var L=S.items,f=Math.max(0,L.length-n);while(f>0&&L[f].role==='tool'&&L[f-1].role==='tool')f--;return f;}
@@ -1966,7 +1994,7 @@ function lpPh(){var ta=lpG('lpIn');if(!ta)return;var S=LP.sess[LP.sel],r=S&&S.ro
     t='Message '+n;}
   if(ta.placeholder!==t)ta.placeholder=t;}
 function lpOnKey(k,downT){if(downT-LP.guardAt<LP_GUARD_MS||!lpFresh())return;
-  lpSend('key',k).then(function(r){if(r.ok){toast('Sent '+k);lpLoad();}else if(r.net)toast('send failed: offline');else if(r.status&&r.status!==401&&r.status!==403)toast(String((r.j&&r.j.error)||'send failed'));});}
+  lpSend('key',k).then(function(r){if(r.ok){lpQStep(k);toast('Sent '+k);lpLoad();}else if(r.net)toast('send failed: offline');else if(r.status&&r.status!==401&&r.status!==403)toast(String((r.j&&r.j.error)||'send failed'));});}
 function lpCantSend(){if(LP.locked)return 'The laptop link is for the owner only.';var S=LP.sess[LP.sel];
   if(!S||!S.row)return 'No terminal selected';if(S.ghost)return 'terminal gone';if(S.cacheOnly||!LP.lastOk||!LP.data)return 'Not connected yet';if(lpOff(S.row))return 'window offline';return '';}
 function lpComposerState(){var b=lpG('lpSend');if(!b)return;var dis=!!lpCantSend();if(b.disabled!==dis)b.disabled=dis;if(dis)lpAttMenu(false);lpAttState();lpPaintTray();lpPh();lpSendLook();}

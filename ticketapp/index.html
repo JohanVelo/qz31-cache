@@ -545,10 +545,30 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 #laptop #lpSend{background:var(--lpwgo);color:#FFFFFF}
 .lpm-a,.lpm-u{will-change:auto}.lpswok{opacity:.85}
 .lpqr{display:flex;gap:6px;margin-top:8px}
+#lpSrch{display:flex;gap:6px;align-items:center;padding:6px 10px;background:var(--lprecv,var(--cell))}#lpSrch[hidden]{display:none}
+#lpSrchI{flex:1 1 auto;min-width:0;min-height:44px;font-size:15px;font-family:inherit;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--cell);color:var(--txt)}
+#lpSrchN{font-size:12px;color:var(--txt2);white-space:nowrap}
+#lpConv .lpmatch{outline:2px solid color-mix(in srgb,var(--amber) 60%,transparent);outline-offset:2px}#lpConv .lpcur{outline-color:var(--amber)}
+#lpConv [data-nw]::before{content:'New messages';display:block;text-align:center;font-size:12px;color:var(--txt);background:color-mix(in srgb,var(--lpwgo,var(--cyan)) 18%,var(--cell));border-radius:8px;padding:2px 8px;margin:0 auto 8px;width:max-content}
+#lpConv .lpstar::after{content:'\2605';position:absolute;right:6px;top:4px;font-size:12px;color:var(--amber)}
+#laptop .lpm-a{position:relative}
+#laptop .lpm-a:not(.lpg)::before{content:'';position:absolute;left:-7px;top:0;width:8px;height:12px;background:var(--lprecv);clip-path:polygon(100% 0,0 0,100% 100%)}
+#laptop .lpm-u:not(.lpg)::before,#laptop .lpq::before{content:'';position:absolute;right:-7px;top:0;width:8px;height:12px;background:var(--lpsent);clip-path:polygon(0 0,100% 0,0 100%)}
+.lpchs{font-size:12px;font-weight:700;color:var(--txt2);padding:12px 12px 4px;text-transform:uppercase;letter-spacing:.04em}
+.lpcr.muted .lpcmn::after{content:' (muted)';font-weight:400;color:var(--txt2)}
+
 .lpqb.sel{border-color:var(--lpwgo,var(--cyan));background:color-mix(in srgb,var(--lpwgo,var(--cyan)) 22%,var(--cell))}
 .lpqbl{font-size:15px;font-weight:600}
 .lpqq .lpqri{width:100%;box-sizing:border-box;margin-top:6px;font-family:inherit}
 .lpqsend{min-height:44px;width:100%}
+#laptop.lp-qfull #lpPend{position:absolute;inset:0;z-index:1600;max-height:none;padding:0;background:var(--lpwall,var(--bg));overflow-y:auto}
+#laptop.lp-qfull #lpPend .lpcard{min-height:100%;box-sizing:border-box;border-radius:0;display:flex;flex-direction:column;padding-bottom:0}
+.lpqtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.lpqstep{font-size:15px;font-weight:700}
+.lpqhide{min-height:44px;font-size:12px}
+.lpqnav{display:flex;gap:8px;justify-content:space-between;margin-top:10px}.lpqnav .lpbtn{flex:1 1 0;min-height:44px}
+.lpqfoot{position:sticky;bottom:0;margin-top:auto;padding:8px 0 12px;background:inherit}
+.lpqrev{display:flex;flex-direction:column;gap:6px}.lpqrvi{display:flex!important;flex-direction:column;align-items:flex-start;text-align:left;min-height:44px;white-space:normal}
+.lpqrva{font-size:15px;color:var(--txt)}.lpqopen{width:100%;min-height:44px}
 #lpChatsB{min-height:44px;margin-left:8px;font-size:15px}
 #lpChats{display:none;position:absolute;inset:0;z-index:1500;background:var(--lpwall,var(--bg));overflow-y:auto;padding:0 0 12px}
 #laptop.lp-chats #lpChats{display:block}
@@ -562,7 +582,7 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpcmn{flex:1 1 auto;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lpcmh{font-size:12px;color:var(--txt2)}
 .lpcmp{flex:1 1 auto;font-size:12px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lppin{flex:0 0 auto;min-height:44px;font-size:12px}
+.lppin,.lpmute{flex:0 0 auto;min-height:44px;font-size:12px}
 .lpun{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:10px;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--lpwgo,var(--green));color:#FFFFFF}
 .lpun.on{display:inline-flex;margin-left:auto}
 .lptab.pin .lptn::before{content:'\2605 ';color:var(--lpwgo,var(--amber))}
@@ -1143,7 +1163,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-10';
+var LP_BUILD='CHAT-20261104-11';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1454,6 +1474,7 @@ function lpAutoPick(vis){var w=vis.filter(function(s){return s.status==='waiting
   var pick=(w[0]||l[0]||b[0]||on[0]||old[0]||vis[0]);if(pick)lpSelect(pick.session_id,false);}
 function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel)return;
   lpSheetClose();lpSelOff();lpDisarm();lpDraftNow();lpSaveScroll();var old=LP.sess[LP.sel];if(old&&old.ghost){old.ghost=false;if(!old.movedTo&&lpBoxVal().trim())old.goneDraft=true;}
+  try{var snk=lpSeen()[lpKeyOf(sid)];LP.newFrom=snk!=null&&lpUnread(sid)>0?{sid:sid,t:snk,used:null}:null;}catch(e){LP.newFrom=null;}
   var prev=LP.sel;LP.sel=sid;LP.dbg.switches++;lpLSset('lp_last',sid);lpBox(lpDraftGet(sid),null,LP.composing?prev:null);LP.guardAt=performance.now();LP.newCount=0;
   if(STATE.view==='laptop'&&LP.built)lpPaint();
   if(byUser&&STATE.view==='laptop')lpRetryNow();}
@@ -1553,7 +1574,7 @@ function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
   var sig=p?JSON.stringify([LP.sel,p.eid||p.at||'',S.row.status||'',p.options||null,p.questions||null,qst||null]):'';
   if(sig===LP.sigs.prompt)return;LP.sigs.prompt=sig;
   var eid=p?String(LP.sel)+'|'+String(p.eid||p.at||'?'):'';if(eid!==LP.promptEid){LP.promptEid=eid;LP.guardAt=performance.now();}
-  box.textContent='';if(!p)return;
+  box.textContent='';if(!p||p.kind!=='question'||!Array.isArray(p.questions))lpTog(lpG('laptop'),'lp-qfull',false);if(!p)return;
   var card=lpEl('div','lpcard'),h=lpEl('div','lpch');lpTxt(h,'// '+(p.kind==='question'?'QUESTION':'PERMISSION')+' · ');
   var age=lpEl('span','lpage');age.dataset.at=String(p.at||'');lpTxt(age,lpAge(p.at,lpSrvNow())+' ago');h.appendChild(age);card.appendChild(h);
   var bs=lpEl('div','lpbtns');
@@ -1573,8 +1594,15 @@ function lpSpVer(){var S=LP.sess[LP.sel],mid=S&&S.row&&S.row.machine_id,ms=(LP.d
 function lpQCardA(card,p,eid){var qs=p.questions,st=(LP.qstep=LP.qstep||{})[eid];if(!st||!st.form)st=LP.qstep[eid]={form:true,sel:qs.map(function(q){return q.multi?[]:'';}),sent:false};
   var own=(LP.qown=LP.qown||{})[eid]||(LP.qown[eid]=qs.map(function(){return '';}));
   if(p.count>qs.length){card.appendChild(lpEl('div','lpcn','This question has '+p.count+' parts; Relay shows '+qs.length+'. Answer it on the laptop.'));return;}
-  qs.forEach(function(q,i){var w=lpEl('div','lpqq on');
-    var hd=lpEl('div','lpqh');hd.appendChild(lpEl('span','lpqn',(qs.length>1?(i+1)+'/'+qs.length+' · ':'')+String(q.header||'Question')));hd.appendChild(lpEl('span','lpqm',q.multi?'tick any':'pick one'));w.appendChild(hd);
+  if(st.cur==null)st.cur=0;var full=!st.fold;lpTog(lpG('laptop'),'lp-qfull',full);
+  if(st.fold){var fb=lpEl('button','lpbtn go lpqopen','Answer '+(qs.length>1?qs.length+' questions':'the question'));fb.type='button';fb.dataset.lptap='qopen';card.appendChild(fb);return;}
+  var top=lpEl('div','lpqtop');top.appendChild(lpEl('span','lpqstep',st.cur<qs.length?('Question '+(st.cur+1)+' of '+qs.length):'Check your answers'));
+  var hb=lpEl('button','lpbtn lpqhide','Back to chat');hb.type='button';hb.dataset.lptap='qfold';top.appendChild(hb);card.appendChild(top);
+  if(st.cur>=qs.length){var rv=lpEl('div','lpqrev'),ans=lpQAns(p,eid);qs.forEach(function(q,i){var r=lpEl('button','lpbtn lpqrvi');r.type='button';r.dataset.lptap='qgo';r.dataset.qi=String(i);
+      r.appendChild(lpEl('span','lpqn',String(q.header||('Question '+(i+1)))));var a=ans[i];r.appendChild(lpEl('span','lpqrva',Array.isArray(a)?(a.length?a.join(', '):'nothing ticked'):(a||'not answered')));rv.appendChild(r);});
+    card.appendChild(rv);}
+  qs.forEach(function(q,i){if(i!==st.cur)return;var w=lpEl('div','lpqq on');
+    var hd=lpEl('div','lpqh');hd.appendChild(lpEl('span','lpqn',(qs.length>1?(i+1)+'/'+qs.length+' · ':'')+String(q.header||'Question')));hd.appendChild(lpEl('span','lpqm',q.multi?'tick all that apply':'pick one'));w.appendChild(hd);
     w.appendChild(lpEl('div','lpcq',String(q.question||'')));
     var bs=lpEl('div','lpqo');(q.options||[]).forEach(function(o,k){var lab=String(o.label==null?'':o.label),on=q.multi?st.sel[i].indexOf(lab)>=0:st.sel[i]===lab;
       var b=lpEl('button','lpbtn lpqb'+(on?' sel':''));b.type='button';b.dataset.lptap='qpick';b.dataset.qi=String(i);b.dataset.qo=String(k);b.setAttribute('aria-pressed',on?'true':'false');
@@ -1583,7 +1611,10 @@ function lpQCardA(card,p,eid){var qs=p.questions,st=(LP.qstep=LP.qstep||{})[eid]
     var inp=lpEl('input','lpqri');inp.type='text';inp.placeholder=q.multi?'Add your own answer (optional)':'Or type your own answer';inp.maxLength=1000;inp.value=own[i]||'';inp.dataset.qi=String(i);if(st.sent)inp.disabled=true;
     inp.addEventListener('input',function(){own[i]=inp.value;if(!q.multi&&inp.value.trim()&&st.sel[i]){st.sel[i]='';LP.sigs.prompt=null;var S0=LP.sess[LP.sel];lpPaintPrompt(S0);var n=lpG('lpPend').querySelector('.lpqri[data-qi="'+i+'"]');if(n){try{n.focus();n.setSelectionRange(n.value.length,n.value.length);}catch(e){}}}lpQReady();});
     w.appendChild(inp);card.appendChild(w);});
-  var bs2=lpEl('div','lpbtns'),sb=lpEl('button','lpbtn go lpqsend',st.sent?'Answers sent \u2713':'Send answers');sb.type='button';sb.dataset.lptap='qsend';sb.id='lpQSend';sb.disabled=st.sent||!lpQAns(p,eid).every(function(a){return Array.isArray(a)?a.length>0:!!a;});bs2.appendChild(sb);card.appendChild(bs2);}
+  var nav=lpEl('div','lpqnav');if(st.cur>0){var bk=lpEl('button','lpbtn','Back');bk.type='button';bk.dataset.lptap='qback';nav.appendChild(bk);}
+  if(st.cur<qs.length){var nx=lpEl('button','lpbtn lpqnext',st.cur===qs.length-1?'Review':'Next');nx.type='button';nx.dataset.lptap='qnext';nav.appendChild(nx);}
+  card.appendChild(nav);
+  var bs2=lpEl('div','lpbtns lpqfoot'),sb=lpEl('button','lpbtn go lpqsend',st.sent?'Answers sent \u2713':'Send answers');sb.type='button';sb.dataset.lptap='qsend';sb.id='lpQSend';sb.disabled=st.sent||!lpQAns(p,eid).every(function(a){return Array.isArray(a)?a.length>0:!!a;});bs2.appendChild(sb);card.appendChild(bs2);}
 function lpQAns(p,eid){var st=LP.qstep[eid],own=(LP.qown||{})[eid]||[];return p.questions.map(function(q,i){var o=String(own[i]||'').trim();
   if(q.multi){var a=st.sel[i].slice();if(o)a.push(o);return a;}return o||st.sel[i];});}
 function lpQReady(){var b=lpG('lpQSend'),S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!b||!p||!Array.isArray(p.questions))return;var eid=String(LP.sel)+'|'+String(p.eid||p.at||''),st=LP.qstep[eid];if(!st||st.sent)return;
@@ -1591,7 +1622,11 @@ function lpQReady(){var b=lpG('lpQSend'),S=LP.sess[LP.sel],p=S&&S.row&&S.row.pen
 function lpQPick(btn){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p||!Array.isArray(p.questions))return;var eid=String(LP.sel)+'|'+String(p.eid||p.at||''),st=LP.qstep[eid];if(!st||!st.form||st.sent)return;
   var i=+btn.dataset.qi,q=p.questions[i],o=q&&q.options&&q.options[+btn.dataset.qo];if(!o)return;var lab=String(o.label);
   if(q.multi){var k=st.sel[i].indexOf(lab);if(k>=0)st.sel[i].splice(k,1);else st.sel[i].push(lab);}else{st.sel[i]=st.sel[i]===lab?'':lab;if(LP.qown&&LP.qown[eid])LP.qown[eid][i]='';}
-  LP.sigs.prompt=null;lpPaintPrompt(S);}
+  LP.sigs.prompt=null;lpPaintPrompt(S);
+  if(!q.multi&&st.sel[i]&&st.cur===i)setTimeout(function(){if(st.cur===i&&!st.sent){st.cur++;LP.sigs.prompt=null;lpPaintPrompt(LP.sess[LP.sel]);}},220);}
+function lpQNav(how,qi){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p||!Array.isArray(p.questions))return;var eid=String(LP.sel)+'|'+String(p.eid||p.at||''),st=LP.qstep[eid];if(!st||!st.form)return;
+  if(how==='next')st.cur=Math.min(p.questions.length,st.cur+1);else if(how==='back')st.cur=Math.max(0,st.cur-1);else if(how==='go')st.cur=Math.max(0,Math.min(p.questions.length-1,qi|0));
+  else if(how==='fold')st.fold=true;else if(how==='open')st.fold=false;LP.sigs.prompt=null;lpPaintPrompt(S);}
 function lpQSend(){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p||!Array.isArray(p.questions)||LP.qBusy)return;var eid=String(LP.sel)+'|'+String(p.eid||p.at||''),st=LP.qstep[eid];if(!st||!st.form||st.sent)return;
   var a=lpQAns(p,eid);if(!a.every(function(x){return Array.isArray(x)?x.length>0:!!x;})){toast('Answer every question first');return;}
   LP.qBusy=true;lpSend('text','[[relay-answers]]'+JSON.stringify({answers:a}),{armed:true}).then(function(r){LP.qBusy=false;
@@ -1640,7 +1675,10 @@ function lpDecorate(rows){var prevDay='',prev=null;
   rows.forEach(function(r){var it=r.it||r.first||(r.kind==='send'?{at:r.at}:null);if(!it){prev=null;return;}var dk=lpDayKey(it.at);
     r.day=dk&&dk!==prevDay?lpDayLabel(it.at):'';if(dk)prevDay=dk;
     r.grp=!!(r.kind==='msg'&&prev&&prev.kind==='msg'&&prev.it.role===r.it.role&&!r.day&&Math.abs(lpT(r.it.at)-lpT(prev.it.at))<180000);
-    r.hm=r.kind==='msg'?lpHm(it.at):'';r.sig+='\u0004'+r.day+'\u0004'+(r.grp?1:0)+'\u0004'+r.hm;prev=r;});
+    r.hm=r.kind==='msg'?lpHm(it.at):'';
+    var nf=LP.newFrom;r.nu=!!(nf&&nf.sid===LP.sel&&r.kind==='msg'&&(nf.used?nf.used===r.k:(r.it.role==='assistant'&&lpT(r.it.at)>nf.t)));if(r.nu)nf.used=r.k;
+    r.st=r.kind==='msg'&&lpStarred(r.k);
+    r.sig+='\u0004'+r.day+'\u0004'+(r.grp?1:0)+'\u0004'+r.hm+'\u0004'+(r.nu?1:0)+(r.st?1:0);prev=r;});
   return rows;}
 function lpRows(S){var L=S.items,rows=[],i=Math.max(0,S.renderFrom);
   while(i<L.length){var it=L[i];
@@ -1708,6 +1746,8 @@ function lpRowEl(r){var el;
 function lpRowFill(el,r){el._sig=r.sig;
   if(r.day)el.dataset.day=r.day;else if(el.dataset.day!=null)delete el.dataset.day;
   if(r.hm)el.dataset.t=r.hm;else if(el.dataset.t!=null)delete el.dataset.t;
+  if(r.nu)el.dataset.nw='1';else if(el.dataset.nw!=null)delete el.dataset.nw;
+  lpTog(el,'lpstar',!!r.st);
   lpTog(el,'lpg',!!r.grp);
   if(r.kind==='send'){var dy=el.dataset.day;lpQFill(el,r.c);if(dy)el.dataset.day=dy;return;}
   if(r.kind==='steps'){lpSetText(el.firstChild,r.sum);var ls=el.lastChild,open={};
@@ -2044,7 +2084,7 @@ function lpCmpPin(a,b){var x=lpPinned(a.session_id),y=lpPinned(b.session_id);if(
 function lpSeen(){return LP.seen||(LP.seen=lpJGet('lp_seen',{}));}
 function lpLastAt(sid){var S=LP.sess[sid],L=S?S.items:[],m=0;for(var i=0;i<L.length;i++){var it=L[i];if(it.role==='assistant'&&!it.gap){var x=lpT(it.at);if(x>m)m=x;}}
   var nw=S&&S.row&&S.row.now;if(nw&&nw.k==='say'){var y=lpT(nw.at);if(y>m)m=y;}return m;}
-function lpUnread(sid){var S=LP.sess[sid];if(!S)return 0;var sn=lpSeen(),k=lpKeyOf(sid);if(sn[k]==null){sn[k]=lpLastAt(sid)||Date.now();lpLSset('lp_seen',JSON.stringify(sn));return 0;}
+function lpUnread(sid){var S=LP.sess[sid];if(!S||lpMuted(sid))return 0;var sn=lpSeen(),k=lpKeyOf(sid);if(sn[k]==null){sn[k]=lpLastAt(sid)||Date.now();lpLSset('lp_seen',JSON.stringify(sn));return 0;}
   var n=0,L=S.items;for(var i=0;i<L.length;i++){var it=L[i];if(it.role==='assistant'&&!it.gap&&lpT(it.at)>sn[k])n++;}
   /* the phone only fetches the open terminal's messages: another terminal's newest reply comes as row.now (server v2) */
   var nw=S.row&&S.row.now;if(!n&&nw&&nw.k==='say'&&lpT(nw.at)>sn[k])n=1;return n;}
@@ -2066,7 +2106,32 @@ function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent=''
     var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));var la=lpLastAt(sid);top.appendChild(lpEl('span','lpcmh',la?lpHm(new Date(la).toISOString()):''));mid.appendChild(top);
     var bot=lpEl('div','lpcmb');bot.appendChild(lpEl('span','lpcmp',lpPreview(sid,t.row)||(t.row.status==='busy'?'working…':'')));var un=sid===LP.sel?0:lpUnread(sid);
     if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);r.appendChild(mid);
-    var pb=lpEl('button','lpbtn lppin',lpPinned(sid)?'Unpin':'Pin');pb.type='button';pb.dataset.lptap='pin';pb.dataset.sid=sid;r.appendChild(pb);box.appendChild(r);});}
+    var pb=lpEl('button','lpbtn lppin',lpPinned(sid)?'Unpin':'Pin');pb.type='button';pb.dataset.lptap='pin';pb.dataset.sid=sid;r.appendChild(pb);
+    var mb=lpEl('button','lpbtn lpmute',lpMuted(sid)?'Unmute':'Mute');mb.type='button';mb.dataset.lptap='mute';mb.dataset.sid=sid;r.appendChild(mb);
+    if(lpMuted(sid))r.classList.add('muted');box.appendChild(r);});
+  var stars=lpStarList();if(stars.length){box.appendChild(lpEl('div','lpchs','Starred messages'));
+    stars.slice(-30).reverse().forEach(function(s){var sr=lpEl('div','lpcr lpcsr');sr.dataset.lptap='chatgo';sr.dataset.sid=String(s.sid||'');
+      var m2=lpEl('div','lpcm');var t2=lpEl('div','lpcmt');t2.appendChild(lpEl('span','lpcmn','\u2605 '+String(s.name||'Claude')));t2.appendChild(lpEl('span','lpcmh',s.at?lpHm(s.at):''));m2.appendChild(t2);
+      m2.appendChild(lpEl('div','lpcmp',String(s.text||'').replace(/\s+/g,' ').slice(0,140)));sr.appendChild(m2);box.appendChild(sr);});}}
+
+/* ── CHAT-11: mute, stars, search, emoji, haptic, Chats first ── */
+function lpMutes(){return LP.mutes||(LP.mutes=lpJGet('lp_mutes',[]));}
+function lpMuted(sid){return lpMutes().indexOf(lpKeyOf(sid))>=0;}
+function lpMuteToggle(sid){var p=lpMutes(),k=lpKeyOf(sid),i=p.indexOf(k);if(i>=0)p.splice(i,1);else p.push(k);lpLSset('lp_mutes',JSON.stringify(p));LP.badgeN=-1;LP.sigs={};lpPaint();if(LP.chatsOn)lpChatsPaint();}
+function lpStarList(){return LP.stars||(LP.stars=lpJGet('lp_stars',[]));}
+function lpStarred(k){var L=lpStarList();for(var i=0;i<L.length;i++)if(L[i].k===k)return true;return false;}
+function lpStarToggle(k,it){var L=lpStarList(),i;for(i=0;i<L.length;i++)if(L[i].k===k)break;
+  if(i<L.length){L.splice(i,1);toast('Unstarred');}else{var S=LP.sess[LP.sel];L.push({k:k,sid:LP.sel,name:String((S&&S.row&&S.row.name)||'Claude').slice(0,60),text:lpMask(String(it&&it.text||'')).slice(0,2000),at:String(it&&it.at||'')});if(L.length>200)L.shift();toast('Starred');}
+  lpLSset('lp_stars',JSON.stringify(L));LP.sigs.conv=null;lpPaintConv(true);}
+function lpSrchOpen(){var b=lpG('lpSrch');if(!b)return;b.hidden=false;var i=lpG('lpSrchI');if(i){try{i.focus();}catch(e){}}}
+function lpSrchClose(){var b=lpG('lpSrch');if(b)b.hidden=true;var i=lpG('lpSrchI');if(i)i.value='';lpSrchRun();}
+function lpSrchRun(){var q=String((lpG('lpSrchI')||{}).value||'').trim().toLowerCase(),rows=document.querySelectorAll('#lpConv [data-k]'),hits=[];
+  Array.prototype.forEach.call(rows,function(r){var on=!!q&&r.textContent.toLowerCase().indexOf(q)>=0;lpTog(r,'lpmatch',on);if(on)hits.push(r);});
+  LP.srch={hits:hits,i:hits.length-1};lpSetText(lpG('lpSrchN'),q?(hits.length?hits.length+' found':'none'):'');if(hits.length)lpSrchShow();}
+function lpSrchGo(d){var s=LP.srch;if(!s||!s.hits.length)return;s.i=(s.i+d+s.hits.length)%s.hits.length;lpSrchShow();}
+function lpSrchShow(){var s=LP.srch,r=s&&s.hits[s.i];if(!r)return;Array.prototype.forEach.call(document.querySelectorAll('#lpConv .lpcur'),function(x){x.classList.remove('lpcur');});r.classList.add('lpcur');
+  try{r.scrollIntoView({block:'center'});}catch(e){r.scrollIntoView();}lpSetText(lpG('lpSrchN'),(s.i+1)+' of '+s.hits.length);}
+function lpStandalone(){try{return !!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));}catch(e){return false;}}
 
 /* ── voice notes (CHAT-8): hold the green button while the box is empty, release to send ── */
 var LP_REC_HOLD_MS=280,LP_REC_MIN_MS=700,LP_REC_MAX_MS=300000;
@@ -2239,12 +2304,14 @@ function lpSheetOpen(m){var it=m&&m._it;if(!it||!m.isConnected)return;lpSheetClo
   try{var g=getSelection(),pn=lpG('lpPane');if(g&&!g.isCollapsed&&pn&&pn.contains(g.anchorNode))g.removeAllRanges();}catch(e){}
   var red=String(it.text).indexOf('[redacted]')>=0;LP.sheet={m:m,it:it,red:red};
   lpSetText(lpG('lpSheetQ'),String(it.text).slice(0,240));var rs=lpG('lpSheetResend');if(rs)rs.hidden=!(it.role==='user'&&!red);
+  var sst=lpG('lpSheetStar');if(sst)lpSetText(sst,lpStarred(m.dataset.k)?'Unstar':'Star');
   lpTog(m,'lpheld',true);lpTog(lpG('laptop'),'lp-sheet',true);}
 function lpSheetClose(){var S=LP.sheet;if(!S)return;LP.sheet=null;lpTog(S.m,'lpheld',false);lpTog(lpG('laptop'),'lp-sheet',false);}
 /* Quote and Resend only fill the box (never send): a Resend still needs Send and F3T's confirm; repeats within 1 s do nothing */
 function lpOnSheet(act){var S=LP.sheet;if(!S)return;var it=S.it,txt=String(it.text);
   if(act==='copy'){lpSheetClose();lpCopy(txt,null,S.m);return;}
   if(act==='select'){var k=S.m.dataset.k;lpSheetClose();lpSelOn(k);return;}
+  if(act==='star'){var km=S.m.dataset.k;lpSheetClose();lpStarToggle(km,it);return;}
   lpSheetClose();if(act!=='quote'&&act!=='resend')return;
   var now=performance.now();if(now-LP.quoteAt<1000)return;LP.quoteAt=now;
   if(act==='quote'){var q=txt.split('\n').map(function(l){return '> '+l;}).join('\n')+'\n';
@@ -2334,9 +2401,11 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='selcopy')lpSelCopy(t.el);else if(w==='seldone')lpSelOff();else if(w==='paste')lpPaste();else if(w==='mic')lpMic();
   else if(w==='retry')lpOnRetry(t.el);else if(w==='chatok')lpOnChatOk();
   else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();
-  else if(w==='fshare')lpFcShare(t.el);else if(w==='qreply')lpQReply(t.el);else if(w==='qpick')lpQPick(t.el);else if(w==='qsend')lpQSend();
+  else if(w==='fshare')lpFcShare(t.el);else if(w==='qreply')lpQReply(t.el);else if(w==='qpick')lpQPick(t.el);else if(w==='qsend')lpQSend();else if(w==='qnext')lpQNav('next');else if(w==='qback')lpQNav('back');
+  else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){lpChatsClose();lpSelect(t.el.dataset.sid,true);}
-  else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='fdl')lpFcDownload(t.el);}
+  else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
+  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
@@ -2368,21 +2437,21 @@ function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.star
   var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-attm');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
   el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><button type="button" id="lpChatsB" class="lpbtn" data-lptap="chats" aria-label="All chats">Chats</button><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
-    '<div id="lpDbg"></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><div class="lpnowr" id="lpNowR"><button type="button" id="lpNow" data-lptap="now"></button><button type="button" class="lpbtn lpstop" id="lpStop" data-lptap="key" data-lpk="Esc" aria-label="Stop Claude (sends Esc)">Stop</button></div>'+
+    '<div id="lpDbg"></div><div id="lpSrch" hidden><input type="search" id="lpSrchI" placeholder="Search this chat" aria-label="Search this chat"><span id="lpSrchN"></span><button type="button" class="lpbtn" data-lptap="srchp" aria-label="Previous match">Up</button><button type="button" class="lpbtn" data-lptap="srchn" aria-label="Next match">Down</button><button type="button" class="lpbtn" data-lptap="srchx">Close</button></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><div class="lpnowr" id="lpNowR"><button type="button" id="lpNow" data-lptap="now"></button><button type="button" class="lpbtn lpstop" id="lpStop" data-lptap="key" data-lpk="Esc" aria-label="Stop Claude (sends Esc)">Stop</button></div>'+
     '<div class="lppw"><div id="lpSelBar"><span>Select text: drag across messages</span><button type="button" class="lpbtn" data-lptap="selcopy">Copy all</button><button type="button" class="lpbtn" data-lptap="seldone">Done</button></div>'+
     '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
     '<div class="lpcomp" id="lpComp"><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChatOk" role="alert"><span>Restored after a restart: is this the right terminal? Sends wait until you say.</span><button type="button" class="lpbtn" data-lptap="chatok">Yes, this one</button></div><div id="lpChips"></div>'+
     '<div class="lpkeys" id="lpKeys" hidden><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="1" hidden>1</button><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="2" hidden>2</button>'+
     '<button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="3" hidden>3</button></div>'+
     '<div id="lpTray" aria-label="Files to send"></div><input type="file" id="lpFile" multiple hidden tabindex="-1" aria-hidden="true">'+
-    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button></div>'+
+    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button><button type="button" class="lpsi" id="lpSrchB" data-lptap="srch" role="menuitem">Search this chat</button></div>'+
     '<div class="lprow"><button type="button" class="lptool" id="lpAtt" data-lptap="att" aria-label="Attach photos or files" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.2l-8.4 8.4a5.2 5.2 0 0 1-7.4-7.4l8.7-8.7a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.5l8-8"/></svg></button>'+
     '<button type="button" class="lptool" id="lpMic" data-lptap="mic" aria-label="Dictate into the box (never sends)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5M8.5 21h7"/></svg></button><textarea id="lpIn" rows="1" placeholder="Message this terminal" autocapitalize="sentences" autocorrect="on" spellcheck="true" enterkeyhint="enter" aria-label="Message this terminal"></textarea>'+
     '<button type="button" id="lpSend" data-lptap="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div><textarea id="lpMirror" class="lpmirror" rows="1" tabindex="-1" aria-hidden="true"></textarea></div>'+
     '<div id="lpView" data-lptap="viewx" role="dialog" aria-label="Photo"></div><div id="lpChats" role="dialog" aria-label="Chats"></div>'+
     '<div id="lpSheetBg" data-lptap="sheetbg"></div><div id="lpSheet" role="dialog" aria-label="Message actions"><div id="lpSheetQ"></div>'+
     '<button type="button" class="lpsi" data-lptap="sheet" data-act="copy">Copy</button><button type="button" class="lpsi" data-lptap="sheet" data-act="quote">Quote in a reply</button>'+
-    '<button type="button" class="lpsi" id="lpSheetResend" data-lptap="sheet" data-act="resend">Resend</button><button type="button" class="lpsi" data-lptap="sheet" data-act="select">Select text</button>'+
+    '<button type="button" class="lpsi" id="lpSheetResend" data-lptap="sheet" data-act="resend">Resend</button><button type="button" class="lpsi" data-lptap="sheet" data-act="select">Select text</button><button type="button" class="lpsi" id="lpSheetStar" data-lptap="sheet" data-act="star">Star</button>'+
     '<button type="button" class="lpsi lpsx" data-lptap="sheet" data-act="cancel">Cancel</button></div></div>';
   ['pointerdown','mousedown'].forEach(function(ev){el.addEventListener(ev,lpTapDown);});el.addEventListener('touchstart',lpTapDown,{passive:false});
   el.addEventListener('pointerup',lpTapUp);el.addEventListener('touchend',lpTapUp);el.addEventListener('pointercancel',function(){LPT=null;});
@@ -2400,6 +2469,8 @@ function lpBuild(el){
   ta.addEventListener('compositionend',function(){LP.composing=false;setTimeout(lpBoxFlush,0);});
   lpG('lpPane').addEventListener('scroll',lpOnScroll,{passive:true});
   try{if(window.ResizeObserver)new ResizeObserver(lpPaneResized).observe(lpG('lpPane'));}catch(e){}
+  var si0=lpG('lpSrchI');if(si0)si0.addEventListener('input',function(){clearTimeout(LP.srchT);LP.srchT=setTimeout(lpSrchRun,120);});
+  if(lpStandalone()&&!/[?&]lps=/.test(location.search))setTimeout(function(){if(STATE.view==='laptop'&&(LP.vis||[]).length>1&&!LP.userPicked)lpChatsOpen();},600);
   var sb0=lpG('lpSend');if(sb0){sb0.addEventListener('pointerdown',lpRecDown);['pointerup','pointercancel'].forEach(function(ev){sb0.addEventListener(ev,lpRecUp);});}
   var pn=lpG('lpPane');pn.addEventListener('pointerdown',lpPressDown);
   pn.addEventListener('touchstart',lpSwDown,{passive:true});pn.addEventListener('touchmove',lpSwMove,{passive:true});

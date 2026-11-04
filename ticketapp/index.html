@@ -1143,7 +1143,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-9';
+var LP_BUILD='CHAT-20261104-10';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1248,7 +1248,7 @@ function lpCacheWrite(S,added,row){if(LP.locked)return;var t=Date.now(),recs=[];
     if(recs.length){var rq=ms.index('sid').getAll(S.sid);rq.onsuccess=function(){var all=rq.result||[];if(all.length<=LP_MAX)return;
       all.sort(function(a,b){return a.o-b.o;});for(var i=0;i<all.length-LP_MAX;i++)ms['delete'](all[i].pk);};}}catch(e){}});}
 /* D82 / IF-1: any 401 or 403 from /laptop/*, a non-owner or another uid on /me: the LAPTOP database and every lp_* key go */
-function lpWipe(){LP.locked=true;LP.fblob={};LP.furl={};try{if(LPDB.db)LPDB.db.close();}catch(e){}LPDB.db=null;LPDB.p=Promise.resolve(null);
+function lpWipe(){LP.locked=true;LP.fblob={};LP.furl={};lpRtClose();LP.rtInfo=null;try{if(LPDB.db)LPDB.db.close();}catch(e){}LPDB.db=null;LPDB.p=Promise.resolve(null);
   try{if(window.indexedDB)indexedDB.deleteDatabase('lp_cache');}catch(e){}
   try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('lp_')===0)ks.push(k);}ks.forEach(lpLSdel);}catch(e){}
   if(LP.draftT){clearTimeout(LP.draftT);LP.draftT=null;}LP.sess={};LP.fullOnce=false;LP.outbox=[];LP.risky={};LP.cacheShown=false;}
@@ -1402,7 +1402,7 @@ function lpPrependOld(S,W){var L=S.items,have={},add=[],i;for(i=0;i<L.length;i++
 function lpHistMaybe(){var sid=LP.sel,S=LP.sess[sid],c=lpChatOf(sid);if(!S||!c)return;var H=S.hist;
   if(!H||H.key!==c.chat_key||H.epoch!==c.terminal_epoch||H.handoffs!==c.handoff_count||Date.now()-(H.loadedAt||0)>20000)lpHistLoad(sid);}
 function lpIngest(d){
-  LP.data=d;lpChatMap(d);var now=lpSrvNow(),ver={},last={},by={};
+  LP.data=d;lpChatMap(d);if(d&&d.rt)lpRtEnsure(d.rt);var now=lpSrvNow(),ver={},last={},by={};
   (d.machines||[]).forEach(function(m){if(!m)return;ver[m.machine_id]=m.info&&m.info.savepoint;var t=lpT(m.seen_at);if(!(last[m.machine_id]>=t))last[m.machine_id]=t;});
   (d.sessions||[]).forEach(function(s){if(!s||!s.session_id)return;var t=lpT(s.updated_at);if(!(last[s.machine_id]>=t))last[s.machine_id]=t;
     var o=by[s.session_id];if(!o||t>lpT(o.updated_at))by[s.session_id]=s;});
@@ -2016,6 +2016,23 @@ function lpUpdTry(){if(!LP.updNew)return;var a=document.activeElement,busy=lpBox
   try{lpDraftNow();}catch(e){}LP.reloadNow();}
 LP.reloadNow=function(){location.reload();};
 setInterval(lpUpdCheck,LP_UPD_MS);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')lpUpdCheck();});
+/* ── INSTANT (CHAT-10): a Realtime wake-up = fetch now. The payload carries nothing; the fetch is the normal
+   owner-only /laptop/state. One connection, 25 s heartbeat, reconnect 1-30 s; hidden page = closed. ── */
+function lpRtEnsure(info){if(!info||typeof info.url!=='string'||!/^wss:\/\//.test(info.url)||!/^vrp-[0-9a-f]{8,64}$/.test(String(info.topic||''))||!window.WebSocket)return;
+  LP.rtInfo=info;if(document.visibilityState==='hidden'||LP.locked)return;var r=LP.rt;if(r&&r.topic===info.topic&&(r.open||r.connecting))return;lpRtClose();lpRtConnect({topic:info.topic,url:info.url,key:String(info.key||''),backoff:1000});}
+function lpRtConnect(r){var ws;try{ws=new WebSocket(r.url+'?apikey='+encodeURIComponent(r.key)+'&vsn=1.0.0');}catch(e){return;}r.ws=ws;r.connecting=true;r.open=false;LP.rt=r;var ref=1;
+  var send=function(o){try{ws.send(JSON.stringify(o));}catch(e){}};
+  ws.onopen=function(){r.connecting=false;r.open=true;r.backoff=1000;send({topic:'realtime:'+r.topic,event:'phx_join',payload:{config:{broadcast:{self:false},presence:{key:''},private:false}},ref:String(ref++)});
+    clearInterval(r.hb);r.hb=setInterval(function(){send({topic:'phoenix',event:'heartbeat',payload:{},ref:String(ref++)});},25000);LP.dbg.rt=(LP.dbg.rt||0)+1;};
+  ws.onmessage=function(m){var j=null;try{j=JSON.parse(String(m.data));}catch(e){return;}if(j&&j.event==='broadcast'&&j.payload&&j.payload.event==='wake'){LP.rtWakes=(LP.rtWakes||0)+1;lpRtWake();}};
+  ws.onclose=function(){clearInterval(r.hb);r.open=false;r.connecting=false;if(LP.rt!==r||document.visibilityState==='hidden'||LP.locked)return;
+    r.t=setTimeout(function(){if(LP.rt===r)lpRtConnect(r);},r.backoff);r.backoff=Math.min(30000,r.backoff*2);};
+  ws.onerror=function(){try{ws.close();}catch(e){}};}
+function lpRtClose(){var r=LP.rt;LP.rt=null;if(!r)return;clearInterval(r.hb);clearTimeout(r.t);try{r.ws&&r.ws.close();}catch(e){}}
+/* several wake-ups in a burst = one fetch; one already in flight runs again when it ends (lpRetryNow does that) */
+function lpRtWake(){if(LP.rtT)return;LP.rtT=setTimeout(function(){LP.rtT=null;if(STATE.view==='laptop')lpRetryNow();},40);}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')lpRtClose();});
+
 /* ── WhatsApp chat list, pins, unread, badge (CHAT-8) ── */
 function lpKeyOf(sid){var c=lpChatOf(sid);return String((c&&c.chat_key)||sid||'');}
 function lpJGet(k,d){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?d:v;}catch(e){return d;}}
@@ -2333,7 +2350,7 @@ function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started
   el.style.top=Math.round(top)+'px';el.style.height=Math.max(160,Math.round(h))+'px';
   /* a small visible area (keyboard up under the top bar) caps the box so the composer never slides under the keyboard */
   var mx=Math.max(44,Math.min(140,Math.round(Math.max(160,h)*0.28)));if(el.style.getPropertyValue('--lpinmax')!==String(mx))el.style.setProperty('--lpinmax',Number(mx));}
-function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else lpRetryNow();}
+function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);}}
 function lpOnSelChange(){if(LP.arm&&!lpSelSame(lpSelSnap(),LP.arm.sel))lpDisarm();if(LP.queued&&!lpFrozen())lpPaintConv(false);}
 function lpStart(){if(LP.started)return;LP.started=true;
   var m=document.querySelector('meta[name="viewport"]');if(m){LP.meta=m.getAttribute('content');if(!/interactive-widget/.test(LP.meta||'')&&!lpAppleWebKit())m.setAttribute('content',(LP.meta||'')+',interactive-widget=resizes-content');}

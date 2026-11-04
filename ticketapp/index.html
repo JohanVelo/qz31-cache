@@ -594,7 +594,7 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 /* Item 10 progress at a glance (2026-11-04) */
 .lpcmg{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;font-weight:600;color:var(--lpwgo)}
 .lpcmg.wait{color:var(--amber)}
-.lpcmgt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpcmgt{flex:1 1 auto;min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:16px}
 .lpcmgb{flex:0 0 56px;height:4px;border-radius:2px;background:var(--line2);overflow:hidden}
 .lpcmgb>i{display:block;height:100%;background:var(--lpwgo)}
 .lppin,.lpmute{flex:0 0 auto;min-height:44px;font-size:12px}
@@ -632,6 +632,20 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpq-read .lpqk::before{color:var(--lpwread)}
 .lpq-failed,.lpq-expired{border-color:color-mix(in srgb,var(--red) 60%,transparent)}
 .lpq-failed .lpqk::before,.lpq-expired .lpqk::before{color:var(--red);letter-spacing:0}
+/* Item 14 waiting bubble */
+.lpqh{font-size:13px;color:var(--lpwtx2,var(--txt2));margin-top:4px}
+.lpqc{margin-top:6px;min-height:36px}
+/* Items 20-21 new terminal sheet */
+#lpNewT{position:fixed;inset:0;z-index:1600;background:var(--bg);display:flex;flex-direction:column}
+#lpNewT[hidden]{display:none}
+.lpnth{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line)}
+.lpntbd{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:16px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.lpntr{display:flex;flex-direction:column;gap:6px}
+.lpntl{font-size:12px;font-weight:600;color:var(--txt2)}
+#lpNewT input,#lpNewT select{box-sizing:border-box;width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--cell);color:var(--txt);font-family:inherit;font-size:16px}
+.lpnth2{font-size:13px;color:var(--txt2)}
+.lpntgo{min-height:48px;font-size:16px;font-weight:600}
+.lpntb{margin-left:auto;margin-right:8px}
 .lpqw{margin-top:4px;padding-left:8px;border-left:3px solid var(--red);font-size:12px;color:var(--txt)}
 .lpqr{margin-top:6px}
 .lptyping{align-self:flex-start;display:flex;gap:5px;padding:12px 14px;border-radius:12px;border-top-left-radius:4px;background:var(--lprecv);border:1px solid var(--line);animation:lpin .2s ease-out both}
@@ -1379,7 +1393,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-13';
+var LP_BUILD='CHAT-20261104-15';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1755,6 +1769,9 @@ function lpDur(at,now){var t=lpT(at);if(!t)return '';var s=Math.max(0,Math.floor
 function lpNowView(sid,row,off){var n=lpNowOf(sid,row),busy=!off&&row&&row.status==='busy',k=n&&n.k,str=function(v){return v==null?'':String(v);};
   var pd=!off&&row&&row.status==='waiting'&&row.pending&&typeof row.pending==='object'?row.pending:null;
   if(pd)return {mk:'ask',t:pd.kind==='question'?str(pd.question||pd.message)||'Has a question':'Allow '+(str(pd.tool)||'a tool')+'?',d:'',at:null,live:false};
+  var ac=busy&&row.progress&&row.progress.act;
+  if(ac&&ac.k==='agent')return {mk:'spin',t:lpActText(ac),d:k==='tool'?str(n.l):'',at:n&&n.at,live:true};
+  if(ac&&ac.k==='shell')return {mk:'spin',t:lpActText(ac),d:k==='tool'&&n.st==='run'?str(n.d):'',at:n&&n.at,live:true};
   if(busy&&k==='tool'&&n.st==='run')return {mk:'spin',t:str(n.l)||'Used a tool',d:str(n.d),at:n.at,live:true};
   if(busy){var last=k==='tool'?(n.st==='err'?'✕ ':n.st==='ok'?'✓ ':'')+str(n.l):k==='say'?str(n.l):'';
     return {mk:'spin',t:k==='user'?'Reading your message':'Thinking…',d:last,at:n&&n.at,live:true};}
@@ -1932,7 +1949,7 @@ function lpWithSends(S,rows){if(!S||!lpChatOf(S.sid))return rows;
 function lpReadOf(c){if(!c||c.status!=='done')return false;var S=LP.sess[c.session_id]||LP.sess[LP.sel];if(!S||!S.items)return false;
   var it=lpShownIt(S,c);if(!it)return false;var L=S.items,i=L.indexOf(it);if(i<0)return false;
   for(var j=i+1;j<L.length;j++){var x=L[j];if((x.role==='assistant'||x.role==='tool')&&!x.gap)return true;}return false;}
-function lpSendRow(c){return {k:'c:'+c.id,kind:'send',c:c,at:c.created_at,sig:'send\u0001'+[c.status,lpReadOf(c)?'r':'',c.body,c.result&&c.result.reason,(c.attachments||[]).map(function(a){return a&&a.path;}).join(',')].join('\u0001')};}
+function lpSendRow(c){return {k:'c:'+c.id,kind:'send',c:c,at:c.created_at,sig:'send\u0001'+[c.status,lpReadOf(c)?'r':'',c.when_idle?'w':'',c.body,c.result&&c.result.reason,(c.attachments||[]).map(function(a){return a&&a.path;}).join(',')].join('\u0001')};}
 function lpInline(p,s){var parts=String(s).split(/(\*\*[^*\n]+?\*\*|\x60[^\x60\n]+\x60)/);
   for(var i=0;i<parts.length;i++){var x=parts[i];if(!x)continue;
     if(x.length>4&&x.slice(0,2)==='**'&&x.slice(-2)==='**'){var b=lpEl('b');lpLinks(b,x.slice(2,-2));p.appendChild(b);}
@@ -2052,12 +2069,16 @@ function lpShownIt(S,c){if(!S)return null;var L=S.items,b=lpMaskMemo(String(c.bo
     if(att){if(lpInboxRe().test(tx)&&lpStripAtt(tx).slice(0,160)===b)return it;continue;}
     if(b&&tx.trim().slice(0,160)===b)return it;}
   return null;}
-function lpQFill(q,c){var st=String(c.status||'queued'),rd=lpReadOf(c),tk=rd?['\u2713\u2713','Claude has started on it']:(LP_TICK[st]||['\u2713',st]),bad=st==='failed'||st==='expired';
+/* Item 14: take back a message still waiting for Claude to finish; it comes back as a bubble with Send again */
+function lpOnWhenCancel(el){var id=+el.dataset.cmd;if(!id||el.disabled)return;el.disabled=true;
+  api('/laptop/cancel',{method:'POST',body:JSON.stringify({id:id})}).then(function(r){if(!r.ok)toast((r.j&&r.j.error)||'Could not cancel it');lpLoad();},function(){el.disabled=false;toast('No connection: not cancelled');});}
+function lpQFill(q,c){var st=String(c.status||'queued'),rd=lpReadOf(c),held=!!c.when_idle&&st==='queued',gone=st==='expired'&&!!(c.result&&c.result.reason==='cancelled'),tk=rd?['\u2713\u2713','Claude has started on it']:held?['\u2713','Waiting for Claude to finish']:gone?['!','Cancelled']:(LP_TICK[st]||['\u2713',st]),bad=st==='failed'||st==='expired';
   q.className='lpq lpq-'+st.replace(/[^a-z]/g,'')+(rd?' lpq-read':'');q.dataset.cmd=String(c.id);q.textContent='';
   var n=(c.attachments||[]).length;if(n)lpAttEls(q,c);if(String(c.body||'').trim())lpTxt(q,String(c.body));
   var meta=lpEl('span','lpqm'),qd=lpEl('span',({done:'lpdot lpd-i',queued:'lpdot lpd-b',delivered:'lpdot lpd-b',failed:'lpdot lpd-w',expired:'lpdot lpd-w'})[st]||'lpdot lpd-o');qd.setAttribute('aria-hidden','true');meta.appendChild(qd);meta.appendChild(lpEl('span','lpqt',lpHm(c.created_at)));var tick=lpEl('span','lpqk');tick.dataset.tk=tk[0];tick.setAttribute('role','img');tick.setAttribute('aria-label',tk[1]);tick.title=tk[1];meta.appendChild(tick);q.appendChild(meta);
+  if(held){q.classList.add('lpq-held');q.appendChild(lpEl('div','lpqh','Sends when Claude finishes'));var cb=lpEl('button','lpbtn lpqc','Cancel');cb.type='button';cb.dataset.lptap='wcancel';cb.dataset.cmd=String(c.id);q.appendChild(cb);}
   if(bad){q.appendChild(lpEl('div','lpqw',st==='failed'?'Failed: '+String((c.result&&c.result.reason)||'the laptop refused it'):tk[1]));
-    var rb=lpEl('button','lpbtn lpqr','Retry');rb.type='button';rb.dataset.lptap='retry';rb.dataset.cmd=String(c.id);q.appendChild(rb);}
+    var rb=lpEl('button','lpbtn lpqr',gone?'Send again':'Retry');rb.type='button';rb.dataset.lptap='retry';rb.dataset.cmd=String(c.id);q.appendChild(rb);}
   return q;}
 function lpPaintCmds(){var box=lpG('lpCmds');if(!box||LP.selMode)return;var S=LP.sess[LP.sel],now=lpSrvNow();
   /* chat mode: the sends are rows in the conversation (lpRows); this box only holds the working dots */
@@ -2071,7 +2092,7 @@ function lpPaintCmds(){var box=lpG('lpCmds');if(!box||LP.selMode)return;var S=LP
   if(stick){var p=lpG('lpPane');if(p)p.scrollTop=p.scrollHeight;}}
 /* Retry: the words go back into the box (a new send, new id); the server never resends a dead row */
 function lpOnRetry(el){var id=el.getAttribute('data-cmd'),c=lpCmdsFor(LP.sel).filter(function(x){return String(x.id)===id;})[0];if(!c)return;
-  LP.handled[c.id]=1;lpPrepend(String(c.body||''),function(){lpDraftNow();});lpTrayBack(LP.sel,c.attachments);toast('Back in the box: tap Send to try again');
+  LP.handled[c.id]=1;if(lpBoxVal().indexOf(String(c.body||''))<0||!String(c.body||''))lpPrepend(String(c.body||''),function(){lpDraftNow();});lpTrayBack(LP.sel,c.attachments);toast('Back in the box: tap Send to try again');
   var ta=lpG('lpIn');if(ta)try{ta.focus();}catch(e){}}
 
 /* ── outbox and refill (F3): sent text waits in memory; a refusal, failure or expiry puts it back ── */
@@ -2327,16 +2348,52 @@ function lpPreview(sid,row){var S=LP.sess[sid],L=S?S.items:[];for(var i=L.length
 /* Item 10: progress at a glance. row.progress comes from Savepoint 0.6.14 through the server:
    { steps, more, since, tasks:{done,total,now} }. Shown only while the terminal is working or waiting. */
 function lpAgo(ms){var m=Math.floor(ms/60000);if(m<1)return '<1 min';if(m<60)return m+' min';var h=Math.floor(m/60);return h+' h '+('0'+(m%60)).slice(-2);}
+/* Item 19: what the terminal is on right now, in words. '' when the laptop does not say (older Savepoint) */
+function lpActText(a){if(!a||typeof a!=='object')return '';var l=a.l?String(a.l):'';switch(a.k){
+  case 'question':return 'Waiting for you: a question';
+  case 'window':return 'Waiting for you: allow '+(l||'a tool');
+  case 'agent':return a.n>1?'Waiting on '+a.n+' agents':'Waiting on an agent';
+  case 'shell':return 'Running: '+(l||'a command');
+  case 'tool':return l||'Using a tool';
+  case 'think':return 'Thinking';
+  default:return '';}}
 function lpProg(row){var st=row&&row.status;if(st!=='busy'&&st!=='waiting')return null;var p=row.progress;if(!p||typeof p!=='object')p={};
-  var t=p.tasks,parts=[],bar=null;
-  if(t&&typeof t==='object'&&t.total>0&&t.done>=0&&t.done<=t.total){parts.push(t.done+' of '+t.total);if(t.now)parts.push(String(t.now));bar=t.done/t.total;}
-  else{parts.push(st==='waiting'?'Waiting for you':'Working');
+  var t=p.tasks,parts=[],bar=null,hd=lpActText(p.act),asks=st==='waiting'||!!(p.act&&(p.act.k==='question'||p.act.k==='window'));
+  if(!asks&&t&&typeof t==='object'&&t.total>0&&t.done>=0&&t.done<=t.total){parts.push(t.done+' of '+t.total);if(t.now)parts.push(String(t.now));else if(hd)parts.push(hd);bar=t.done/t.total;}
+  else{parts.push(hd||(st==='waiting'?'Waiting for you':'Working'));
     var since=lpT(p.since);if(since){var d=lpSrvNow()-since;if(d>=0)parts.push(lpAgo(d));}
     if(typeof p.steps==='number'&&p.steps>0)parts.push(p.steps+(p.more?'+':'')+(p.steps===1&&!p.more?' step':' steps'));}
-  return {text:parts.join(' · '),bar:bar,wait:st==='waiting'};}
+  return {text:parts.join(' · '),bar:bar,wait:asks};}
 function lpProgEl(row){var g=lpProg(row);if(!g)return null;var el=lpEl('div','lpcmg'+(g.wait?' wait':''));el.appendChild(lpEl('span','lpcmgt',g.text));
   if(g.bar!==null){var b=lpEl('span','lpcmgb'),i=document.createElement('i');i.style.width=Math.round(g.bar*100)+'%';b.appendChild(i);el.appendChild(b);}return el;}
+/* Items 20-21 (JJ 2026-11-04): a new terminal from the phone. The laptop opens it, starts claude, and it shows up in
+   Chats by itself. Folder choices = where terminals already run; login choices = what the laptop says it has (names only). */
+function lpNewTMachine(){var ms=(LP.data&&LP.data.machines)||[],now=lpSrvNow(),best=null;
+  ms.forEach(function(m){if(m&&lpVerGE(m.info&&m.info.savepoint,[0,6,15])&&now-lpT(m.seen_at)<=LP_OFFLINE_MS&&(!best||lpT(m.seen_at)>lpT(best.seen_at)))best=m;});return best;}
+function lpNewTClose(){var b=lpG('lpNewT');if(b){b.hidden=true;b.textContent='';}}
+function lpNewTOpen(){var b=lpG('lpNewT'),m=lpNewTMachine();if(!b)return;if(!m){toast('The laptop is not online');return;}b.textContent='';
+  var hd=lpEl('div','lpnth');hd.appendChild(lpEl('span','lpcht','New terminal'));var x=lpEl('button','lpbtn','Cancel');x.type='button';x.dataset.lptap='newtx';hd.appendChild(x);b.appendChild(hd);
+  var bd=lpEl('div','lpntbd');
+  var row=function(label,el){var w=lpEl('label','lpntr');w.appendChild(lpEl('span','lpntl',label));w.appendChild(el);bd.appendChild(w);};
+  var nm=lpEl('input');nm.id='lpNewTN';nm.type='text';nm.maxLength=60;nm.placeholder='Optional';nm.autocomplete='off';row('Name',nm);
+  var cwds=[];(LP.vis||[]).forEach(function(s){var c=String(s.cwd||'');if(c&&cwds.indexOf(c)<0)cwds.push(c);});
+  var fd=lpEl('select');fd.id='lpNewTF';var o0=lpEl('option',null,'The laptop\u2019s open folder');o0.value='';fd.appendChild(o0);cwds.forEach(function(c){var o=lpEl('option',null,lpBase(c)||c);o.value=c;o.title=c;fd.appendChild(o);});row('Folder',fd);
+  var accs=(m.info&&Array.isArray(m.info.accounts))?m.info.accounts:[];
+  if(accs.length){var ac=lpEl('select');ac.id='lpNewTA';var a0=lpEl('option',null,'Default login');a0.value='';ac.appendChild(a0);accs.forEach(function(n){var o=lpEl('option',null,String(n));o.value=String(n);ac.appendChild(o);});row('Claude login',ac);
+    bd.appendChild(lpEl('div','lpnth2','A new login needs /login once, on the laptop.'));}
+  var go=lpEl('button','lpbtn lpntgo','Open terminal');go.type='button';go.id='lpNewTGo';go.dataset.lptap='newtgo';bd.appendChild(go);b.appendChild(bd);b.hidden=false;}
+function lpNewTGo(){var m=lpNewTMachine(),go=lpG('lpNewTGo');if(!m){toast('The laptop is not online');return;}if(!go||go.disabled)return;go.disabled=true;
+  var v=function(id){var e=lpG(id);return e?String(e.value||'').trim():'';};
+  var pl={machine_id:m.machine_id,client_id:lpCid(),lp_build:LP_BUILD};if(v('lpNewTN'))pl.name=v('lpNewTN');if(v('lpNewTF'))pl.cwd=v('lpNewTF');if(v('lpNewTA'))pl.account=v('lpNewTA');
+  api('/laptop/new-terminal',{method:'POST',body:JSON.stringify(pl)}).then(function(r){
+    if(!r.ok){go.disabled=false;toast((r.j&&r.j.error)||'Could not open a terminal');return;}
+    lpNewTClose();toast('Opening a terminal on the laptop');LP.newT={id:r.j&&r.j.id,t:Date.now()};lpLoad();},function(){go.disabled=false;toast('No connection: nothing was opened');});}
+function lpNewTWatch(){var w=LP.newT;if(!w)return;var cs=(LP.data&&LP.data.commands)||[],c=cs.filter(function(x){return x&&x.id===w.id;})[0];
+  if(c&&c.status==='done'){LP.newT=null;toast('Terminal open on the laptop');}
+  else if(c&&(c.status==='failed'||c.status==='expired'||c.status==='unconfirmed')){LP.newT=null;toast('Not opened: '+String((c.result&&c.result.reason)||'the laptop did not take it'));}
+  else if(Date.now()-w.t>60000){LP.newT=null;toast('The laptop has not answered yet');}}
 function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent='';var hd=lpEl('div','lpchh');hd.appendChild(lpEl('span','lpcht','Chats'));
+  if(lpNewTMachine()){var nb=lpEl('button','lpbtn lpntb','New terminal');nb.type='button';nb.dataset.lptap='newt';hd.appendChild(nb);}
   var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);box.appendChild(hd);
   var list=lpTabList();if(!list.length)box.appendChild(lpEl('div','lpcn','No Claude terminal is open on the laptop.'));
   list.forEach(function(t){var sid=String(t.sid),r=lpEl('div','lpcr'+(sid===LP.sel?' on':''));r.dataset.lptap='chatgo';r.dataset.sid=sid;
@@ -2409,6 +2466,7 @@ function lpSend(kind,body,o){o=o||{};
   /* RELAY CHAT: name the chat and the terminal it is showing; the server routes to whoever holds the slot now */
   var ch=lpChatOf(row.session_id);if(ch){pl.chat_key=ch.chat_key;pl.epoch=ch.terminal_epoch;}
   if(o.attachments&&o.attachments.length)pl.attachments=o.attachments;
+  if(o.whenIdle&&kind==='text')pl.when_idle=true;
   var payload=JSON.stringify(pl),gapTries=0,sawNet=false;
   function once(){return api('/laptop/send',{method:'POST',body:payload}).then(function(r){
     if(!r.ok){lpCode(r);if(r.status===401||r.status===403)lpDenied();}return r;
@@ -2468,10 +2526,10 @@ function lpSelSnap(){var ta=lpG('lpIn'),f=document.activeElement===ta,o={f:f,s:f
 function lpSelSame(a,b){return a.f===b.f&&a.s===b.s&&a.e===b.e&&a.an===b.an&&a.ao===b.ao&&a.fn===b.fn&&a.fo===b.fo;}
 /* ONE TAP (JJ 2026-11-04, replaces F3T D85's arm/confirm): Send sends. The box names the terminal, so the target is always on screen.
    After a network error the same text goes with the same id, so the server answers 'already queued' instead of typing it twice. */
-function lpOnSend(){if(LP.rec||LP.recSwallow)return;if(LP.textBusy)return;var v=lpBoxVal().trim(),n=lpTray().length;if(!v&&!n)return;var why=lpCantSend();if(why){toast(why);return;}
+function lpOnSend(when){when=when===true;if(when)lpAttMenu(false);if(LP.rec||LP.recSwallow)return;if(LP.textBusy)return;var v=lpBoxVal().trim(),n=lpTray().length;if(!v&&!n){if(when)toast('Type your message first');return;}var why=lpCantSend();if(why){toast(why);return;}
   var aw=lpAttWhy();if(n&&aw){toast(aw);return;}
   if(lpIsOver(v)&&aw&&v.length>LP_TEXT_MAX){toast('Over 4,000 characters: '+aw.charAt(0).toLowerCase()+aw.slice(1)+' to send it as a .txt');return;}
-  var a={sid:LP.sel,text:v,at:performance.now(),ack:true,cid:lpCid(),files:lpTrayIds(LP.sel),over:lpIsOver(v)&&!lpAttWhy()},rk=LP.risky[a.sid+'\u0001'+v];
+  var a={sid:LP.sel,text:v,at:performance.now(),ack:true,cid:lpCid(),files:lpTrayIds(LP.sel),over:lpIsOver(v)&&!lpAttWhy(),whenIdle:when},rk=LP.risky[a.sid+'\u0001'+v];
   if(typeof rk==='string')a.cid=rk;lpAttMenu(false);lpDoSend(a);}
 function lpDisarm(){LP.arm=null;}
 /* Item 9 QUICK REPLIES (JJ 2026-11-04): the clip menu's 'Quick replies', or '/' typed in an empty box, opens a short list.
@@ -2501,8 +2559,8 @@ function lpDoSend(a){var S=LP.sess[a.sid],raw=lpBoxVal();lpBox(raw.trim()===a.te
   LP.outbox.push(o);LP.textBusy=true;lpPaintStat();
   /* S5: files in the tray (and long text as one .txt) upload first; the send then names them */
   var T=lpTray(a.sid).slice(),withF=T.length>0||a.over;if(withF){LP.tray[a.sid]=[];if(a.sid===LP.sel)lpPaintTray();}
-  var pre=withF?lpUploadAll(a,T).then(function(att){return lpSend('text',a.over?'':a.text,{armed:true,sid:a.sid,cid:a.cid,attachments:att});},
-      function(err){return {ok:false,status:0,j:{},refused:String(err||'upload failed')};}):lpSend('text',a.text,{armed:true,sid:a.sid,cid:a.cid});
+  var pre=withF?lpUploadAll(a,T).then(function(att){return lpSend('text',a.over?'':a.text,{armed:true,sid:a.sid,cid:a.cid,attachments:att,whenIdle:a.whenIdle});},
+      function(err){return {ok:false,status:0,j:{},refused:String(err||'upload failed')};}):lpSend('text',a.text,{armed:true,sid:a.sid,cid:a.cid,whenIdle:a.whenIdle});
   pre.then(function(r){LP.textBusy=false;if(!r.ok&&withF)lpTrayBack(a.sid,null,T);
     if(r.ok){delete LP.risky[a.sid+''+a.text];o.id=(r.j&&r.j.id!=null)?r.j.id:null;o.state='queued';if(o.id==null)lpOutDel(o);LP.textOff=false;
       if(r.j&&r.j.dup)toast('Already queued, not sent twice');if(a.sid===LP.sel&&!lpBoxVal().trim())lpLSdel('lp_draft_'+a.sid);lpLoad();}
@@ -2533,7 +2591,7 @@ function lpPaintDbg(){var el=lpG('lpDbg');if(!el)return;lpTog(el,'on',LP.dbgOn);
   lpSetText(el,lines.join('\n'));}
 function lpAges(){var now=lpSrvNow(),xs=document.querySelectorAll('#laptop .lpage');for(var i=0;i<xs.length;i++)lpSetText(xs[i],lpAge(xs[i].dataset.at,now)+' ago');}
 function lpTickFn(){if(STATE.view!=='laptop')return;if(LP.arm&&performance.now()-LP.arm.at>LP_ARM_MS)lpDisarm();
-  lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpPaintNow();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();lpFitTick();}
+  lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpPaintNow();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();lpFitTick();lpNewTWatch();}
 function lpDenied(){lpSheetClose();lpSelOff();lpMicStop();lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
   ['lpConv','lpPend','lpCmds','lpChips'].forEach(function(id){var e=lpG(id);if(e)e.textContent='';});
   lpBox('');lpDisarm();lpPaintTabs([]);lpPaintNow();lpPaintHead();lpPaintStat();lpComposerState();lpKeysState();lpPill();}
@@ -2671,7 +2729,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){lpChatsClose();lpSelect(t.el.dataset.sid,true);}
   else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
-  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
+  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='newt')lpNewTOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
@@ -2710,14 +2768,14 @@ function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.star
   var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-attm');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
   el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><button type="button" id="lpChatsB" class="lpbtn" data-lptap="chats" aria-label="All chats">Chats</button><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
-    '<div id="lpDbg"></div><div id="lpSrch" hidden><input type="search" id="lpSrchI" placeholder="Search this chat" aria-label="Search this chat"><span id="lpSrchN"></span><button type="button" class="lpbtn" data-lptap="srchp" aria-label="Previous match">Up</button><button type="button" class="lpbtn" data-lptap="srchn" aria-label="Next match">Down</button><button type="button" class="lpbtn" data-lptap="srchx">Close</button></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><div class="lpnowr" id="lpNowR"><button type="button" id="lpNow" data-lptap="now"></button><button type="button" class="lpbtn lpstop" id="lpStop" data-lptap="key" data-lpk="Esc" aria-label="Stop Claude (sends Esc)">Stop</button></div>'+
+    '<div id="lpDbg"></div><div id="lpNewT" hidden></div><div id="lpSrch" hidden><input type="search" id="lpSrchI" placeholder="Search this chat" aria-label="Search this chat"><span id="lpSrchN"></span><button type="button" class="lpbtn" data-lptap="srchp" aria-label="Previous match">Up</button><button type="button" class="lpbtn" data-lptap="srchn" aria-label="Next match">Down</button><button type="button" class="lpbtn" data-lptap="srchx">Close</button></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><div class="lpnowr" id="lpNowR"><button type="button" id="lpNow" data-lptap="now"></button><button type="button" class="lpbtn lpstop" id="lpStop" data-lptap="key" data-lpk="Esc" aria-label="Stop Claude (sends Esc)">Stop</button></div>'+
     '<div class="lppw"><div id="lpSelBar"><span>Select text: drag across messages</span><button type="button" class="lpbtn" data-lptap="selcopy">Copy all</button><button type="button" class="lpbtn" data-lptap="seldone">Done</button></div>'+
     '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
     '<div class="lpcomp" id="lpComp"><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChatOk" role="alert"><span>Restored after a restart: is this the right terminal? Sends wait until you say.</span><button type="button" class="lpbtn" data-lptap="chatok">Yes, this one</button></div><div id="lpChips"></div>'+
     '<div class="lpkeys" id="lpKeys" hidden><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="1" hidden>1</button><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="2" hidden>2</button>'+
     '<button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="3" hidden>3</button></div>'+
     '<div id="lpTray" aria-label="Files to send"></div><input type="file" id="lpFile" multiple hidden tabindex="-1" aria-hidden="true">'+
-    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button><button type="button" class="lpsi" id="lpSrchB" data-lptap="srch" role="menuitem">Search this chat</button><button type="button" class="lpsi" id="lpQkB" data-lptap="qk" role="menuitem">Quick replies</button></div>'+
+    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button><button type="button" class="lpsi" id="lpSrchB" data-lptap="srch" role="menuitem">Search this chat</button><button type="button" class="lpsi" id="lpQkB" data-lptap="qk" role="menuitem">Quick replies</button><button type="button" class="lpsi" id="lpWhenB" data-lptap="when" role="menuitem">Send when Claude finishes</button></div>'+
     '<div id="lpQk" role="menu" aria-label="Quick replies"></div>'+
     '<div class="lprow"><button type="button" class="lptool" id="lpAtt" data-lptap="att" aria-label="Attach photos or files" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.2l-8.4 8.4a5.2 5.2 0 0 1-7.4-7.4l8.7-8.7a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.5l8-8"/></svg></button>'+
     '<button type="button" class="lptool" id="lpMic" data-lptap="mic" aria-label="Dictate into the box (never sends)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5M8.5 21h7"/></svg></button><textarea id="lpIn" rows="1" placeholder="Message this terminal" autocapitalize="sentences" autocorrect="on" spellcheck="true" enterkeyhint="enter" aria-label="Message this terminal"></textarea>'+

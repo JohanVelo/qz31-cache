@@ -446,7 +446,6 @@ body.lp-compact #app>.top{display:none}
 .lpsr .lpsb{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--txt)}
 #lpPill{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:2;display:none;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;background:var(--cell);border:1px solid var(--line2);color:var(--txt2);font-family:var(--m);font-size:12px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer}
 #lpPill.on{display:inline-flex}
-#laptop.lp-armed #lpPill{bottom:68px}
 .lpcomp{position:relative;flex:0 0 auto;border-top:1px solid var(--line);background:var(--bg);padding:4px 10px calc(8px + env(safe-area-inset-bottom))}
 #laptop.lp-kb .lpcomp{padding-bottom:8px}
 /* keyboard up: give the conversation the room (the head row and folder lines come back when it closes) */
@@ -456,16 +455,24 @@ body.lp-compact #app>.top{display:none}
 #lpChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 #lpChips:empty{display:none}
 .lpchip{min-height:44px;padding:0 12px;background:var(--cell);color:var(--txt);border:1px solid var(--line2);border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer}
+/* WhatsApp row (JJ 2026-11-04): [clip] [box] [round send]; the 1/2/3 keys only while Claude asks, Esc only while it works */
 .lpkeys{display:flex;gap:6px;margin:4px 0 6px}
+.lpkeys[hidden],.lpkeys .lpbtn[hidden]{display:none}
 .lpkeys .lpbtn{flex:1 1 0;font-family:var(--m)}
+/* Esc alone sits small at the right, away from the box, so a slip never interrupts Claude */
+.lpkeys .lpk-e{flex:0 0 96px;margin-left:auto}
+#lpIn:focus{outline:none;border-color:var(--cyan)}
 .lprow{display:flex;gap:6px;align-items:flex-end}
-#lpIn,.lpmirror{box-sizing:border-box;width:100%;min-height:44px;max-height:140px;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:16px;line-height:1.4;letter-spacing:normal}
+.lprow .lptool{flex:0 0 44px;width:44px;min-width:44px;min-height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:50%;color:var(--txt2);cursor:pointer;touch-action:manipulation}
+.lprow .lptool svg{width:22px;height:22px}
+#lpAttMenu{position:absolute;left:8px;bottom:calc(100% + 8px);z-index:9;display:none;flex-direction:column;gap:2px;min-width:200px;background:var(--cell);border:1px solid var(--line2);border-radius:14px;padding:6px;box-shadow:0 18px 44px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.2)}
+#laptop.lp-attm #lpAttMenu{display:flex;animation:lpUp .16s cubic-bezier(.2,.8,.2,1)}
+#lpIn,.lpmirror{box-sizing:border-box;width:100%;min-height:44px;max-height:140px;padding:10px 14px;border:1px solid var(--line);border-radius:22px;font-family:inherit;font-size:16px;line-height:1.4;letter-spacing:normal}
 #lpIn{flex:1 1 auto;min-width:0;max-height:calc(var(--lpinmax,140) * 1px);resize:none;overflow-y:auto;background:var(--cell);color:var(--txt);field-sizing:content}
 .lpmirror{position:absolute;left:-9999px;top:0;height:0;min-height:0;visibility:hidden;overflow:hidden;resize:none;pointer-events:none}
-#lpSend{flex:0 0 auto;min-height:44px;min-width:68px;padding:0 16px;background:var(--cyan);color:#04141A;border:1px solid transparent;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;touch-action:manipulation;cursor:pointer}
+#lpSend{flex:0 0 44px;width:44px;height:44px;min-height:44px;min-width:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:var(--cyan);color:#04141A;border:1px solid transparent;border-radius:50%;touch-action:manipulation;cursor:pointer}
+#lpSend svg{width:22px;height:22px;display:block;pointer-events:none}
 #lpSend.lp-inert,#lpSend:disabled{background:transparent;color:var(--txt2);border:1px dashed var(--line2);cursor:default}
-#lpConfirm{position:absolute;left:10px;right:10px;bottom:calc(100% + 10px);z-index:3;display:none;align-items:center;justify-content:center;min-height:48px;padding:0 14px;background:var(--cell);color:var(--txt);border:2px solid var(--cyan);border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 22px rgba(0,0,0,.35);touch-action:manipulation;cursor:pointer}
-#lpConfirm.on{display:flex}
 /* page commit B: Copy (F7), long-press sheet, Select mode, Paste (F8), mic (F9) */
 #laptop button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .lpcopy{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:0 8px;background:transparent;color:var(--txt2);border:0;border-radius:8px;
@@ -574,7 +581,7 @@ body.lp-compact #app>.top{display:none}
 #lpView img{max-width:100%;max-height:calc(100% - 52px);object-fit:contain}
 #lpViewO{font-size:15px;color:#fff;min-height:44px;display:inline-flex;align-items:center;padding:0 12px}
 #laptop.lp-drop .lppw{outline:2px dashed var(--cyan);outline-offset:-6px}
-.lpkeys .lptool.lp-off{opacity:.45}
+.lptool.lp-off{opacity:.45}
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -1075,7 +1082,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-2';
+var LP_BUILD='CHAT-20261104-3';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1715,7 +1722,10 @@ function lpAttWhy(){var S=LP.sess[LP.sel],row=S&&S.row;if(!row||S.ghost)return '
   return lpVerGE(v,LP_SP_FILES.split('.').map(Number))?'':'Files need Savepoint '+LP_SP_FILES+' on the laptop'+(v?' (it has '+v+')':'');}
 function lpAttState(){var b=lpG('lpAtt');if(!b)return;var why=lpCantSend()||lpAttWhy();lpTog(b,'lp-off',!!why);
   var t=why?'Attach is off: '+why:'Attach photos or files';if(b.title!==t){b.title=t;b.setAttribute('aria-label',t);}}
-function lpOnAtt(){var why=lpCantSend()||lpAttWhy();if(why){toast(why);return;}var f=lpG('lpFile');if(f){f.value='';f.click();}}
+/* the clip opens a small menu: a photo or file, or Paste (the box's own long-press paste still works) */
+function lpAttMenu(on){var el=lpG('laptop'),b=lpG('lpAtt');if(!el||el.classList.contains('lp-attm')===!!on)return;lpTog(el,'lp-attm',!!on);if(b)b.setAttribute('aria-expanded',on?'true':'false');}
+function lpOnAtt(){var el=lpG('laptop');lpAttMenu(!(el&&el.classList.contains('lp-attm')));}
+function lpOnAttFile(){lpAttMenu(false);var why=lpCantSend()||lpAttWhy();if(why){toast(why);return;}var f=lpG('lpFile');if(f){f.value='';f.click();}}
 function lpExt(name,mime){var m=/\.([A-Za-z0-9]{1,8})$/.exec(String(name||''));if(m)return m[1].toLowerCase();
   return ({'image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/webp':'webp','image/heic':'heic','image/heif':'heif','image/bmp':'bmp','application/pdf':'pdf','text/plain':'txt','text/csv':'csv','application/zip':'zip'})[String(mime||'').toLowerCase()]||'bin';}
 function lpIsImg(mime){return /^image\/(png|jpe?g|gif|webp|heic|heif|bmp)$/i.test(String(mime||''));}
@@ -1851,34 +1861,34 @@ function lpOnChatOk(){var S=LP.sess[LP.sel],c=S&&S.row&&lpChatOf(S.row.session_i
 function lpCid(){try{if(crypto.randomUUID)return crypto.randomUUID();}catch(e){}
   var b=new Uint8Array(16);crypto.getRandomValues(b);return Array.prototype.map.call(b,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
 function lpFresh(){var S=LP.sess[LP.sel];if(!S||!S.row||S.ghost||S.cacheOnly||LP.locked)return false;if(Date.now()-LP.lastOk>=LP_FRESH_MS)return false;return lpSrvNow()-lpT(S.row.updated_at)<LP_FRESH_MS;}
-function lpKeysState(){var on=lpFresh(),bs=document.querySelectorAll('#laptop [data-lptap="key"]');for(var i=0;i<bs.length;i++){if(bs[i].disabled!==!on)bs[i].disabled=!on;}LP.keysOn=on;}
+function lpKeysState(){var on=lpFresh(),bs=document.querySelectorAll('#laptop [data-lptap="key"]');for(var i=0;i<bs.length;i++){if(bs[i].disabled!==!on)bs[i].disabled=!on;}LP.keysOn=on;
+  var S=LP.sess[LP.sel],r=S&&S.row&&!S.ghost&&!S.cacheOnly&&!lpOff(S.row)?S.row:null,ask=!!(r&&r.status==='waiting'),work=!!(r&&r.status==='busy');
+  for(var j=0;j<bs.length;j++){var h=bs[j].classList.contains('lpk-e')?!work:!ask;if(bs[j].hidden!==h)bs[j].hidden=h;}
+  var row=lpG('lpKeys');if(row&&row.hidden!==!(ask||work))row.hidden=!(ask||work);}
+function lpShortName(n){var p=String(n||'').split(' · ');return p.length>2?p.slice(0,2).join(' · '):String(n||'');}
+function lpPh(){var ta=lpG('lpIn');if(!ta)return;var S=LP.sess[LP.sel],r=S&&S.row,t='Message this terminal';
+  if(r&&r.name){var list=lpTabList(),n=lpShortName(r.name),oth=function(f){return list.some(function(x){return x.sid!==LP.sel&&!x.off&&x.row&&f(x);});};
+    /* two terminals that read alike get the full name, then the folder, then a short session id (as the old confirm did) */
+    if(oth(function(x){return lpShortName(x.row.name)===n;})){n=String(r.name);if(oth(function(x){return String(x.row.name)===n;})){var me=list.filter(function(x){return x.sid===LP.sel;})[0];
+      n+=' · '+lpBase(r.cwd)+(me&&lpTwin(list,me)?' · '+lpShortId(list,me):'');}}
+    t='Message '+n;}
+  if(ta.placeholder!==t)ta.placeholder=t;}
 function lpOnKey(k,downT){if(downT-LP.guardAt<LP_GUARD_MS||!lpFresh())return;
   lpSend('key',k).then(function(r){if(r.ok){toast('Sent '+k);lpLoad();}else if(r.net)toast('send failed: offline');else if(r.status&&r.status!==401&&r.status!==403)toast(String((r.j&&r.j.error)||'send failed'));});}
 function lpCantSend(){if(LP.locked)return 'The laptop link is for the owner only.';var S=LP.sess[LP.sel];
   if(!S||!S.row)return 'No terminal selected';if(S.ghost)return 'terminal gone';if(S.cacheOnly||!LP.lastOk||!LP.data)return 'Not connected yet';if(lpOff(S.row))return 'window offline';return '';}
-function lpComposerState(){var b=lpG('lpSend');if(!b)return;var dis=!!lpCantSend();if(b.disabled!==dis)b.disabled=dis;if(dis&&LP.arm)lpDisarm();lpAttState();lpPaintTray();}
+function lpComposerState(){var b=lpG('lpSend');if(!b)return;var dis=!!lpCantSend();if(b.disabled!==dis)b.disabled=dis;if(dis)lpAttMenu(false);lpAttState();lpPaintTray();lpPh();}
 function lpSelSnap(){var ta=lpG('lpIn'),f=document.activeElement===ta,o={f:f,s:f?ta.selectionStart:-1,e:f?ta.selectionEnd:-1,an:null,ao:0,fn:null,fo:0};
   try{var s=window.getSelection();if(s&&!f){o.an=s.anchorNode;o.ao=s.anchorOffset;o.fn=s.focusNode;o.fo=s.focusOffset;}}catch(e){}return o;}
 function lpSelSame(a,b){return a.f===b.f&&a.s===b.s&&a.e===b.e&&a.an===b.an&&a.ao===b.ao&&a.fn===b.fn&&a.fo===b.fo;}
-/* F3T (D85): the first Send tap only arms; a separate confirm, at least 60 px away, sends once it has been up 400 ms */
-function lpOnSend(){if(LP.arm||LP.textBusy)return;var v=lpBoxVal().trim(),n=lpTray().length;if(!v&&!n)return;var why=lpCantSend();if(why){toast(why);return;}
+/* ONE TAP (JJ 2026-11-04, replaces F3T D85's arm/confirm): Send sends. The box names the terminal, so the target is always on screen.
+   After a network error the same text goes with the same id, so the server answers 'already queued' instead of typing it twice. */
+function lpOnSend(){if(LP.textBusy)return;var v=lpBoxVal().trim(),n=lpTray().length;if(!v&&!n)return;var why=lpCantSend();if(why){toast(why);return;}
   var aw=lpAttWhy();if(n&&aw){toast(aw);return;}
   if(lpIsOver(v)&&aw&&v.length>LP_TEXT_MAX){toast('Over 4,000 characters: '+aw.charAt(0).toLowerCase()+aw.slice(1)+' to send it as a .txt');return;}
-  lpArm(v);}
-function lpConfirmLabel(){var a=LP.arm,c=lpG('lpConfirm');if(!a||!c)return;var S=LP.sess[a.sid],row=(S&&S.row)||{},list=lpTabList(),me=list.filter(function(t){return t.sid===a.sid;})[0];
-  var nf=a.files?a.files.split(',').length:0,ex=(nf?' · '+nf+(nf===1?' file':' files'):'')+(a.over?' · long text as .txt':'');
-  lpSetText(c,(a.ack?'Send again? It may already be typed · ':'Send to ')+String(row.name||'Claude')+' · '+lpBase(row.cwd)+(me&&lpTwin(list,me)?' · '+lpShortId(list,me):'')+ex);}
-function lpArm(v){LP.arm={sid:LP.sel,text:v,at:performance.now(),sel:lpSelSnap(),ack:false,cid:lpCid(),files:lpTrayIds(LP.sel),over:lpIsOver(v)&&!lpAttWhy()};lpConfirmLabel();
-  lpTog(lpG('lpConfirm'),'on',true);lpTog(lpG('lpSend'),'lp-inert',true);lpTog(lpG('laptop'),'lp-armed',true);
-  if(LP.armTimer)clearTimeout(LP.armTimer);LP.armTimer=setTimeout(lpDisarm,LP_ARM_MS);}
-function lpDisarm(){if(LP.armTimer){clearTimeout(LP.armTimer);LP.armTimer=null;}var c=lpG('lpConfirm');if(!LP.arm&&!(c&&c.classList.contains('on')))return;
-  LP.arm=null;lpTog(lpG('lpConfirm'),'on',false);lpTog(lpG('lpSend'),'lp-inert',false);lpTog(lpG('laptop'),'lp-armed',false);}
-function lpOnConfirm(downT){var a=LP.arm;if(!a||LP.textBusy)return;if(downT-a.at<LP_ARM_MIN_MS)return;
-  if(a.sid!==LP.sel||lpBoxVal().trim()!==a.text||lpTrayIds(a.sid)!==a.files||lpCantSend()){lpDisarm();return;}
-  if(LP.risky[a.sid+'\u0001'+a.text]&&!a.ack){a.ack=true;
-    /* after a network error the same id goes again: if the first one did arrive, the server answers 'already queued' */
-    if(typeof LP.risky[a.sid+'\u0001'+a.text]==='string')a.cid=LP.risky[a.sid+'\u0001'+a.text];a.at=performance.now();lpConfirmLabel();if(LP.armTimer)clearTimeout(LP.armTimer);LP.armTimer=setTimeout(lpDisarm,LP_ARM_MS);return;}
-  lpDisarm();lpDoSend(a);}
+  var a={sid:LP.sel,text:v,at:performance.now(),ack:true,cid:lpCid(),files:lpTrayIds(LP.sel),over:lpIsOver(v)&&!lpAttWhy()},rk=LP.risky[a.sid+'\u0001'+v];
+  if(typeof rk==='string')a.cid=rk;lpAttMenu(false);lpDoSend(a);}
+function lpDisarm(){LP.arm=null;}
 function lpDoSend(a){var S=LP.sess[a.sid],raw=lpBoxVal();lpBox(raw.trim()===a.text?'':raw);lpDraftNow();
   var o={sid:a.sid,text:a.text,t0:Date.now(),id:null,state:'sending',dbg:{n:LP.dbg.sends.length+1,len:a.text.length,sha:'',osha:'',refill:''}};
   LP.dbg.sends.push(o.dbg);if(LP.dbg.sends.length>20)LP.dbg.sends.shift();
@@ -1954,7 +1964,7 @@ function lpOnSheet(act){var S=LP.sheet;if(!S)return;var it=S.it,txt=String(it.te
     lpPrepend(q,function(){var ta=lpG('lpIn');if(ta){try{ta.focus({preventScroll:true});ta.setSelectionRange(q.length,q.length);}catch(e){}}lpDraftSoon();});
     if(S.red)toast('Part of this message was redacted on this phone: the quote shows [redacted]');return;}
   if(it.role!=='user'||S.red)return;
-  if(LP.arm)lpDisarm();var fill=function(){lpDraftSoon();toast('In the box: tap Send, then confirm, to send it again');};
+  if(LP.arm)lpDisarm();var fill=function(){lpDraftSoon();toast('In the box: tap Send to send it again');};
   if(lpBoxVal().trim())lpPrepend(txt,fill);else lpBox(txt,fill);}
 
 /* Select mode: the conversation as one plain-text block native selection can cross; the pane is frozen while it is on
@@ -1977,7 +1987,7 @@ function lpSelCopy(b){var blk=lpG('lpSelB');if(!blk)return;var g=null;try{g=getS
   var part=g&&!g.isCollapsed&&blk.contains(g.anchorNode)&&blk.contains(g.focusNode)?String(g):'';lpCopy(part||blk.textContent,null,blk);}
 
 /* ── F8: Paste at the caret through the Clipboard API; refused: say how to paste by hand, box unchanged ── */
-function lpPaste(){var ta=lpG('lpIn');if(!ta)return;var s=ta.selectionStart,e=ta.selectionEnd;
+function lpPaste(){lpAttMenu(false);var ta=lpG('lpIn');if(!ta)return;var s=ta.selectionStart,e=ta.selectionEnd;
   var no=function(){toast('Paste was blocked: long-press the box and choose Paste');};
   try{if(!(navigator.clipboard&&navigator.clipboard.readText)){no();return;}
     if(navigator.clipboard.read&&!lpAttWhy()){navigator.clipboard.read().then(function(items){var fs=[],k=0;
@@ -2017,11 +2027,11 @@ function lpMic(){if(LP.mic){var m0=LP.mic;try{m0.r.stop();}catch(e){lpMicStop();
 function lpNavIn(){if(LP.nav)return;var vt=document.querySelector('#app>.top .vtoggle'),head=lpG('lpHead'),pill=lpG('lpConnW');if(!vt||!head||!pill)return;
   LP.nav={vt:vt,parent:vt.parentNode,next:vt.nextSibling,sl:vt.scrollLeft};head.insertBefore(vt,pill);vt.scrollLeft=0;}
 function lpNavOut(){var n=LP.nav;if(!n)return;LP.nav=null;try{if(n.next&&n.next.parentNode===n.parent)n.parent.insertBefore(n.vt,n.next);else n.parent.appendChild(n.vt);n.vt.scrollLeft=n.sl;}catch(e){}}
-function lpKeyDown(e){if(e.key!=='Escape')return;if(LP.viewOn){lpViewClose();e.preventDefault();}else if(LP.sheet){lpSheetClose();e.preventDefault();}else if(LP.selMode){lpSelOff();e.preventDefault();}}
+function lpKeyDown(e){if(e.key!=='Escape')return;var am=lpG('laptop');if(am&&am.classList.contains('lp-attm')){lpAttMenu(false);e.preventDefault();}else if(LP.viewOn){lpViewClose();e.preventDefault();}else if(LP.sheet){lpSheetClose();e.preventDefault();}else if(LP.selMode){lpSelOff();e.preventDefault();}}
 
 /* ── taps (F3T): own tap detection on pointerup inside the element's box, never click; keeps the keyboard up ── */
 var LPT=null;
-function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-lptap]'):null;if(!el)return;
+function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-lptap]'):null;if(!el){if(e.target&&e.target.closest&&!e.target.closest('#lpAttMenu'))lpAttMenu(false);return;}
   if(e.type!=='mousedown'&&(e.type==='pointerdown'||!LPT||LPT.el!==el||performance.now()-LPT.t>600))LPT={el:el,pid:e.type==='pointerdown'?e.pointerId:null,t:performance.now(),done:false};
   /* a Copy button inside the conversation lets a touch start a scroll (its mousedown is still held, so focus stays) */
   var w=el.getAttribute('data-lptap');if(w!=='pill'&&!((w==='copy'||w==='view')&&e.type==='touchstart')&&e.cancelable)e.preventDefault();}
@@ -2030,16 +2040,23 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else{if(t.pid!=null&&e.pointerId!==t.pid)return;x=e.clientX;y=e.clientY;}
   t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;
   var w=t.el.getAttribute('data-lptap');
-  if(w==='send')lpOnSend();else if(w==='confirm')lpOnConfirm(t.t);else if(w==='key')lpOnKey(t.el.getAttribute('data-lpk'),t.t);
+  if(w!=='att'&&w!=='attfile'&&w!=='paste')lpAttMenu(false);
+  if(w==='send')lpOnSend();else if(w==='key')lpOnKey(t.el.getAttribute('data-lpk'),t.t);
   else if(w==='pill')lpJump();else if(w==='now')lpNowGo();else if(w==='chip')lpOnChip(t.el);
   else if(w==='copy')lpOnCopy(t.el);else if(w==='sheet')lpOnSheet(t.el.getAttribute('data-act'));else if(w==='sheetbg')lpSheetClose();
   else if(w==='selcopy')lpSelCopy(t.el);else if(w==='seldone')lpSelOff();else if(w==='paste')lpPaste();else if(w==='mic')lpMic();
   else if(w==='retry')lpOnRetry(t.el);else if(w==='chatok')lpOnChatOk();
-  else if(w==='att')lpOnAtt();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();}
+  else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
-  if(vv){var t=Math.max(vv.offsetTop,top);h=vv.offsetTop+vv.height-t;top=t;lpTog(el,'lp-kb',vv.height<window.innerHeight*0.8);}else h=window.innerHeight-top;
+  if(vv){var t=Math.max(vv.offsetTop,top);h=vv.offsetTop+vv.height-t;top=t;
+    /* keyboard up = the visible area is well under the tallest one seen at this width (iOS shrinks innerHeight with the keyboard too) */
+    /* zoom shrinks vv in CSS px, so compare at scale 1; on a touch screen the screen's own height for this orientation is a floor,
+       so a page opened (or rotated) with the keyboard already up still knows it is up; only full-width windows (never split view) */
+    var sc=vv.scale||1,vh=vv.height*sc,w=Math.round((vv.width||window.innerWidth)*sc);if(LP.vvW!==w){LP.vvW=w;LP.vvMax=0;}LP.vvMax=Math.max(LP.vvMax||0,vh,window.innerHeight);
+    var scr=0;try{if(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&screen.width&&screen.height){var dw=Math.abs(w-screen.width),dh=Math.abs(w-screen.height);if(Math.min(dw,dh)<=8)scr=dw<=dh?screen.height:screen.width;}}catch(e){}
+    lpTog(el,'lp-kb',vh<Math.max(LP.vvMax*0.8,scr*0.7));}else h=window.innerHeight-top;
   el.style.top=Math.round(top)+'px';el.style.height=Math.max(160,Math.round(h))+'px';
   /* a small visible area (keyboard up under the top bar) caps the box so the composer never slides under the keyboard */
   var mx=Math.max(44,Math.min(140,Math.round(Math.max(160,h)*0.28)));if(el.style.getPropertyValue('--lpinmax')!==String(mx))el.style.setProperty('--lpinmax',Number(mx));}
@@ -2058,21 +2075,20 @@ function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.star
   var m=document.querySelector('meta[name="viewport"]');if(m&&LP.meta!=null)m.setAttribute('content',LP.meta);LP.meta=null;
   var vv=LP.vv;if(vv){vv.removeEventListener('resize',lpFit);vv.removeEventListener('scroll',lpFit);}LP.vv=null;
   window.removeEventListener('resize',lpFit);document.removeEventListener('visibilitychange',lpVis);window.removeEventListener('pagehide',lpDisarm);document.removeEventListener('selectionchange',lpOnSelChange);
-  var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-armed');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
+  var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-attm');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
   el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
     '<div id="lpDbg"></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><button type="button" id="lpNow" data-lptap="now"></button>'+
     '<div class="lppw"><div id="lpSelBar"><span>Select text: drag across messages</span><button type="button" class="lpbtn" data-lptap="selcopy">Copy all</button><button type="button" class="lpbtn" data-lptap="seldone">Done</button></div>'+
     '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
-    '<div class="lpcomp" id="lpComp"><button type="button" id="lpConfirm" data-lptap="confirm"></button><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChatOk" role="alert"><span>Restored after a restart: is this the right terminal? Sends wait until you say.</span><button type="button" class="lpbtn" data-lptap="chatok">Yes, this one</button></div><div id="lpChips"></div>'+
-    '<div class="lpkeys"><button type="button" class="lpbtn" data-lptap="key" data-lpk="1">1</button><button type="button" class="lpbtn" data-lptap="key" data-lpk="2">2</button>'+
-    '<button type="button" class="lpbtn" data-lptap="key" data-lpk="3">3</button><button type="button" class="lpbtn" data-lptap="key" data-lpk="Esc">Esc</button><span class="lpsep" aria-hidden="true"></span>'+
-    '<button type="button" class="lpbtn lptool" id="lpPaste" data-lptap="paste" aria-label="Paste into the box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="4.5" width="13" height="16.5" rx="2.2"/><path d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5"/><path d="M9 11h6M9 15h4"/></svg></button>'+
-    '<button type="button" class="lpbtn lptool" id="lpAtt" data-lptap="att" aria-label="Attach photos or files"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.2l-8.4 8.4a5.2 5.2 0 0 1-7.4-7.4l8.7-8.7a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.5l8-8"/></svg></button>'+
-    '<button type="button" class="lpbtn lptool" id="lpMic" data-lptap="mic" aria-label="Dictate into the box (never sends)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5M8.5 21h7"/></svg></button></div>'+
+    '<div class="lpcomp" id="lpComp"><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChatOk" role="alert"><span>Restored after a restart: is this the right terminal? Sends wait until you say.</span><button type="button" class="lpbtn" data-lptap="chatok">Yes, this one</button></div><div id="lpChips"></div>'+
+    '<div class="lpkeys" id="lpKeys" hidden><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="1" hidden>1</button><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="2" hidden>2</button>'+
+    '<button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="3" hidden>3</button><button type="button" class="lpbtn lpk-e" data-lptap="key" data-lpk="Esc" hidden>Esc</button></div>'+
     '<div id="lpTray" aria-label="Files to send"></div><input type="file" id="lpFile" multiple hidden tabindex="-1" aria-hidden="true">'+
-    '<div class="lprow"><textarea id="lpIn" rows="1" placeholder="Message this terminal" autocapitalize="sentences" autocorrect="on" spellcheck="true" enterkeyhint="enter" aria-label="Message this terminal"></textarea>'+
-    '<button type="button" id="lpSend" data-lptap="send">Send</button></div><textarea id="lpMirror" class="lpmirror" rows="1" tabindex="-1" aria-hidden="true"></textarea></div>'+
+    '<div id="lpAttMenu" role="menu" aria-label="Attach"><button type="button" class="lpsi" data-lptap="attfile" role="menuitem">Photo or file</button><button type="button" class="lpsi" id="lpPaste" data-lptap="paste" role="menuitem">Paste</button></div>'+
+    '<div class="lprow"><button type="button" class="lptool" id="lpAtt" data-lptap="att" aria-label="Attach photos or files" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.2l-8.4 8.4a5.2 5.2 0 0 1-7.4-7.4l8.7-8.7a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.5l8-8"/></svg></button>'+
+    '<button type="button" class="lptool" id="lpMic" data-lptap="mic" aria-label="Dictate into the box (never sends)" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5M8.5 21h7"/></svg></button><textarea id="lpIn" rows="1" placeholder="Message this terminal" autocapitalize="sentences" autocorrect="on" spellcheck="true" enterkeyhint="enter" aria-label="Message this terminal"></textarea>'+
+    '<button type="button" id="lpSend" data-lptap="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div><textarea id="lpMirror" class="lpmirror" rows="1" tabindex="-1" aria-hidden="true"></textarea></div>'+
     '<div id="lpView" data-lptap="viewx" role="dialog" aria-label="Photo"></div>'+
     '<div id="lpSheetBg" data-lptap="sheetbg"></div><div id="lpSheet" role="dialog" aria-label="Message actions"><div id="lpSheetQ"></div>'+
     '<button type="button" class="lpsi" data-lptap="sheet" data-act="copy">Copy</button><button type="button" class="lpsi" data-lptap="sheet" data-act="quote">Quote in a reply</button>'+

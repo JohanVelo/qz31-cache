@@ -549,7 +549,7 @@ body.lp-compact #app>.top{display:none}
 body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#54656F;--lpwgo:#008069;--lpwread:#016A99}
 #laptop .lpm-a,#laptop .lpm-u,#laptop .lpq{border-color:transparent}
 #laptop .lpqm,#laptop .lpqm .lpqt{background:transparent;color:var(--lpwtx2)}
-#laptop .lpq-done .lpqm,#laptop .lpq-done .lpqm .lpqt{color:var(--lpwread)}
+#laptop .lpq-read .lpqm,#laptop .lpq-read .lpqm .lpqt{color:var(--lpwread)}
 #laptop .lpqm .lpdot{display:none}
 #laptop #lpSend{background:var(--lpwgo);color:#FFFFFF}
 .lpm-a,.lpm-u{will-change:auto}.lpswok{opacity:.85}
@@ -591,6 +591,12 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpcmn{flex:1 1 auto;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lpcmh{font-size:12px;color:var(--txt2)}
 .lpcmp{flex:1 1 auto;font-size:12px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Item 10 progress at a glance (2026-11-04) */
+.lpcmg{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;font-weight:600;color:var(--lpwgo)}
+.lpcmg.wait{color:var(--amber)}
+.lpcmgt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpcmgb{flex:0 0 56px;height:4px;border-radius:2px;background:var(--line2);overflow:hidden}
+.lpcmgb>i{display:block;height:100%;background:var(--lpwgo)}
 .lppin,.lpmute{flex:0 0 auto;min-height:44px;font-size:12px}
 .lpun{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:10px;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--lpwgo,var(--green));color:#FFFFFF}
 .lpun.on{display:inline-flex;margin-left:auto}
@@ -606,6 +612,12 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 #lpConv>.lpm-a.lpg{border-top-left-radius:12px}
 #lpConv>.lpm-u.lpg{border-top-right-radius:12px}
 #lpConv>[data-t]::after{content:attr(data-t);position:absolute;right:9px;bottom:3px;font:500 12px/1 var(--d);color:var(--txt2);pointer-events:none}
+/* Item 13: ticks on JJ's own bubbles - grey = Claude has it, blue = Claude has started on it */
+#lpConv>.lpm-u[data-tk]::after{right:31px}
+#lpConv>.lpm-u[data-tk]{padding-right:14px;min-width:110px}
+.lpuk{position:absolute;right:9px;bottom:3px;font:700 12px/1 var(--d);letter-spacing:-2px;color:var(--lpwtx2,var(--txt2));pointer-events:none;-webkit-user-select:none;user-select:none}
+.lpuk::before{content:'\2713\2713'}
+.lpuk.rd{color:var(--lpwread)}
 #lpConv>[data-day]{margin-top:34px}
 #lpConv>[data-day]::before{content:attr(data-day);position:absolute;top:-28px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:4px 10px;border-radius:999px;background:var(--cell);border:1px solid var(--line);font:600 12px/1.2 var(--d);color:var(--txt2);box-shadow:0 1px 2px rgba(0,0,0,.2);pointer-events:none}
 #lpConv>.lpm-a[data-day]::before{left:calc(50% + 0px)}
@@ -616,7 +628,8 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpq{position:relative;align-self:flex-end;min-width:118px;max-width:min(78%,65ch);padding:7px 11px 18px;border-radius:12px;border-top-right-radius:4px;background:var(--lpsent);border:1px solid var(--line2);font-size:15px;line-height:1.5;color:var(--txt);white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;box-shadow:0 1px 1.5px rgba(0,0,0,.18);animation:lpin .2s cubic-bezier(.2,.9,.3,1.15) both}
 .lpqm{position:absolute;right:6px;bottom:2px;display:flex;white-space:nowrap;gap:4px;align-items:center;padding:1px 6px;border-radius:999px;background:var(--cell);font:500 12px/1 var(--d);color:var(--txt2)}
 .lpqk::before{content:attr(data-tk);font-weight:700;letter-spacing:-2px;padding-right:2px}
-.lpq-done .lpqk::before{color:var(--lpok)}
+.lpq-done .lpqk::before{color:var(--lpwtx2,var(--txt2))}
+.lpq-read .lpqk::before{color:var(--lpwread)}
 .lpq-failed,.lpq-expired{border-color:color-mix(in srgb,var(--red) 60%,transparent)}
 .lpq-failed .lpqk::before,.lpq-expired .lpqk::before{color:var(--red);letter-spacing:0}
 .lpqw{margin-top:4px;padding-left:8px;border-left:3px solid var(--red);font-size:12px;color:var(--txt)}
@@ -1366,7 +1379,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-12';
+var LP_BUILD='CHAT-20261104-13';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1883,6 +1896,9 @@ function lpDecorate(rows){var prevDay='',prev=null;
     var nf=LP.newFrom;r.nu=!!(nf&&nf.sid===LP.sel&&r.kind==='msg'&&(nf.used?nf.used===r.k:(r.it.role==='assistant'&&lpT(r.it.at)>nf.t)));if(r.nu)nf.used=r.k;
     r.st=r.kind==='msg'&&lpStarred(r.k);
     r.sig+='\u0004'+r.day+'\u0004'+(r.grp?1:0)+'\u0004'+r.hm+'\u0004'+(r.nu?1:0)+(r.st?1:0);prev=r;});
+  var after=false;for(var i=rows.length-1;i>=0;i--){var x=rows[i];
+    if(x.kind==='steps'||(x.kind==='msg'&&x.it&&x.it.role==='assistant'))after=true;
+    else if(x.kind==='msg'&&x.it&&x.it.role==='user'){x.tk=after?'r':'d';x.sig+='\u0004'+x.tk;}}
   return rows;}
 function lpRows(S){var L=S.items,rows=[],i=Math.max(0,S.renderFrom);
   while(i<L.length){var it=L[i];
@@ -1912,7 +1928,11 @@ function lpWithSends(S,rows){if(!S||!lpChatOf(S.sid))return rows;
   rows=rows.filter(function(r){return !(r.kind==='msg'&&r.it&&fold[r.it.k]);});var out=[],j=0;
   rows.forEach(function(r){var t=lpRowAt(r);while(j<cs.length&&t&&lpT(cs[j].created_at)<t){out.push(lpSendRow(cs[j]));j++;}out.push(r);});
   while(j<cs.length){out.push(lpSendRow(cs[j]));j++;}return out;}
-function lpSendRow(c){return {k:'c:'+c.id,kind:'send',c:c,at:c.created_at,sig:'send\u0001'+[c.status,c.body,c.result&&c.result.reason,(c.attachments||[]).map(function(a){return a&&a.path;}).join(',')].join('\u0001')};}
+/* Item 13: read = Claude has started on it: the transcript holds JJ's entry and a reply or a step after it */
+function lpReadOf(c){if(!c||c.status!=='done')return false;var S=LP.sess[c.session_id]||LP.sess[LP.sel];if(!S||!S.items)return false;
+  var it=lpShownIt(S,c);if(!it)return false;var L=S.items,i=L.indexOf(it);if(i<0)return false;
+  for(var j=i+1;j<L.length;j++){var x=L[j];if((x.role==='assistant'||x.role==='tool')&&!x.gap)return true;}return false;}
+function lpSendRow(c){return {k:'c:'+c.id,kind:'send',c:c,at:c.created_at,sig:'send\u0001'+[c.status,lpReadOf(c)?'r':'',c.body,c.result&&c.result.reason,(c.attachments||[]).map(function(a){return a&&a.path;}).join(',')].join('\u0001')};}
 function lpInline(p,s){var parts=String(s).split(/(\*\*[^*\n]+?\*\*|\x60[^\x60\n]+\x60)/);
   for(var i=0;i<parts.length;i++){var x=parts[i];if(!x)continue;
     if(x.length>4&&x.slice(0,2)==='**'&&x.slice(-2)==='**'){var b=lpEl('b');lpLinks(b,x.slice(2,-2));p.appendChild(b);}
@@ -1958,7 +1978,9 @@ function lpRowFill(el,r){el._sig=r.sig;
     Array.prototype.forEach.call(ls.querySelectorAll('details.lpst[open]'),function(d){open[d.dataset.sk]=1;});ls.textContent='';
     if(r.steps)r.steps.forEach(function(s){ls.appendChild(lpStepEl(s,open[s.k]));});
     else r.labels.forEach(function(x){ls.appendChild(lpEl('div',null,x));});}
-  else if(r.kind==='msg'){el.textContent='';el._it=r.it;if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);if(r.it.att&&r.it.role!=='user')lpFcEls(el,r.it.att);el.appendChild(lpCopyBtn('Copy message'));}}
+  else if(r.kind==='msg'){el.textContent='';el._it=r.it;if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);if(r.it.att&&r.it.role!=='user')lpFcEls(el,r.it.att);el.appendChild(lpCopyBtn('Copy message'));
+    if(r.tk){el.dataset.tk=r.tk;var uk=lpEl('span','lpuk'+(r.tk==='r'?' rd':''));uk.setAttribute('role','img');var ul=r.tk==='r'?'Claude has started on it':'Typed into Claude';uk.setAttribute('aria-label',ul);uk.title=ul;el.appendChild(uk);}
+    else if(el.dataset.tk!=null)delete el.dataset.tk;}}
 /* RELAY P3: one step: mark (running / done / failed), its plain label, then what it acted on; output or edit lines open on tap */
 var LP_MARK={run:'\u2022',ok:'\u2713',err:'\u2715'},LP_MARKW={run:'running',ok:'done',err:'failed'};
 function lpStepEl(s,isOpen){var x=s.x||{},more=!!(x.out||(x.diff&&x.diff.length)),el=lpEl(more?'details':'div','lpst'),hd=more?lpEl('summary'):el;
@@ -2030,8 +2052,8 @@ function lpShownIt(S,c){if(!S)return null;var L=S.items,b=lpMaskMemo(String(c.bo
     if(att){if(lpInboxRe().test(tx)&&lpStripAtt(tx).slice(0,160)===b)return it;continue;}
     if(b&&tx.trim().slice(0,160)===b)return it;}
   return null;}
-function lpQFill(q,c){var st=String(c.status||'queued'),tk=LP_TICK[st]||['\u2713',st],bad=st==='failed'||st==='expired';
-  q.className='lpq lpq-'+st.replace(/[^a-z]/g,'');q.dataset.cmd=String(c.id);q.textContent='';
+function lpQFill(q,c){var st=String(c.status||'queued'),rd=lpReadOf(c),tk=rd?['\u2713\u2713','Claude has started on it']:(LP_TICK[st]||['\u2713',st]),bad=st==='failed'||st==='expired';
+  q.className='lpq lpq-'+st.replace(/[^a-z]/g,'')+(rd?' lpq-read':'');q.dataset.cmd=String(c.id);q.textContent='';
   var n=(c.attachments||[]).length;if(n)lpAttEls(q,c);if(String(c.body||'').trim())lpTxt(q,String(c.body));
   var meta=lpEl('span','lpqm'),qd=lpEl('span',({done:'lpdot lpd-i',queued:'lpdot lpd-b',delivered:'lpdot lpd-b',failed:'lpdot lpd-w',expired:'lpdot lpd-w'})[st]||'lpdot lpd-o');qd.setAttribute('aria-hidden','true');meta.appendChild(qd);meta.appendChild(lpEl('span','lpqt',lpHm(c.created_at)));var tick=lpEl('span','lpqk');tick.dataset.tk=tk[0];tick.setAttribute('role','img');tick.setAttribute('aria-label',tk[1]);tick.title=tk[1];meta.appendChild(tick);q.appendChild(meta);
   if(bad){q.appendChild(lpEl('div','lpqw',st==='failed'?'Failed: '+String((c.result&&c.result.reason)||'the laptop refused it'):tk[1]));
@@ -2302,6 +2324,18 @@ function lpChatsOpen(){LP.chatsOn=true;lpChatsPaint();lpTog(lpG('laptop'),'lp-ch
 function lpChatsClose(){LP.chatsOn=false;lpTog(lpG('laptop'),'lp-chats',false);}
 function lpPreview(sid,row){var S=LP.sess[sid],L=S?S.items:[];for(var i=L.length-1;i>=0;i--){var it=L[i];if((it.role==='assistant'||it.role==='user')&&String(it.text||'').trim())return (it.role==='user'?'You: ':'')+String(it.text).replace(/\s+/g,' ').slice(0,90);}
   var nw=row&&row.now;return nw&&nw.l?String(nw.l):'';}
+/* Item 10: progress at a glance. row.progress comes from Savepoint 0.6.14 through the server:
+   { steps, more, since, tasks:{done,total,now} }. Shown only while the terminal is working or waiting. */
+function lpAgo(ms){var m=Math.floor(ms/60000);if(m<1)return '<1 min';if(m<60)return m+' min';var h=Math.floor(m/60);return h+' h '+('0'+(m%60)).slice(-2);}
+function lpProg(row){var st=row&&row.status;if(st!=='busy'&&st!=='waiting')return null;var p=row.progress;if(!p||typeof p!=='object')p={};
+  var t=p.tasks,parts=[],bar=null;
+  if(t&&typeof t==='object'&&t.total>0&&t.done>=0&&t.done<=t.total){parts.push(t.done+' of '+t.total);if(t.now)parts.push(String(t.now));bar=t.done/t.total;}
+  else{parts.push(st==='waiting'?'Waiting for you':'Working');
+    var since=lpT(p.since);if(since){var d=lpSrvNow()-since;if(d>=0)parts.push(lpAgo(d));}
+    if(typeof p.steps==='number'&&p.steps>0)parts.push(p.steps+(p.more?'+':'')+(p.steps===1&&!p.more?' step':' steps'));}
+  return {text:parts.join(' · '),bar:bar,wait:st==='waiting'};}
+function lpProgEl(row){var g=lpProg(row);if(!g)return null;var el=lpEl('div','lpcmg'+(g.wait?' wait':''));el.appendChild(lpEl('span','lpcmgt',g.text));
+  if(g.bar!==null){var b=lpEl('span','lpcmgb'),i=document.createElement('i');i.style.width=Math.round(g.bar*100)+'%';b.appendChild(i);el.appendChild(b);}return el;}
 function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent='';var hd=lpEl('div','lpchh');hd.appendChild(lpEl('span','lpcht','Chats'));
   var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);box.appendChild(hd);
   var list=lpTabList();if(!list.length)box.appendChild(lpEl('div','lpcn','No Claude terminal is open on the laptop.'));
@@ -2309,7 +2343,7 @@ function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent=''
     var nq=lpNice(t.row.name),nm=nq.title,av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());r.appendChild(av);
     var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));var la=lpLastAt(sid);top.appendChild(lpEl('span','lpcmh',la?lpHm(new Date(la).toISOString()):''));mid.appendChild(top);
     var bot=lpEl('div','lpcmb');bot.appendChild(lpEl('span','lpcmp',lpPreview(sid,t.row)||(t.row.status==='busy'?'working…':'')));var un=sid===LP.sel?0:lpUnread(sid);
-    if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);r.appendChild(mid);
+    if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);var pg=lpProgEl(t.row);if(pg)mid.appendChild(pg);r.appendChild(mid);
     var pb=lpEl('button','lpbtn lppin',lpPinned(sid)?'Unpin':'Pin');pb.type='button';pb.dataset.lptap='pin';pb.dataset.sid=sid;r.appendChild(pb);
     var mb=lpEl('button','lpbtn lpmute',lpMuted(sid)?'Unmute':'Mute');mb.type='button';mb.dataset.lptap='mute';mb.dataset.sid=sid;r.appendChild(mb);
     if(lpMuted(sid))r.classList.add('muted');box.appendChild(r);});
@@ -2499,7 +2533,7 @@ function lpPaintDbg(){var el=lpG('lpDbg');if(!el)return;lpTog(el,'on',LP.dbgOn);
   lpSetText(el,lines.join('\n'));}
 function lpAges(){var now=lpSrvNow(),xs=document.querySelectorAll('#laptop .lpage');for(var i=0;i<xs.length;i++)lpSetText(xs[i],lpAge(xs[i].dataset.at,now)+' ago');}
 function lpTickFn(){if(STATE.view!=='laptop')return;if(LP.arm&&performance.now()-LP.arm.at>LP_ARM_MS)lpDisarm();
-  lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpPaintNow();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
+  lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpPaintNow();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();lpFitTick();}
 function lpDenied(){lpSheetClose();lpSelOff();lpMicStop();lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
   ['lpConv','lpPend','lpCmds','lpChips'].forEach(function(id){var e=lpG(id);if(e)e.textContent='';});
   lpBox('');lpDisarm();lpPaintTabs([]);lpPaintNow();lpPaintHead();lpPaintStat();lpComposerState();lpKeysState();lpPill();}
@@ -2648,16 +2682,23 @@ function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started
     var sc=vv.scale||1,vh=vv.height*sc,w=Math.round((vv.width||window.innerWidth)*sc);if(LP.vvW!==w){LP.vvW=w;LP.vvMax=0;}LP.vvMax=Math.max(LP.vvMax||0,vh,window.innerHeight);
     var scr=0;try{if(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&screen.width&&screen.height){var dw=Math.abs(w-screen.width),dh=Math.abs(w-screen.height);if(Math.min(dw,dh)<=8)scr=dw<=dh?screen.height:screen.width;}}catch(e){}
     lpTog(el,'lp-kb',vh<Math.max(LP.vvMax*0.8,scr*0.7));}else h=window.innerHeight-top;
-  el.style.top=Math.round(top)+'px';el.style.height=Math.max(160,Math.round(h))+'px';
+  el.style.top=Math.round(top)+'px';el.style.height=Math.max(160,Math.round(h))+'px';LP.fitKey=lpFitKey();LP.fitH=el.style.height;
   /* a small visible area (keyboard up under the top bar) caps the box so the composer never slides under the keyboard */
   var mx=Math.max(44,Math.min(140,Math.round(Math.max(160,h)*0.28)));if(el.style.getPropertyValue('--lpinmax')!==String(mx))el.style.setProperty('--lpinmax',Number(mx));}
-function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);}}
+function lpBlurFit(e){var el=lpG('laptop');if(!el||!e||!e.target||!el.contains(e.target))return;
+  [60,350,800].forEach(function(ms){setTimeout(function(){if(!LP.started)return;var a=document.activeElement;
+    if(!(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT'))&&(window.scrollY||document.documentElement.scrollTop))window.scrollTo(0,0);lpFit();},ms);});}
+/* the 1 s safety refit (iOS can close the keyboard without a resize event): only when the visible area moved
+   since the last fit or the column height was changed by something else, so an idle tick reads no layout */
+function lpFitKey(){var vv=window.visualViewport;return [window.innerHeight,window.innerWidth,vv?vv.height:0,vv?vv.offsetTop:0,vv?vv.width:0,vv?vv.scale:0].join(',');}
+function lpFitTick(){var el=lpG('laptop');if(!el||!LP.started)return;if(LP.fitKey===lpFitKey()&&LP.fitH===el.style.height)return;lpFit();}
+function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);lpFit();}}
 function lpOnSelChange(){if(LP.arm&&!lpSelSame(lpSelSnap(),LP.arm.sel))lpDisarm();if(LP.queued&&!lpFrozen())lpPaintConv(false);}
 function lpStart(){if(LP.started)return;LP.started=true;
   var m=document.querySelector('meta[name="viewport"]');if(m){LP.meta=m.getAttribute('content');if(!/interactive-widget/.test(LP.meta||'')&&!lpAppleWebKit())m.setAttribute('content',(LP.meta||'')+',interactive-widget=resizes-content');}
   var vv=window.visualViewport;LP.vv=vv||null;if(vv){vv.addEventListener('resize',lpFit);vv.addEventListener('scroll',lpFit);}
   window.addEventListener('resize',lpFit);document.addEventListener('visibilitychange',lpVis);window.addEventListener('pagehide',lpDisarm);document.addEventListener('selectionchange',lpOnSelChange);
-  window.addEventListener('online',lpRetryNow);document.addEventListener('keydown',lpKeyDown);
+  document.addEventListener('focusout',lpBlurFit);window.addEventListener('online',lpRetryNow);document.addEventListener('keydown',lpKeyDown);
   document.body.classList.add('lp-compact');lpNavIn();lpMicShow();
   lpG('laptop').classList.add('lp-on');lpFit();LP.tick=setInterval(lpTickFn,1000);}
 function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.started)return;LP.started=false;lpSheetClose();lpPressEnd();lpSelOff();lpMicStop();lpDisarm();lpDraftNow();lpSaveScroll();
@@ -2665,7 +2706,7 @@ function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.star
   if(LP.tick){clearInterval(LP.tick);LP.tick=null;}
   var m=document.querySelector('meta[name="viewport"]');if(m&&LP.meta!=null)m.setAttribute('content',LP.meta);LP.meta=null;
   var vv=LP.vv;if(vv){vv.removeEventListener('resize',lpFit);vv.removeEventListener('scroll',lpFit);}LP.vv=null;
-  window.removeEventListener('resize',lpFit);document.removeEventListener('visibilitychange',lpVis);window.removeEventListener('pagehide',lpDisarm);document.removeEventListener('selectionchange',lpOnSelChange);
+  window.removeEventListener('resize',lpFit);document.removeEventListener('visibilitychange',lpVis);window.removeEventListener('pagehide',lpDisarm);document.removeEventListener('selectionchange',lpOnSelChange);document.removeEventListener('focusout',lpBlurFit);
   var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-attm');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
   el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><button type="button" id="lpChatsB" class="lpbtn" data-lptap="chats" aria-label="All chats">Chats</button><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
@@ -2710,10 +2751,7 @@ function lpBuild(el){
   pn.addEventListener('touchend',lpSwEnd,{passive:true});pn.addEventListener('touchcancel',lpSwEnd,{passive:true});pn.addEventListener('pointermove',lpPressMove,{passive:true});
   ['pointerup','pointercancel','pointerleave','scroll'].forEach(function(ev){pn.addEventListener(ev,lpPressEnd,{passive:true});});
   pn.addEventListener('contextmenu',function(e){if(LP.selMode)return;var m=e.target&&e.target.closest?e.target.closest('.lpm-a,.lpm-u'):null;if(!m)return;e.preventDefault();if(!LP.sheet){lpPressEnd();lpSheetOpen(m);}});
-  var head=lpG('lpConnW'),hold=null,clr=function(){if(hold){clearTimeout(hold);hold=null;}};
-  head.addEventListener('pointerdown',function(){clr();hold=setTimeout(function(){hold=null;LP.dbgOn=!LP.dbgOn;lpPaintDbg();},600);});
-  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){head.addEventListener(ev,clr);});
-  head.addEventListener('contextmenu',function(e){e.preventDefault();});
+  /* JJ 2026-11-04: the debug panel no longer opens by holding the connection label (it took half the screen by accident); ?lpdebug=1 only */
   LP.built=true;lpDraftSweep();}
 function renderLaptop(){
   var el=document.getElementById('laptop');if(!el)return;

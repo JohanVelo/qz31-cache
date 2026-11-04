@@ -587,6 +587,15 @@ body.lp-compact #app>.top{display:none}
 .lpfile[href]{cursor:pointer}
 .lpfn{font-size:15px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lpfs,.lpfp{font-size:12px;line-height:1.4;color:var(--txt2)}
+.lpfcs{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.lpfc{border:1px solid var(--line2);border-radius:8px;background:var(--cell);overflow:hidden}
+.lpfco{display:flex;align-items:center;gap:10px;padding:8px 10px;color:var(--txt);text-decoration:none;min-height:44px;box-sizing:border-box}
+.lpfcb{flex:0 0 auto;min-width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;letter-spacing:.02em;background:var(--line2);color:var(--txt)}
+.lpfct{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lpfca{display:flex;border-top:1px solid var(--line2)}
+.lpfcx{flex:1 1 50%;min-height:44px;background:none;border:0;color:var(--txt);font-size:15px;cursor:pointer}
+.lpfcx+.lpfcx{border-left:1px solid var(--line2)}
+.lpfcx:disabled{color:var(--txt2);cursor:default}
 .lpfp{white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #lpView{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;box-sizing:border-box}
 #lpView.on{display:flex}
@@ -1094,7 +1103,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-4';
+var LP_BUILD='CHAT-20261104-5';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1199,7 +1208,7 @@ function lpCacheWrite(S,added,row){if(LP.locked)return;var t=Date.now(),recs=[];
     if(recs.length){var rq=ms.index('sid').getAll(S.sid);rq.onsuccess=function(){var all=rq.result||[];if(all.length<=LP_MAX)return;
       all.sort(function(a,b){return a.o-b.o;});for(var i=0;i<all.length-LP_MAX;i++)ms['delete'](all[i].pk);};}}catch(e){}});}
 /* D82 / IF-1: any 401 or 403 from /laptop/*, a non-owner or another uid on /me: the LAPTOP database and every lp_* key go */
-function lpWipe(){LP.locked=true;try{if(LPDB.db)LPDB.db.close();}catch(e){}LPDB.db=null;LPDB.p=Promise.resolve(null);
+function lpWipe(){LP.locked=true;LP.fblob={};LP.furl={};try{if(LPDB.db)LPDB.db.close();}catch(e){}LPDB.db=null;LPDB.p=Promise.resolve(null);
   try{if(window.indexedDB)indexedDB.deleteDatabase('lp_cache');}catch(e){}
   try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('lp_')===0)ks.push(k);}ks.forEach(lpLSdel);}catch(e){}
   if(LP.draftT){clearTimeout(LP.draftT);LP.draftT=null;}LP.sess={};LP.fullOnce=false;LP.outbox=[];LP.risky={};LP.cacheShown=false;}
@@ -1240,8 +1249,14 @@ function lpWin(ms){var out=[],cnt={};for(var i=ms.length-1;i>=0;i--){var m=ms[i]
   var role=m.role==='user'||m.role==='tool'||m.role==='divider'||m.role==='hgap'?m.role:'assistant',txt=String(m.text==null?'':m.text),id=(m.id!=null&&m.id!=='')?String(m.id):'';
   var mt=(role==='tool'||id)?'':lpMaskMemo(txt);
   var x=role==='tool'?lpX(m):null;
-  out.unshift({k:id?'i:'+id:'n:'+at+'|'+role+'|'+pos+'|'+mt,loose:id?'':at+'|'+role+'|'+(role==='tool'?pos:mt),id:id,role:role,text:txt,at:at,x:x,xs:x?JSON.stringify(x):'',cmd:(m.cmd_id!=null?m.cmd_id:null)});}
+  var att=role==='assistant'&&/^file:/.test(id)?lpFcAtt(m.attachments):null;   /* only the server's checked file rows */
+  out.unshift({k:id?'i:'+id:'n:'+at+'|'+role+'|'+pos+'|'+mt,loose:id?'':at+'|'+role+'|'+(role==='tool'?pos:mt),id:id,role:role,text:txt,at:at,x:x,xs:x?JSON.stringify(x):'',cmd:(m.cmd_id!=null?m.cmd_id:null),att:att});}
   return out;}
+/* FILE-TO-PHONE: the files of a message Claude sent (server-checked); plain fields only, at most 10 */
+function lpFcAtt(a){if(!Array.isArray(a)||!a.length)return null;var out=[];
+  for(var i=0;i<a.length&&out.length<10;i++){var f=a[i];if(!f||typeof f.path!=='string'||!/^chat\/[A-Za-z0-9_-]{8,64}\/[A-Za-z0-9_-]{8,64}\.[a-z0-9]{1,8}$/.test(f.path))continue;
+    out.push({path:f.path,name:String(f.name||'file').slice(0,120),size:Number(f.size)||0,sha256:/^[0-9a-f]{64}$/.test(String(f.sha256||''))?f.sha256:'',mime:String(f.mime||'application/octet-stream').slice(0,100)});}
+  return out.length?out:null;}
 /* RELAY P3: what a step acted on (d), how it ended (st), its first output lines (out), an edit's -/+ lines (diff).
    Savepoint >= 0.6.5 sends them; anything else is ignored. Plain strings only, capped, device token masked;
    they are only ever put on screen as text. */
@@ -1259,9 +1274,10 @@ function lpMerge(S,W){var L=S.items,map={},added=[],changed=false,lk=null,i;
   var pos=first>=0?known(W[first]):L.length;
   if(first<0&&L.length&&W.length){var last=L[L.length-1];if(!last.gap){var g={k:'gap:'+W[0].k,gap:true,role:'gap',o:last.o+0.5};L.push(g);map[g.k]=L.length-1;}pos=L.length;changed=true;}
   for(i=0;i<W.length;i++){var x=W[i],p=known(x);
-    if(p>=0){pos=p+1;if(L[p].k===x.k&&(L[p].text!==x.text||(L[p].xs||'')!==(x.xs||''))){L[p].text=x.text;L[p].x=x.x;L[p].xs=x.xs;changed=true;}if(x.cmd!=null&&L[p].cmd==null)L[p].cmd=x.cmd;continue;}
+    if(p>=0){pos=p+1;if(L[p].k===x.k&&(L[p].text!==x.text||(L[p].xs||'')!==(x.xs||''))){L[p].text=x.text;L[p].x=x.x;L[p].xs=x.xs;changed=true;}if(x.cmd!=null&&L[p].cmd==null)L[p].cmd=x.cmd;
+      if(x.att&&!L[p].att){L[p].att=x.att;changed=true;}continue;}
     var prev=L[pos-1],next=L[pos],o=prev&&next?(prev.o+next.o)/2:prev?prev.o+1:next?next.o-1:0;
-    var ni={k:x.k,id:x.id,role:x.role,text:x.text,at:x.at,o:o,x:x.x,xs:x.xs,cmd:x.cmd};L.splice(pos,0,ni);
+    var ni={k:x.k,id:x.id,role:x.role,text:x.text,at:x.at,o:o,x:x.x,xs:x.xs,cmd:x.cmd,att:x.att||null};L.splice(pos,0,ni);
     if(pos<L.length-1){for(var q=pos;q<L.length;q++)map[L[q].k]=q;if(S.renderFrom>pos)S.renderFrom++;}else map[ni.k]=pos;
     lk=null;added.push(ni);pos++;changed=true;}
   if(L.length>LP_MAX){var drop=L.length-LP_MAX;L.splice(0,drop);if(S.renderFrom>=0)S.renderFrom=Math.max(0,S.renderFrom-drop);}
@@ -1311,7 +1327,7 @@ function lpChatMap(d){LP.chatBy={};LP.chatOn=Array.isArray(d.chats);
 /* history: the server's permanent copy of this chat (every session it had), merged in like any window */
 function lpHistItems(ms){return (ms||[]).map(function(m){var b=(m&&m.body&&typeof m.body==='object')?m.body:{},o={};
   for(var k in b)if(Object.prototype.hasOwnProperty.call(b,k))o[k]=b[k];
-  o.id=String(m.item_id||'');o.at=m.at;o.cmd_id=m.cmd_id;
+  o.id=String(m.item_id||'');o.at=m.at;o.cmd_id=m.cmd_id;if(Array.isArray(m.attachments)){o.attachments=m.attachments;if(!String(o.text||'').trim())o.text='Sent you a file';}
   if(m.role==='divider'){o.role='divider';o.text=String(b.kind||'');}else if(m.role==='gap'){o.role='hgap';o.text=String(b.count||0);}
   else o.role=m.role==='event'?'assistant':m.role;
   return o;}).filter(function(o){return o.id;});}
@@ -1361,6 +1377,7 @@ function lpIngest(d){
     var has=Array.isArray(s.messages),ms=has?s.messages:null,sig=has?JSON.stringify(ms):S.msgSig;if(has&&s.fp)S.fp=s.fp;
     if(has&&sig!==S.msgSig){S.msgSig=sig;var res=lpMerge(S,lpWin(ms));if(S.cacheOk&&!LP.locked)lpCacheWrite(S,res.added,s);}
     else if(S.cacheOk&&!LP.locked)lpCacheWrite(S,[],s);});
+  if(Array.isArray(d.files))lpFcIngest(d.files,vis);
   var cur=by[LP.sel];if(cur){LP.dbg.ages.push(Math.max(0,now-lpT(cur.updated_at)));if(LP.dbg.ages.length>300)LP.dbg.ages.shift();}
   var want=lpWant();
   if(want&&seen[want]){LP.want=null;LP.firstPicked=true;LP.userPicked=true;if(LP.sel!==want)lpSelect(want,false);}
@@ -1539,7 +1556,7 @@ function lpRows(S){var L=S.items,rows=[],i=Math.max(0,S.renderFrom);
         sig:sum+'\u0001'+labels.join('\u0001')+(det?'\u0002'+steps.map(function(s){return s.k+'\u0003'+s.text+'\u0003'+(s.xs||'');}).join('\u0001'):'')});i=j;continue;}
     if(it.role==='user'&&lpInboxRe().test(String(it.text||''))){var st=lpStripAtt(it.text),na=(String(it.text).match(lpInboxRe(true))||[]).length,
         cp={k:it.k,role:'user',text:(st?st+'\n':'')+'['+na+(na===1?' file':' files')+']',at:it.at,cmd:it.cmd};rows.push({k:it.k,kind:'msg',it:cp,sig:'user\u0001'+cp.text});i++;continue;}
-    rows.push({k:it.k,kind:'msg',it:it,sig:it.role+'\u0001'+it.text});i++;}
+    rows.push({k:it.k,kind:'msg',it:it,sig:it.role+'\u0001'+it.text+(it.att?'\u0002'+it.att.map(function(a){return a.path;}).join(','):'')});i++;}
   return lpDecorate(lpWithSends(S,rows));}
 /* RELAY CHAT: your sends sit IN the conversation at the time you sent them (WhatsApp order), not in a list under it.
    A send Claude's transcript already shows is drawn once (the transcript copy). Chat mode only. */
@@ -1596,7 +1613,7 @@ function lpRowFill(el,r){el._sig=r.sig;
     Array.prototype.forEach.call(ls.querySelectorAll('details.lpst[open]'),function(d){open[d.dataset.sk]=1;});ls.textContent='';
     if(r.steps)r.steps.forEach(function(s){ls.appendChild(lpStepEl(s,open[s.k]));});
     else r.labels.forEach(function(x){ls.appendChild(lpEl('div',null,x));});}
-  else if(r.kind==='msg'){el.textContent='';el._it=r.it;if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);el.appendChild(lpCopyBtn('Copy message'));}}
+  else if(r.kind==='msg'){el.textContent='';el._it=r.it;if(r.it.role==='user')lpTxt(el,r.it.text);else lpMd(el,r.it.text);if(r.it.att&&r.it.role!=='user')lpFcEls(el,r.it.att);el.appendChild(lpCopyBtn('Copy message'));}}
 /* RELAY P3: one step: mark (running / done / failed), its plain label, then what it acted on; output or edit lines open on tap */
 var LP_MARK={run:'\u2022',ok:'\u2713',err:'\u2715'},LP_MARKW={run:'running',ok:'done',err:'failed'};
 function lpStepEl(s,isOpen){var x=s.x||{},more=!!(x.out||(x.diff&&x.diff.length)),el=lpEl(more?'details':'div','lpst'),hd=more?lpEl('summary'):el;
@@ -1818,7 +1835,7 @@ function lpFurlLoad(key,paths){LP.furl=LP.furl||{};LP.furlQ=LP.furlQ||{};var wan
     if(!r.ok){lpCode(r);return;}var us=(r.j&&r.j.urls)||{},exp=Date.now()+Math.max(60,Number(r.j.expires_in)||600)*1000-60000;
     want.forEach(function(p){if(typeof us[p]==='string'&&/^https:\/\//.test(us[p]))LP.furl[p]={u:us[p],exp:exp};});
     Array.prototype.forEach.call(document.querySelectorAll('#lpConv [data-path]'),function(el){var u=lpFurl(el.dataset.path);if(!u)return;
-      if(el.tagName==='IMG'){if(!el.getAttribute('src'))el.src=u;}else if(!el.getAttribute('href'))el.href=u;});},
+      if(el.tagName==='IMG'){if(!el.getAttribute('src'))el.src=u;}else if(!el.getAttribute('href'))el.href=u;});lpFcScan();},
     function(){want.forEach(function(p){delete LP.furlQ[p];});});}
 function lpAttEls(q,c){var box=lpEl('div','lpatt'),ch=lpChatOf(LP.sel),want=[],imgs=0,L=LP.flocal||{};
   (c.attachments||[]).forEach(function(a){if(!a||!a.path)return;var loc=L[a.path]||{},u=lpFurl(a.path);
@@ -1830,6 +1847,65 @@ function lpAttEls(q,c){var box=lpEl('div','lpatt'),ch=lpChatOf(LP.sel),want=[],i
     else{f.appendChild(lpEl('span','lpfn',String(a.name||('file.'+lpExt(a.path)))));f.appendChild(lpEl('span','lpfs',lpSize(a.size)+' · '+lpExt(a.name||a.path,a.mime).toUpperCase()));}
     box.appendChild(f);});
   if(imgs>1)box.classList.add('lpmany');q.appendChild(box);if(want.length&&ch)lpFurlLoad(ch.chat_key,want);}
+/* ── FILE-TO-PHONE (JJ GO 2026-11-04): a file Claude sent, as a card with Download + Share ──
+   The server checked size + sha256 before it posted the card. Files up to LP_FC_PRE bytes are fetched in the
+   background when the card is drawn and checked again here (sha256), so Share can hand iOS the file at once
+   (iOS refuses the share sheet after a wait). A bigger file: the first tap gets it ready, the second shares. */
+var LP_FC_PRE=10*1024*1024,LP_FC_KEEP=40*1024*1024;
+function lpFcIngest(files,vis){var keyOf={};vis.forEach(function(s){var c=lpChatOf(s.session_id);if(c&&c.chat_key)(keyOf[c.chat_key]=keyOf[c.chat_key]||[]).push(s.session_id);});
+  files.forEach(function(f){if(!f||!f.chat_key||!keyOf[f.chat_key])return;var W=lpWin(lpHistItems([f]));if(!W.length||!W[0].att)return;
+    keyOf[f.chat_key].forEach(function(sid){var S=lpS(sid);if(lpFcPut(S,W[0])&&LP.sel===sid)LP.fcDirty=true;});});
+  if(LP.fcDirty){LP.fcDirty=false;lpPaintConv(false);}}
+/* one file message into a session's list, by time; a known one only gains its files */
+function lpFcPut(S,x){var L=S.items,i;for(i=0;i<L.length;i++)if(L[i].k===x.k){if(!L[i].att){L[i].att=x.att;return true;}return false;}
+  var t=lpT(x.at),pos=L.length;for(i=L.length-1;i>=0;i--){if(L[i].gap)continue;if(lpT(L[i].at)<=t){pos=i+1;break;}pos=i;}
+  var prev=L[pos-1],next=L[pos],o=prev&&next?(prev.o+next.o)/2:prev?prev.o+1:next?next.o-1:0;
+  var ni={k:x.k,id:x.id,role:'assistant',text:x.text,at:x.at,o:o,x:null,xs:'',cmd:null,att:x.att};L.splice(pos,0,ni);
+  if(S.renderFrom>pos)S.renderFrom++;return true;}
+function lpFcBadge(a){var e=lpExt(a.name||a.path,a.mime).toUpperCase().slice(0,4);return e||'FILE';}
+function lpFcEls(el,att){var box=lpEl('div','lpfcs'),ch=lpChatOf(LP.sel),want=[];
+  att.forEach(function(a){var c=lpEl('div','lpfc');c.dataset.path=a.path;var st=(LP.fblob||{})[a.path];
+    var o=lpEl('a','lpfco');o.dataset.path=a.path;o.target='_blank';o.rel='noopener noreferrer';var u=lpFurl(a.path);if(u)o.href=u;else want.push(a.path);
+    o.appendChild(lpEl('span','lpfcb',lpFcBadge(a)));var tx=lpEl('span','lpfct');tx.appendChild(lpEl('span','lpfn',a.name));
+    tx.appendChild(lpEl('span','lpfs',lpSize(a.size)+' · '+lpFcBadge(a)));o.appendChild(tx);c.appendChild(o);
+    var row=lpEl('div','lpfca');var d=lpEl('button','lpfcx','Download');d.type='button';d.dataset.lptap='fdl';d.dataset.path=a.path;
+    var s=lpEl('button','lpfcx lpfcsh',st&&st.bad?'Damaged':'Share');s.type='button';s.dataset.lptap='fshare';s.dataset.path=a.path;if(st&&st.bad)s.disabled=true;
+    row.appendChild(d);row.appendChild(s);c.appendChild(row);box.appendChild(c);});
+  el.appendChild(box);if(want.length&&ch)lpFurlLoad(ch.chat_key,want);
+  att.forEach(function(a){if(lpFurl(a.path)&&a.size>0&&a.size<=LP_FC_PRE)lpFcGet(a);});}
+function lpFcFind(p){var S=LP.sess[LP.sel],L=S?S.items:[];for(var i=L.length-1;i>=0;i--){var A=L[i].att;if(A)for(var j=0;j<A.length;j++)if(A[j].path===p)return A[j];}return null;}
+/* background fetch of every small file on screen that has a view link */
+function lpFcScan(){Array.prototype.forEach.call(document.querySelectorAll('#lpConv .lpfc[data-path]'),function(c){var a=lpFcFind(c.dataset.path);
+  if(a&&a.size>0&&a.size<=LP_FC_PRE)lpFcGet(a);});}
+function lpFcHex(b){var h='',v=new Uint8Array(b);for(var i=0;i<v.length;i++)h+=(v[i]<16?'0':'')+v[i].toString(16);return h;}
+/* the checked bytes of one file, fetched once: {file} when ready, {bad} when its sha256 does not match */
+function lpFcGet(a){LP.fblob=LP.fblob||{};var st=LP.fblob[a.path];if(st)return st.p||Promise.resolve(st);var u=lpFurl(a.path);if(!u)return Promise.resolve(null);
+  st=LP.fblob[a.path]={at:Date.now()};
+  st.p=fetch(u,{credentials:'omit'}).then(function(r){if(!r.ok)throw new Error('download '+r.status);return r.arrayBuffer();}).then(function(buf){
+    if(buf.byteLength!==a.size)return {bad:'size'};
+    var ck=(window.crypto&&crypto.subtle&&a.sha256)?crypto.subtle.digest('SHA-256',buf).then(function(h){return lpFcHex(h)===a.sha256;}):Promise.resolve(true);
+    return ck.then(function(ok){if(!ok)return {bad:'sha256'};var f;try{f=new File([buf],a.name,{type:a.mime});}catch(e){f=new Blob([buf],{type:a.mime});f.name=a.name;}return {file:f,size:buf.byteLength};});
+  }).then(function(res){delete st.p;if(!res){delete LP.fblob[a.path];return null;}Object.assign(st,res);
+    if(res.bad)Array.prototype.forEach.call(document.querySelectorAll('#lpConv .lpfcsh[data-path]'),function(b){if(b.dataset.path===a.path){b.textContent='Damaged';b.disabled=true;}});
+    lpFcTrim();return st;},function(){delete LP.fblob[a.path];return null;});
+  return st.p;}
+function lpFcTrim(){var ks=Object.keys(LP.fblob||{}).filter(function(k){return LP.fblob[k].file;}),tot=0;ks.sort(function(x,y){return LP.fblob[y].at-LP.fblob[x].at;});
+  ks.forEach(function(k){tot+=LP.fblob[k].size||0;if(tot>LP_FC_KEEP)delete LP.fblob[k];});}
+function lpFcShare(b){var a=lpFcFind(b.dataset.path);if(!a)return;var st=(LP.fblob||{})[a.path];
+  if(st&&st.bad){toast('That file did not arrive intact, so it is not shared');return;}
+  if(st&&st.file){var data={files:[st.file],title:a.name};
+    if(navigator.share&&(!navigator.canShare||navigator.canShare(data))){navigator.share(data).catch(function(e){if(e&&e.name!=='AbortError')toast('Share did not open: '+String(e.name||'error'));});return;}
+    lpFcSave(st.file,a.name);toast('Share is not available here: saved instead');return;}
+  if(st&&st.p){toast('Getting it ready · tap Share again in a moment');return;}
+  if(!lpFurl(a.path)){var ch=lpChatOf(LP.sel);if(ch)lpFurlLoad(ch.chat_key,[a.path]);toast('Getting the link · tap Share again');return;}
+  toast('Getting it ready · tap Share again in a moment');
+  lpFcGet(a).then(function(r){if(r&&r.file)toast('Ready · tap Share');});}
+function lpFcSave(f,name){try{var u=URL.createObjectURL(f),x=document.createElement('a');x.href=u;x.download=name;x.rel='noopener';document.body.appendChild(x);x.click();x.remove();setTimeout(function(){URL.revokeObjectURL(u);},60000);}catch(e){toast('Download failed');}}
+function lpFcDownload(b){var a=lpFcFind(b.dataset.path);if(!a)return;var st=(LP.fblob||{})[a.path];
+  if(st&&st.bad){toast('That file did not arrive intact');return;}
+  if(st&&st.file){lpFcSave(st.file,a.name);return;}
+  var u=lpFurl(a.path);if(!u){var ch=lpChatOf(LP.sel);if(ch)lpFurlLoad(ch.chat_key,[a.path]);toast('Getting the link · tap Download again');return;}
+  var w=window.open(u+(u.indexOf('?')<0?'?':'&')+'download='+encodeURIComponent(a.name),'_blank','noopener');if(!w)location.href=u+(u.indexOf('?')<0?'?':'&')+'download='+encodeURIComponent(a.name);}
 function lpViewOpen(im){var v=lpG('lpView');if(!v||!im||!im.getAttribute('src'))return;v.textContent='';
   var i=lpEl('img');i.id='lpViewI';i.src=im.src;i.alt=im.alt||'photo';var o=lpEl('a',null,'Open full size');o.id='lpViewO';o.href=im.src;o.target='_blank';o.rel='noopener noreferrer';
   v.appendChild(i);v.appendChild(o);LP.viewOn=true;lpTog(v,'on',true);}
@@ -2064,7 +2140,8 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='copy')lpOnCopy(t.el);else if(w==='sheet')lpOnSheet(t.el.getAttribute('data-act'));else if(w==='sheetbg')lpSheetClose();
   else if(w==='selcopy')lpSelCopy(t.el);else if(w==='seldone')lpSelOff();else if(w==='paste')lpPaste();else if(w==='mic')lpMic();
   else if(w==='retry')lpOnRetry(t.el);else if(w==='chatok')lpOnChatOk();
-  else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();}
+  else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();
+  else if(w==='fshare')lpFcShare(t.el);else if(w==='fdl')lpFcDownload(t.el);}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;

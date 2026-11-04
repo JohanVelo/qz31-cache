@@ -42,8 +42,21 @@ self.addEventListener('push', function (e) {
     data: { ticket_id: d.ticket_id || null, url: d.url || ('./index.html' + (d.ticket_id ? ('?t=' + d.ticket_id) : '')) },
     vibrate: [60, 30, 60]
   };
-  e.waitUntil(self.registration.showNotification(title, opts));
+  var laptop = /^laptop-/.test(String(d.tag || ''));
+  e.waitUntil(self.registration.showNotification(title, opts).then(function () { return laptop ? vrBadgeAdd(1) : null; }));
 });
+
+/* unread badge: a small counter in Cache Storage, shared with the page (it writes the true count) */
+var BADGE_CACHE = 'vr-badge', BADGE_KEY = './__badge';
+function vrBadgeGet() { return caches.open(BADGE_CACHE).then(function (c) { return c.match(BADGE_KEY); }).then(function (r) { return r ? r.text() : '0'; }).then(function (s) { var n = parseInt(s, 10); return n > 0 ? n : 0; }, function () { return 0; }); }
+function vrBadgeSet(n) {
+  n = Math.max(0, Math.min(999, n | 0));
+  return caches.open(BADGE_CACHE).then(function (c) { return c.put(BADGE_KEY, new Response(String(n))); }).catch(function () {}).then(function () {
+    try { if (n > 0 && self.navigator.setAppBadge) return self.navigator.setAppBadge(n); if (self.navigator.clearAppBadge) return self.navigator.clearAppBadge(); } catch (_) {}
+  }).catch(function () {});
+}
+function vrBadgeAdd(k) { return vrBadgeGet().then(function (n) { return vrBadgeSet(n + k); }); }
+self.addEventListener('message', function (e) { var m = e.data || {}; if (m && m.type === 'vr-badge') e.waitUntil(vrBadgeSet(m.n)); });
 
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();

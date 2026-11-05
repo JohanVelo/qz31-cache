@@ -798,7 +798,7 @@ body.nt-on #ntFab{display:none}
     <div class="kp" id="kp"></div>
     <div class="tabs" id="tabs"></div>
     <div class="tools">
-      <input class="search" id="q" placeholder="search tickets…" oninput="STATE.q=this.value;render()">
+      <input class="search" id="q" placeholder="search tickets…" oninput="vrQ(this)" onchange="vrQPaint()">
       <button class="sortbtn" id="selbtn" onclick="toggleSelMode()" title="select multiple">☑ Select</button>
       <button class="sortbtn" id="sortbtn" onclick="cycleSort()">↕ newest</button>
     </div>
@@ -901,7 +901,7 @@ function whoChip(id){var a=whoList(id),p=whoPeople(id),w=H(whoSheet(id)),h='';
   return h;}
 function whoSheet(id){var a=whoList(id),p=whoPeople(id),o=[];if(p.length)o.push('Open now: '+p.map(function(x){return x.name;}).join(', '));
   if(a.length)o.push('Terminal: '+a.map(function(x){return x.name+(x.status==='busy'?' (working)':' (open)');}).join(', '));return o.join(' · ');}
-function whoSet(on,people){on=on||{};people=people||{};Object.keys(on).forEach(function(k){(on[k]||[]).forEach(function(x){x.name=lpMask(String(x.name||''));});});var sig=JSON.stringify([on,people]);if(sig===WHO.sig)return;WHO.on=on;WHO.people=people;WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)render();}
+function whoSet(on,people){on=on||{};people=people||{};Object.keys(on).forEach(function(k){(on[k]||[]).forEach(function(x){x.name=lpMask(String(x.name||''));});});var sig=JSON.stringify([on,people]);if(sig===WHO.sig)return;WHO.on=on;WHO.people=people;WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)vrBgRender();}
 function whoTick(){if(document.hidden||WHO.busy||!STATE.me)return Promise.resolve();if(STATE.view&&STATE.view!=='list'&&STATE.view!=='board')return Promise.resolve();
   WHO.busy=true;return api('/who-on-it').then(function(r){WHO.busy=false;var ok=r.ok&&r.j;whoSet(ok?r.j.on:{},ok?r.j.people:{});},function(){WHO.busy=false;whoSet({},{});});}
 setInterval(whoTick,10000);
@@ -1191,7 +1191,7 @@ function load(){
         if(_vis&&_fresh.length>4)toast('🆕 +'+(_fresh.length-4)+' more new tickets');}
       /* 'shipped' OS notification is the server Web Push too — removed the in-app duplicate that double-notified */
     }
-    render();
+    if(STATE.first)render();else vrBgRender();
     notifyFromFeed();
     if(STATE.first){try{if(localStorage.getItem('vr_view')==='stats')setView('stats');}catch(e){}}
     if(DEEP){var dl=DEEP;DEEP=null;if(find(dl)){openT(dl);}else{toast('ticket #'+dl+' not found');}}
@@ -1205,24 +1205,34 @@ window.addEventListener('unhandledrejection',function(){try{toast('network hiccu
 function counts(){var o=0,p=0,d=0,reps={};STATE.tickets.forEach(function(t){if(t.open&&!t.prog)o++;if(t.prog)p++;if(t.done)d++;reps[t.who]=1});return{o:o,p:p,d:d,r:Object.keys(reps).length}}
 function animateNum(el,to,from){if(!el)return;from=from||0;if(from===to){el.textContent=to;return;}var t0=null;function step(ts){if(!t0)t0=ts;var k=Math.min((ts-t0)/650,1);k=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*k);if(k<1)requestAnimationFrame(step)}requestAnimationFrame(step)}
 function flashIf(id,from,to){if(from===to)return;var el=document.getElementById(id);if(!el||!el.closest)return;var kc=el.closest('.kc');if(!kc)return;kc.classList.add('flash');setTimeout(function(){kc.classList.remove('flash')},700);}
+/* Premium S1: a repaint that changes nothing does not touch the DOM, so a tap, selection or scroll in progress survives it. */
+function vrSet(el,html){if(!el)return false;if(el.__vrH===html&&el.firstChild)return false;el.__vrH=html;el.innerHTML=html;return true;}
+var VR_IN={at:0,t:0,bg:0,cost:20};
+function vrSelIn(id){try{var s=window.getSelection&&getSelection(),b=document.getElementById(id);return !!(s&&!s.isCollapsed&&b&&b.contains(s.anchorNode));}catch(e){return false;}}
+/* A background refresh waits for a typist or a reader who is selecting text; a tap or a typed filter never does. */
+function vrBgRender(){clearTimeout(VR_IN.bg);if(Date.now()-VR_IN.at<500||vrSelIn('list')||vrSelIn('board')||vrSelIn('stats')){VR_IN.bg=setTimeout(vrBgRender,500);return;}render();}
+/* Ticket search box: the box itself never waits. The list follows as soon as the typist pauses; slower lists wait a little longer. */
+function vrQ(i){STATE.q=i.value;VR_IN.at=Date.now();clearTimeout(VR_IN.t);VR_IN.t=setTimeout(vrQPaint,Math.max(40,Math.min(240,VR_IN.cost*2.5)));}
+document.addEventListener('input',function(){VR_IN.at=Date.now();},true);
+function vrQPaint(){clearTimeout(VR_IN.t);var t=performance.now();render();VR_IN.cost=performance.now()-t;}
 function render(){
   if(STATE.view==='agentic'){renderAgentic();return;}
   if(STATE.view==='agents'){renderAgents();return;}
   if(STATE.view==='graph'){renderGraph();return;}
   if(STATE.view==='laptop'){renderLaptop();return;}
   var c=counts();
-  document.getElementById('kp').innerHTML=
+  vrSet(document.getElementById('kp'),
    '<div class="kc open"><div class="l">OPEN</div><div class="n" id="n0">'+c.o+'</div></div>'+
    '<div class="kc prog"><div class="l">IN-PROG</div><div class="n" id="n1">'+c.p+'</div></div>'+
    '<div class="kc done"><div class="l">SHIPPED</div><div class="n" id="n2">'+c.d+'</div></div>'+
-   '<div class="kc rep"><div class="l">REPORTERS</div><div class="n" id="n3">'+c.r+'</div></div>';
+   '<div class="kc rep"><div class="l">REPORTERS</div><div class="n" id="n3">'+c.r+'</div></div>');
   var pc=STATE.prevC||{o:0,p:0,d:0,r:0};
   flashIf('n0',pc.o,c.o);flashIf('n1',pc.p,c.p);flashIf('n2',pc.d,c.d);flashIf('n3',pc.r,c.r);
   animateNum(document.getElementById('n0'),c.o,pc.o);animateNum(document.getElementById('n1'),c.p,pc.p);animateNum(document.getElementById('n2'),c.d,pc.d);animateNum(document.getElementById('n3'),c.r,pc.r);
   STATE.prevC=c;
   // tabs
   var tabs=[["all","ALL"],["open","OPEN"],["prog","IN-PROG"],["done","SHIPPED"]];
-  document.getElementById('tabs').innerHTML=tabs.map(function(t){return '<div class="tab '+(STATE.tab===t[0]?'on':'')+'" onclick="setTab(\''+t[0]+'\')">'+t[1]+'</div>'}).join('');
+  vrSet(document.getElementById('tabs'),tabs.map(function(t){return '<div class="tab '+(STATE.tab===t[0]?'on':'')+'" onclick="setTab(\''+t[0]+'\')">'+t[1]+'</div>'}).join(''));
   // reporter chips + kind
   var reps={};STATE.tickets.forEach(function(t){reps[t.who]=t.color});
   var ch='<div class="chip '+(STATE.kind==='all'&&STATE.reporter===null?'on':'')+'" onclick="setKind(\'all\');setRep(null)">ALL</div>'+
@@ -1235,14 +1245,14 @@ function render(){
   STATE.views.forEach(function(v,i){ch+='<div class="chip vw'+(viewActive(v)?' on':'')+'" onclick="applyView('+i+')">⭐ '+H(v.name)+'<span class="vx" onclick="delView(event,'+i+')">✕</span></div>';});
   ch+='<div class="chip addv" onclick="saveView()" title="save the current filter as a view">＋ Save view</div>';
   STATE.repNames=Object.keys(reps);STATE.repNames.forEach(function(n,ri){ch+='<div class="chip '+(STATE.reporter===n?'on':'')+'" onclick="setRep(STATE.repNames['+Number(ri)+'])"><i style="background:'+safeColor(reps[n])+'"></i>'+H(n)+'</div>'});
-  document.getElementById('chips').innerHTML=ch;
+  vrSet(document.getElementById('chips'),ch);
   // new alert
   var al=document.getElementById('alert');
   if(STATE.newIds.length){al.classList.add('on');al.innerHTML='🔔 '+STATE.newIds.length+' NEW since you last looked — tap to clear';}
   else{al.classList.remove('on');}
   var _un=unreadCount();var _bell=document.getElementById('bell');var _bdg=document.getElementById('bdg');
   if(_un>0){_bell.classList.add('has');_bdg.textContent=_un>99?'99+':_un;}else{_bell.classList.remove('has');}
-  document.getElementById('list').innerHTML=gsHint()+listHtml();
+  vrSet(document.getElementById('list'),gsHint()+listHtml());
   buildTicker();
   if(STATE.view==='board')renderBoard();
   if(STATE.view==='stats')renderStats();
@@ -1493,7 +1503,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261105-22';
+var LP_BUILD='CHAT-20261105-23';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2399,8 +2409,12 @@ var LP_UPD_MS=300000;
 function lpUpdCheck(){if(!/^https:/.test(location.protocol)||LP.updBusy)return;LP.updBusy=true;
   fetch(location.pathname+'?v='+Date.now(),{cache:'no-store',credentials:'omit'}).then(function(r){return r.ok?r.text():'';}).then(function(h){LP.updBusy=false;
     var m=/var LP_BUILD='([^']+)'/.exec(h||'');if(!m||m[1]===LP_BUILD)return;LP.updNew=m[1];lpUpdTry();},function(){LP.updBusy=false;});}
-function lpUpdTry(){if(!LP.updNew)return;var a=document.activeElement,busy=lpBoxVal().trim()||(LP.tray&&LP.sel&&lpTray(LP.sel).length)||LP.sheet||LP.composing||(a&&a.classList&&a.classList.contains('lpqri'));
-  if(busy){if(!LP.updToast){LP.updToast=1;toast('A new version is ready: it loads when your message is sent');}setTimeout(lpUpdTry,15000);return;}
+function vrBusy(){var a=document.activeElement,t=a&&a.tagName;if(((t==='INPUT'||t==='TEXTAREA')&&a.value)||t==='SELECT'||(a&&a.isContentEditable))return true;
+  var r=document.getElementById('reply-text');if(r&&r.value.trim())return true;var q=document.getElementById('q');if(q&&q.value)return true;
+  var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on'))return true;var g=document.getElementById('gSrch');if(g&&!g.hidden)return true;
+  var c=document.getElementById('cmdk');if(c&&c.classList.contains('on'))return true;if(document.querySelector('#teamovl[style*="flex"],#notifovl[style*="flex"],#qrovl[style*="flex"]'))return true;return false;}
+function lpUpdTry(){if(!LP.updNew)return;var a=document.activeElement,busy=vrBusy()||lpBoxVal().trim()||(LP.tray&&LP.sel&&lpTray(LP.sel).length)||LP.sheet||LP.composing||(a&&a.classList&&a.classList.contains('lpqri'));
+  if(busy){if(!LP.updToast&&lpBoxVal().trim()){LP.updToast=1;toast('A new version is ready: it loads when your message is sent');}clearTimeout(LP.updT);LP.updT=setTimeout(lpUpdTry,15000);return;}
   try{lpDraftNow();}catch(e){}LP.reloadNow();}
 LP.reloadNow=function(){location.reload();};
 setInterval(lpUpdCheck,LP_UPD_MS);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')lpUpdCheck();});
@@ -3224,7 +3238,7 @@ function renderBoard(){
        '<div class="bcolh"><span class="bdot" style="background:'+safeColor(c.dot)+'"></span>'+c.lab+'<span class="bn">'+items.length+'</span></div>'+
        (items.map(bCard).join('')||'<div class="bempty">—</div>')+'</div>';
   });
-  document.getElementById('board').innerHTML=h+'</div>';
+  vrSet(document.getElementById('board'),h+'</div>');
 }
 function bCard(t){
   var ic=t.kind==='bug'?'🐛':'✨';
@@ -3258,8 +3272,11 @@ function moveStatus(id,st){
 }
 /* ── similarity (dedup + related) ── */
 function tokens(s){return String(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(function(w){return w.length>2;});}
-function sim(a,b){var A=tokens(a),B=tokens(b);if(!A.length||!B.length)return 0;var sb={};B.forEach(function(w){sb[w]=1;});var seen={},inter=0;A.forEach(function(w){if(sb[w]&&!seen[w]){inter++;seen[w]=1;}});var uni={};A.concat(B).forEach(function(w){uni[w]=1;});return inter/Object.keys(uni).length;}
-function findDupes(items){var p=[];for(var i=0;i<items.length;i++)for(var j=i+1;j<items.length;j++){if(sim(items[i].title,items[j].title)>=0.5)p.push([items[i].id,items[j].id]);}return p;}
+var VR_TOK=Object.create(null);
+function vrTok(s){s=String(s||'');var c=VR_TOK[s];if(c)return c;var o=Object.create(null),n=0;tokens(s).forEach(function(w){if(!o[w]){o[w]=1;n++;}});return VR_TOK[s]={o:o,n:n};}
+function vrSim(a,b){if(!a.n||!b.n)return 0;var i=0,k;for(k in a.o)if(b.o[k])i++;return i/(a.n+b.n-i);}
+function sim(a,b){return vrSim(vrTok(a),vrTok(b));}
+function findDupes(items,most){var p=[],T=items.map(function(t){return vrTok(t.title);});for(var i=0;i<items.length;i++)for(var j=i+1;j<items.length;j++){if(vrSim(T[i],T[j])>=0.5){p.push([items[i].id,items[j].id]);if(most&&p.length>=most)return p;}}return p;}
 /* ── command palette ── */
 var CMD_SEL=0,CMD_ITEMS=[];
 function cmdItems(q){
@@ -3505,7 +3522,7 @@ window.addEventListener('error',function(e){_vrLogErr(e.message,(e.error&&e.erro
 window.addEventListener('unhandledrejection',function(e){var r=e.reason;_vrLogErr((r&&r.message)||String(r),(r&&r.stack)||'');});
 if('serviceWorker' in navigator){try{
   navigator.serviceWorker.register('sw.js').then(function(reg){try{reg.update();}catch(e){}setInterval(function(){try{reg.update();}catch(e){}},120000);}).catch(function(){});
-  var _vrReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_vrReloaded)return;_vrReloaded=true;location.reload();});
+  var _vrReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_vrReloaded)return;_vrReloaded=true;LP.updNew=LP.updNew||'sw';lpUpdTry();});
 }catch(e){}}
 /* Raise a Windows toast for ANY new activity, not just new tickets.
    The first version only fired for tickets with an id higher than the last seen, so
@@ -3589,7 +3606,7 @@ function renderStats(){
   var mxt=Math.max.apply(null,rtArr.map(function(r){return r.o+r.d;}).concat([1]));
   var reprows=rtArr.map(function(r){return '<div class="srep"><span class="rn"><i style="background:'+safeColor(r.color)+'"></i>'+H(r.name)+'</span><span class="rb"><i style="width:'+Math.round((r.o+r.d)/mxt*100)+'%;background:'+safeColor(r.color)+'"></i></span><span class="rc"><b>'+r.o+'</b> open · '+r.d+' done</span></div>';}).join('')||'<div style="color:var(--txt3);font-family:var(--m);font-size:11px">no reporters</div>';
   var feedHtml=buildFeed().slice(0,7).map(function(f){return '<div class="sfeed-item"><span class="fi" style="background:'+safeColor(f.color||'var(--cyan,#22D3EE)')+'"></span><div>'+f.text+'<div class="ft">'+f.sub+'</div></div></div>';}).join('')||'<div style="color:var(--txt3);font-family:var(--m);font-size:11px">no recent activity</div>';
-  document.getElementById('stats').innerHTML=
+  vrSet(document.getElementById('stats'),
    '<div class="sgrid">'+
     '<div class="scard"><div class="slab">// OPEN BY REPORTER</div><div class="dwrap">'+donut+'<div class="dleg">'+leg+'</div></div></div>'+
     '<div class="scard"><div class="slab">// QUEUE STATUS</div><div class="skpis">'+
@@ -3608,7 +3625,7 @@ function renderStats(){
     '<div class="scard sfull"><div class="slab">// 14-DAY INTAKE (new tickets/day)</div><div class="sspark">'+spark+'</div></div>'+
     '<div class="scard sfull"><div class="slab">// 14-DAY SHIPPED (resolved/day)</div><div class="sspark">'+shipspark+'</div></div>'+
     '<div class="scard sfull"><div class="slab">// THROUGHPUT · avg resolve '+avg+'</div>'+reprows+'</div>'+
-   '</div>';
+   '</div>');
 }
 function applyFilters(){
   var ops=parseQuery(STATE.q);
@@ -3651,7 +3668,7 @@ function listHtml(){
     var pinned=STATE.tickets.filter(function(t){return isPinned(t.id);});
     if(pinned.length)h+=lsec('📌','Pinned',pinned.length,'violet')+'<div class="rowgrid">'+pinned.map(rowHtml).join('')+'</div>';
     h+=lsec('📥','Inbox',opens.length,'amber');
-    var dupes=findDupes(opens);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+Number(p[0])+' &amp; #'+Number(p[1])+' look similar — possible duplicate</div>';}).join('');
+    var dupes=findDupes(opens,3);if(dupes.length)h+=dupes.slice(0,3).map(function(p){return '<div class="dupe">⚠ #'+Number(p[0])+' &amp; #'+Number(p[1])+' look similar — possible duplicate</div>';}).join('');
     h+=opens.length?('<div class="rowgrid">'+opens.map(rowHtml).join('')+'</div>'):'<div class="empty">✦ ALL CLEAR — nothing waiting</div>';
     if(snoozed.length)h+=lsec('😴','Snoozed',snoozed.length,'')+'<div class="rowgrid">'+snoozed.map(snoozeRow).join('')+'</div>';
     h+=lsec('🚀','Shipped · Recent',done.length,'green')+(done.length?('<div class="rowgrid">'+done.slice(0,40).map(rowHtml).join('')+'</div>'):'<div class="empty" style="color:var(--txt3);border-color:var(--line)">none</div>');

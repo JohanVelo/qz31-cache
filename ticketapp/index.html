@@ -96,6 +96,10 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .who{font-family:var(--m);font-size:9px;display:flex;align-items:center;gap:5px;flex:0 0 auto}.who i{width:7px;height:7px;border-radius:50%}
 .badge{font-family:var(--m);font-size:9px;color:var(--cyan);background:rgba(26,229,255,.1);border-radius:9px;padding:2px 6px;flex:0 0 auto}
 .meta-r{font-family:var(--m);font-size:9px;color:var(--txt3);flex:0 0 auto;min-width:26px;text-align:right}
+.agec{font-size:10px;font-weight:600;min-width:0;padding:1px 6px;border-radius:9px;text-align:center;background:rgba(127,127,127,.14)}
+.agec.amb{color:var(--amber);background:rgba(255,176,32,.14)}
+.agec.red{color:var(--red);background:rgba(255,82,82,.14)}
+@media(max-width:759px){.row{flex-wrap:wrap}.row .ttl{flex:1 1 140px}}
 .empty{font-family:var(--m);font-size:13.5px;color:var(--green);text-align:center;padding:28px 18px;background:var(--cell);border:1px dashed rgba(61,255,154,.25);border-radius:10px;margin-top:4px;animation:clearpulse 2.6s ease-in-out infinite}
 @keyframes clearpulse{50%{box-shadow:0 0 24px rgba(61,255,154,.13);border-color:rgba(61,255,154,.4)}}
 /* detail sheet */
@@ -863,7 +867,8 @@ function safeB64(s){s=String(s==null?'':s);return /^[A-Za-z0-9+\/=]+$/.test(s)?s
 function safeQr(s){var m=/^data:image\/png;base64,([A-Za-z0-9+\/=]+)$/.exec(String(s==null?'':s));return m?'data:image/png;base64,'+m[1]:'';}
 function safeColor(c){var s=String(c==null?'':c);return (/^#[0-9A-Fa-f]{3,8}$/.test(s)||/^var\(--[a-z0-9-]+(,#[0-9A-Fa-f]{3,8})?\)$/.test(s))?s:'#9AA4B8';}
 function ageH(iso){try{return (Date.now()-new Date(iso).getTime())/3.6e6}catch(e){return 0}}
-function ageS(iso){var h=ageH(iso);return h<48?(h|0)+'h':((h/24)|0)+'d'}
+function ageS(iso){var h=ageH(iso);if(isNaN(h))return '';if(h<1)return Math.max(0,(h*60)|0)+'m';return h<48?(h|0)+'h':((h/24)|0)+'d'}
+function ageChip(t){var w=workingDaysSince(t.created);return '<span class="meta-r agec'+(w>=3?' red':(w>=1?' amb':''))+'" title="open '+w+' working days (weekends + SA holidays excluded)">'+ageS(t.created)+'</span>';}
 /* SA public holidays (weekday ones matter; weekends already skipped). 2026-2027. */
 var ZA_HOLIDAYS={'2026-01-01':1,'2026-03-21':1,'2026-04-03':1,'2026-04-06':1,'2026-04-27':1,'2026-05-01':1,'2026-06-16':1,'2026-08-09':1,'2026-08-10':1,'2026-09-24':1,'2026-12-16':1,'2026-12-25':1,'2026-12-26':1,'2027-01-01':1,'2027-03-21':1,'2027-03-22':1,'2027-03-26':1,'2027-03-29':1,'2027-04-27':1,'2027-05-01':1,'2027-06-16':1,'2027-08-09':1,'2027-09-24':1,'2027-12-16':1,'2027-12-25':1,'2027-12-26':1,'2027-12-27':1};
 /* whole working days elapsed since iso (skips Sat/Sun + SA public holidays) */
@@ -1409,7 +1414,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-16';
+var LP_BUILD='CHAT-20261105-17';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3116,7 +3121,7 @@ function bCard(t){
   return '<div class="bcard" draggable="true" ondragstart="bStart(event,'+Number(t.id)+')" ondragend="bEnd(event)" onclick="openT('+Number(t.id)+')" style="border-left-color:'+safeColor(t.color)+'">'+
     '<div class="bctop"><span class="tid">#'+H(t.id)+'</span>'+pri+asg+'</div>'+
     '<div class="bctt">'+ic+' '+H(t.title)+'</div>'+
-    '<div class="bcf"><span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span><span class="meta-r">'+(t.done?('v'+(H(t.ver)||'?')):ageS(t.created))+'</span></div></div>';
+    '<div class="bcf"><span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span>'+(t.done?('<span class="meta-r">v'+(H(t.ver)||'?')+'</span>'):ageChip(t))+'</div></div>';
 }
 var _drag=null;
 function bStart(e,id){_drag=id;try{e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';}catch(_){}var el=e.currentTarget;setTimeout(function(){if(el&&el.classList)el.classList.add('dragging');},0);}
@@ -3545,8 +3550,7 @@ function listHtml(){
 }
 function rowHtml(t){
   var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
-  var ic=t.kind==='bug'?'🐛':'✨',right=t.done?('v'+(H(t.ver)||'?')):ageS(t.created);
-  var ageStyle='';if(!t.done){var _wd=workingDaysSince(t.created);if(_wd>=3)ageStyle=' style="color:var(--red);font-weight:600"';else if(_wd>=1)ageStyle=' style="color:var(--amber)"';}
+  var ic=t.kind==='bug'?'🐛':'✨',right=t.done?('<span class="meta-r">v'+(H(t.ver)||'?')+'</span>'):ageChip(t);
   var thread=t.thread&&t.thread.length?('<span class="badge">💬 '+t.thread.length+'</span>'):'';
   var pri=priClass(t.priority)?('<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>'):'';
   var stale=(!t.done && workingDaysSince(t.created)>=2)?'<span class="stale" title="open >2 working days (weekends + SA holidays excluded)">⚠</span>':'';
@@ -3560,7 +3564,7 @@ function rowHtml(t){
    '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+dueb+stale+thread+asg+
    '<span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span>'+
    '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+Number(t.id)+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
-   '<span class="meta-r"'+ageStyle+'>'+right+'</span></div>';
+   right+'</div>';
 }
 function insightsHtml(){
   var ts=STATE.tickets;if(!ts.length)return'';

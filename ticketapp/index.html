@@ -1289,7 +1289,47 @@ html.ui2 .cmdk-in:focus{outline:0;box-shadow:none}
 html.ui2 .ui2ic{display:inline-flex;vertical-align:-3px;margin-right:5px}
 html.ui2 #agentic button,html.ui2 #agents button{font-family:var(--sans);letter-spacing:0}
 html.ui2 #agentic button .ui2ic{margin-right:4px}
-html.ui2 #agents .ui2ic svg{color:var(--accent)}/*UI2CSSEND*/
+html.ui2 #agents .ui2ic svg{color:var(--accent)}
+
+/* Now bar */
+#ui2Now{position:fixed;z-index:41;left:12px;right:12px;bottom:calc(var(--ui2kb,0px) + max(env(safe-area-inset-bottom),12px) + var(--dockh) + 64px);min-height:60px;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 10px;border-radius:22px;animation:ui2nowin 340ms var(--e-spring) both;box-shadow:var(--shade),inset 0 0 0 .75px color-mix(in oklab,var(--warn) 42%,transparent),inset 0 1px 0 var(--rim)}
+#ui2Now[hidden]{display:none}
+@keyframes ui2nowin{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+#ui2Now .lpca{flex:0 0 40px;width:40px;height:40px;border-radius:12px;font-size:16px}
+#ui2Now .nm{flex:1;min-width:0}
+#ui2Now b{display:block;font:600 14.5px/19px var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ui2Now span:not(.lpca){display:block;font:400 13px/18px var(--sans);color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ui2Now .lpbtn{flex:none;min-width:62px;min-height:44px;margin:0;padding:0 13px;border:0;border-radius:15px;font:600 14px/1 var(--sans);letter-spacing:0;text-transform:none;transition:transform var(--t-tap)}
+#ui2Now .lpbtn:active{transform:scale(.95);transition:none}
+#ui2Now .op{background:var(--fill);color:var(--fill-ink)}
+#ui2Now .al{background:var(--s3);color:var(--ink)}
+html.ui2[data-ui2now] #list,html.ui2[data-ui2now] #board,html.ui2[data-ui2now] #stats,html.ui2[data-ui2now] #agentic,html.ui2[data-ui2now] #agents{padding-bottom:calc(220px + env(safe-area-inset-bottom))}
+html.ui2[data-ui2kb] #ui2Now{display:none}
+@media (min-width:960px){#ui2Now{left:calc(var(--rail) + 16px);right:auto;bottom:16px;width:440px}}
+@media (prefers-reduced-motion:reduce){#ui2Now{animation:none!important}}
+
+/* Stuck, not told, brief */
+html.ui2 .u-stuck .lpcmg{color:var(--warn)}
+html.ui2 .u-stuck .lpcmg::before{animation:none;border-color:var(--warn)}
+html.ui2 .u-stuck .ui2dot{background:var(--warn)}
+html.ui2 .u-stuck .ui2dot::after{display:none}
+html.ui2 .ui2nt{order:1;font:500 13px/20px var(--sans);padding:0 7px;border-radius:8px;background:color-mix(in oklab,var(--warn) 15%,var(--s2));color:var(--warn)}
+html.ui2 .ui2tell{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 10px 10px 14px;border-radius:16px;background:color-mix(in oklab,var(--warn) 11%,var(--s1));box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 32%,transparent);font:400 14px/19px var(--sans);color:var(--ink)}
+html.ui2 .ui2tell .act{flex:none;background:var(--fill);color:var(--fill-ink);box-shadow:none;font-weight:600}
+#ui2Brief{flex:none;margin:0 16px 12px;padding:12px 14px 14px;border-radius:var(--r-group);background:radial-gradient(120% 140% at 100% -20%,color-mix(in oklab,var(--accent) 22%,transparent),transparent 60%),var(--s1);box-shadow:inset 0 0 0 .75px var(--hair2)}
+#ui2Brief[hidden]{display:none}
+html.ui2:not([data-ui2v=list]) #ui2Brief{display:none}
+#ui2Brief .hd{display:flex;align-items:center;gap:8px}
+#ui2Brief .hd b{font:600 15px/20px var(--sans);color:var(--ink)}
+#ui2Brief .hd span{flex:1;font:400 13px/18px var(--sans);color:var(--ink2)}
+#ui2Brief .x{width:36px;height:36px;display:grid;place-items:center;margin:-6px -8px -6px 0;border:0;border-radius:50%;background:none;color:var(--ink2)}
+#ui2Brief .it{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px}
+#ui2Brief .c b{display:block;font:640 22px/26px var(--sans);letter-spacing:-.02em;color:var(--ink)}
+#ui2Brief .c span{font:400 13px/17px var(--sans);color:var(--ink2)}
+html.ui2 .ui2pj{display:flex;gap:6px;margin:-2px -16px 8px;padding:0 16px 4px;overflow-x:auto;scrollbar-width:none}
+html.ui2 .ui2pj::-webkit-scrollbar{display:none}
+html.ui2 .ui2pj .chip{flex:none;cursor:pointer}
+@media (min-width:960px){#ui2Brief{margin:0 24px 12px}html.ui2 .ui2pj{margin:-2px 0 8px;padding:0 0 4px;flex-wrap:wrap}}/*UI2CSSEND*/
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -2018,7 +2058,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-2';
+var LP_BUILD='CHAT-20261106-3';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3021,8 +3061,8 @@ function lpBrGo(){var ta=lpG('lpBrT'),go=lpG('lpBrGo');if(!ta||!go||go.disabled)
 /* Item 12: what Allow would do, in plain words, from the command itself. A hint, never a guarantee. */
 function lpRisk(tool,what){var t=String(tool||''),w=String(what||'');
   if(t==='Bash'||t==='PowerShell'){
-    if(/\b(rm|del|rmdir|Remove-Item|rd)\b|\bformat\b|git\s+(reset\s+--hard|clean|checkout\s+--)|--force\b|\bDROP\s+TABLE\b|\bDELETE\s+FROM\b|\btruncate\b/i.test(w))return {c:'bad',t:'Can delete or overwrite things. Read it before you allow.'};
-    if(/\bgit\s+push\b|\bpublish\b|\bdeploy\b|\bcurl\b[^|]*\b(-X|--request|-d|--data)\b|\bgh\s+(pr|release)\b/i.test(w))return {c:'warn',t:'Sends something off this laptop.'};
+    if(/\b(rm|del|rmdir|Remove-Item|rd)\b|\bformat\b|git\s+(reset\s+--hard|clean|checkout\s+--)|--force\b|\bgit\s+push\b[^|;&]*\s-f\b|\bDROP\s+(?:TABLE|DATABASE|SCHEMA)\b|\bDELETE\s+FROM\b|\btruncate\b/i.test(w))return {c:'bad',t:'Can delete or overwrite things. Read it before you allow.'};
+    if(/\bgit\s+push\b|\bpublish\b|\bdeploy\b|\bcurl\b[^|]*\s(-X|--request|-d|--data)\b|\bgh\s+(pr|release)\b/i.test(w))return {c:'warn',t:'Sends something off this laptop.'};
     return {c:'',t:'Runs a command on the laptop.'};}
   if(t==='Edit'||t==='Write'||t==='NotebookEdit'||t==='MultiEdit')return {c:'',t:'Changes a file on the laptop.'};
   if(t==='Read'||t==='Grep'||t==='Glob')return {c:'',t:'Only reads.'};
@@ -4508,6 +4548,7 @@ var UI2_I={
  compass:'<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  scale:'<path d="M12 4v16M7 20h10M5 7h14M5 7l-2.5 6h5zM19 7l-2.5 6h5z"/>',
  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ share:'<path d="M12 15V4M8 7.5L12 3.5l4 4M6 11.5v7A1.5 1.5 0 0 0 7.5 20h9a1.5 1.5 0 0 0 1.5-1.5v-7"/>',
  sat:'<path d="M5 19a10 10 0 0 1 0-14l14 14a10 10 0 0 1-14 0zM13 11l3.5-3.5M15 4.5a4.5 4.5 0 0 1 4.5 4.5"/>'};
 function ui2Svg(n,s){s=s||24;return '<svg class="i2" width="'+Number(s)+'" height="'+Number(s)+'" viewBox="0 0 24 24" aria-hidden="true">'+(UI2_I[n]||'')+'</svg>';}
 function ui2El(id,cls,html){var e=document.createElement('div');e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
@@ -4543,10 +4584,17 @@ function ui2Mount(){if(UI2.mounted){UI2.on=true;ui2Sync();return;}
     var _sv=setView;setView=function(v){_sv(v);ui2Sync();};
     var _co=lpChatsOpen,_cc=lpChatsClose;lpChatsOpen=function(){_co();ui2Sync();};
     lpChatsClose=function(){if(ui2IsWide()&&UI2.on)return;_cc();ui2Sync();};
-    var _ren=render;render=function(){_ren();ui2Badges();ui2Polish();};
+    var _ren=render;render=function(){_ren();ui2Badges();ui2Polish();ui2BriefCheck();};
     var _lph=lpPaintHead;lpPaintHead=function(){_lph();ui2ChatHead();};
     ui2Overlays();ui2WatchViews();
-    var _ot=openT;openT=function(id){_ot(id);try{ui2SheetPolish();}catch(err){try{console.warn('ui2 sheet',err);}catch(x){}}};
+    b.appendChild((function(){var e=ui2El('ui2Now','ui2gl');e.hidden=true;return e;})());
+    var br=ui2El('ui2Brief');br.hidden=true;app.insertBefore(br,hd.nextSibling);
+    setInterval(ui2NowPoll,8000);setTimeout(ui2NowPoll,800);document.addEventListener('visibilitychange',function(){if(document.hidden)ui2BriefMark();else{ui2NowPoll();ui2BriefCheck();}});
+    var _rh=rowHtml;rowHtml=function(t){var h=_rh(t);return UI2.on&&ui2NotTold(t)?h.replace(/<\/div>\s*$/,'<span class="ui2nt">Not told</span></div>'):h;};
+    var _los=lpOnSheet;lpOnSheet=function(a){if(a==='speak'){var S=LP.sheet,tx=S&&S.it&&S.it.text;lpSheetClose();ui2Speak(tx);return;}_los(a);};
+    var _sv2=setView;setView=function(v){if(window.speechSynthesis&&v!=='laptop')try{speechSynthesis.cancel();}catch(e){}_sv2(v);ui2NowPaint();};
+    var _cl=closeT;closeT=function(){_cl();ui2NowPaint();};
+    var _ot=openT;openT=function(id){_ot(id);ui2NowPaint();try{ui2SheetPolish();}catch(err){try{console.warn('ui2 sheet',err);}catch(x){}}};
     var bk=document.getElementById('back');if(bk){bk.innerHTML=ui2Svg('back',24)+'<span>Back</span>';var shTop=bk.parentNode,tgS=document.createElement('span');tgS.id='ui2ShTag';shTop.appendChild(tgS);}
     var rs=document.getElementById('reply-send');if(rs){rs.innerHTML=ui2Svg('up',22);rs.setAttribute('aria-label','Send reply');}
     var _lcp=lpChatsPaint;lpChatsPaint=function(){if(!UI2.on){_lcp();return;}var sg=ui2ChatsSig(),bx=document.getElementById('lpChats');if(sg===UI2.chatsSig&&bx&&bx.firstChild)return;if(ui2ChatsBusy())return;UI2.chatsSig=sg;try{ui2ChatsPaint();}catch(err){try{console.warn('ui2 chats paint failed',err);}catch(x){}_lcp();}};
@@ -4583,11 +4631,11 @@ function ui2Head(v){var hd=document.getElementById('ui2Hd');if(!hd)return;var h;
   if(hd.__h===h)return;hd.__h=h;hd.innerHTML=h;
   if(!hd.__w){hd.__w=1;hd.addEventListener('click',function(e){var t=e.target.closest?e.target:null;if(!t)return;var b=t.closest('[data-v],[data-m],[data-r]');if(!b)return;if(b.dataset.v)setView(b.dataset.v);else if(b.dataset.m)ui2MoreOpen();else load();});}}
 function ui2Badges(){if(!UI2.on)return;var un=0;try{un=unreadCount();}catch(e){}var b=document.getElementById('ui2BN');if(b)b.textContent=un?(un>99?'99+':String(un)):'';
-  var chats=0;try{if(LP.data)LP.vis.forEach(function(s){chats+=lpUnread(s.session_id)||0;if(s.status==='waiting')chats++;});}catch(e){}
+  var chats=0;try{if(LP.data&&STATE.view==='laptop')LP.vis.forEach(function(s){chats+=lpUnread(s.session_id)||0;if(s.status==='waiting')chats++;});else if(UI2.nowS)chats=ui2NowList().length;else if(LP.data)LP.vis.forEach(function(s){chats+=lpUnread(s.session_id)||0;if(s.status==='waiting')chats++;});}catch(e){}
   var c=document.querySelector('.ui2d em[data-n=chats]');if(c)c.textContent=chats?(chats>99?'99+':String(chats)):'';
   /* the laptop app reads this for its taskbar dot; a browser tab shows it too */
   var ttl=(un+chats)>0?'('+(un+chats)+') Velocity Relay':'Velocity Relay';if(document.title!==ttl)document.title=ttl;}
-function ui2Tick(){if(document.hidden||!UI2.on)return;ui2Badges();if(UI2.more)ui2MorePaint();}
+function ui2Tick(){if(document.hidden||!UI2.on)return;ui2Badges();ui2NowPaint();if(UI2.more)ui2MorePaint();}
 function ui2OnScroll(){var y=document.getElementById('app').scrollTop,t=document.getElementById('ui2Tool');if(!t)return;if(Math.abs(y-UI2.lastY)<8)return;var down=y>UI2.lastY&&y>60;UI2.lastY=y;if(t.classList.contains('tuck')!==down&&document.activeElement&&document.activeElement.id!=='q')t.classList.toggle('tuck',down);}
 /* keyboard up on a phone: the search pill rides above it and the bar steps aside */
 function ui2Kb(){if(!UI2.on)return;var vv=window.visualViewport,r=document.documentElement,kb=0;if(vv&&!ui2IsWide())kb=Math.max(0,Math.round(window.innerHeight-(vv.offsetTop+vv.height)));
@@ -4615,7 +4663,7 @@ function ui2SheetPolish(){if(!UI2.on)return;var b=document.getElementById('sh-bo
   Array.prototype.forEach.call(b.querySelectorAll('.sec'),function(x){var t=x.textContent.replace(/^\/\/\s*/,'');x.textContent=t.charAt(0)+t.slice(1).toLowerCase();});
   Array.prototype.forEach.call(b.querySelectorAll('.tmsg .a'),function(x){var c=x.firstChild;if(c&&c.nodeType===3&&c.nodeValue.indexOf('OFFICE')===0)c.nodeValue=c.nodeValue.replace('OFFICE','Office');});
   var pdf=b.querySelector('.pdfbtn');if(pdf&&pdf.firstChild&&pdf.firstChild.nodeType===3)pdf.firstChild.nodeValue=pdf.firstChild.nodeValue.replace('open PDF report','Open PDF report');
-  ui2Deemoji(b,17);}
+  ui2SheetExtras(b);ui2Deemoji(b,17);}
 /* the old look's '// LABEL' headings read as plain words */
 function ui2Word(t){t=t.replace(/^\/\/\s*/,'');var m=/^([0-9A-Z][0-9A-Z &/-]+[A-Z])\b(.*)$/.exec(t);if(!m)return t;var h=m[1].charAt(0)+m[1].slice(1).toLowerCase();return (h.replace(/\b(os|qr|pdf|boq|csv)\b/g,function(x){return x.toUpperCase();}))+m[2];}
 function ui2PolishBox(box){var w=document.createTreeWalker(box,NodeFilter.SHOW_TEXT),n;while((n=w.nextNode())){var t=n.nodeValue;if(t&&t.charCodeAt(0)===47&&/^\/\/ /.test(t))n.nodeValue=ui2Word(t);}Array.prototype.forEach.call(box.querySelectorAll('.bcolh'),function(h){Array.prototype.forEach.call(h.childNodes,function(c){if(c.nodeType===3&&/[A-Z]{3}/.test(c.nodeValue))c.nodeValue=ui2Word(c.nodeValue);});});ui2Deemoji(box,16);}
@@ -4634,12 +4682,12 @@ function ui2Overlays(){var setHd=function(id,t){var e=document.querySelector('#'
   var _ci=cmdItems;cmdItems=function(q){var L=_ci(q).filter(function(it){return it.hint!=='theme';}),qq=String(q||'').toLowerCase();[['carbon','Carbon'],['graphite','Graphite'],['midnight','Midnight'],['porcelain','Porcelain']].forEach(function(f){var lb='Finish: '+f[1];if(!qq||lb.toLowerCase().indexOf(qq)>=0)L.push({lbl:lb,hint:'finish',run:function(){ui2Finish(f[0]);}});});return L;};
   if(typeof cycleTheme==='function')cycleTheme=function(){var F=['carbon','graphite','midnight','porcelain'],i=F.indexOf(ui2Get('vr_ui2_fin')||'carbon');var nx=F[(i+1)%F.length];ui2Finish(nx);try{toast('Finish: '+nx);}catch(e){}};}
 /* chat header: which chat, and what it is doing */
-function ui2ChatHead(){if(!UI2.on)return;var hd=document.getElementById('lpHead');if(!hd)return;var e=document.getElementById('ui2ChatT');if(!e){e=document.createElement('div');e.id='ui2ChatT';e.appendChild(document.createElement('span'));e.appendChild(document.createElement('small'));var ch=document.getElementById('lpChatsB');if(ch&&ch.nextSibling)hd.insertBefore(e,ch.nextSibling);else hd.appendChild(e);}
+function ui2ChatHead(){if(!UI2.on)return;ui2SpeakSetup();var hd=document.getElementById('lpHead');if(!hd)return;var e=document.getElementById('ui2ChatT');if(!e){e=document.createElement('div');e.id='ui2ChatT';e.appendChild(document.createElement('span'));e.appendChild(document.createElement('small'));var ch=document.getElementById('lpChatsB');if(ch&&ch.nextSibling)hd.insertBefore(e,ch.nextSibling);else hd.appendChild(e);}
   var row=null;try{row=(LP.vis||[]).filter(function(s){return String(s.session_id)===String(LP.sel);})[0]||null;}catch(x){}
   var nm='',st='';if(row){nm=lpNice(row.name).title;var W={waiting:'Waiting for you',busy:'Working',idle:'Idle'};st=W[String(row.status||'idle')]||'';}
   if(e.firstChild.textContent!==nm)e.firstChild.textContent=nm;if(e.lastChild.textContent!==st)e.lastChild.textContent=st;}
 /* the chat list only rebuilds when something on it changed, so a tap or a swipe in progress survives the 2 s poll */
-function ui2ChatsSig(){try{return JSON.stringify(lpTabList().map(function(t){var sid=String(t.sid),r=t.row||{},st=ui2ChatState(t);return [sid,r.name,st.k,st.g?st.g.text:'',st.g?st.g.bar:null,st.k==='wait'?ui2AskText(r,st.g):'',lpPreview(sid,r),lpUnread(sid),ui2When(lpLastAt(sid)),lpPinned(sid),lpMuted(sid),sid===LP.sel];}))+'|'+(lpNewTMachine()?1:0)+'|'+((lpHealthEl()||{}).textContent||'')+'|'+lpStarList().length+'|'+(LP.data?1:0);}catch(e){return String(Math.random());}}
+function ui2ChatsSig(){try{return JSON.stringify(lpTabList().map(function(t){var sid=String(t.sid),r=t.row||{},st=ui2ChatState(t);return [sid,r.name,st.k,st.g?st.g.text:'',st.g?st.g.bar:null,st.k==='wait'?ui2AskText(r,st.g):'',lpPreview(sid,r),lpUnread(sid),ui2When(lpLastAt(sid)),lpPinned(sid),lpMuted(sid),sid===LP.sel];}))+'|'+(lpNewTMachine()?1:0)+'|'+((lpHealthEl()||{}).textContent||'')+'|'+lpStarList().length+'|'+(LP.data?1:0)+'|'+(ui2Get('vr_ui2_pj')||'');}catch(e){return String(Math.random());}}
 /* Chats: one state per row, real groups, and a card on top only when a terminal is truly waiting. textContent only. */
 var UI2_TC=['#7FB2FF','#B597F2','#5CC9C0','#FF7A85','#E3B341','#6FCF7F','#F08CC8','#9FB0C3'];
 function ui2Tone(slot,name){var k=0,n=String(name||''),i;if(slot)k=slot.charCodeAt(0)-65;else for(i=0;i<n.length;i++)k=(k*31+n.charCodeAt(i))>>>0;return UI2_TC[k%UI2_TC.length];}
@@ -4654,7 +4702,7 @@ function ui2ChatRow(t,hero,idx){var sid=String(t.sid),row=t.row||{},nq=lpNice(ro
   var face=lpEl('div','ui2rm'),av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());av.style.setProperty('--tc',ui2Tone(nq.slot,nm));av.appendChild(lpEl('i','ui2dot'));face.appendChild(av);
   var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));top.appendChild(lpEl('span','lpcmh',ui2When(lpLastAt(sid))));mid.appendChild(top);
   var bot=lpEl('div','lpcmb'),txt=hero?ui2AskText(row,s.g):ui2Clean(lpPreview(sid,row));if(!txt&&s.k==='run')txt='Working';bot.appendChild(lpEl('span','lpcmp',txt));if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);
-  var pg=s.g?lpProgEl(row):null;if(!hero&&pg)mid.appendChild(pg);face.appendChild(mid);r.appendChild(face);
+  var pg=s.g?lpProgEl(row):null;var sm=s.k==='run'?ui2StuckMin(t):0;if(sm&&pg){r.classList.add('u-stuck');var pgt=pg.querySelector('.lpcmgt');if(pgt)pgt.textContent='No change for '+lpAgo(sm*60000)+' \u00b7 '+pgt.textContent;}if(!hero&&pg)mid.appendChild(pg);face.appendChild(mid);r.appendChild(face);
   if(hero){var ft=lpEl('div','ui2hf'),ht=pg&&pg.querySelector('.lpcmgt'),more=s.g?String(s.g.text||'').split(' \u00b7 ').slice(1).join(' \u00b7 '):'';if(ht&&more)ht.textContent=more;ft.appendChild(ht&&more?pg:lpEl('span'));var op=lpEl('button','lpbtn ui2open','Open');op.type='button';op.dataset.lptap='chatgo';op.dataset.sid=sid;ft.appendChild(op);r.appendChild(ft);return r;}
   var ra=lpEl('div','ui2ra'),pb=lpEl('button','lpbtn lppin',lpPinned(sid)?'Unpin':'Pin');pb.type='button';pb.dataset.lptap='pin';pb.dataset.sid=sid;ra.appendChild(pb);
   var mb=lpEl('button','lpbtn lpmute',mt?'Unmute':'Mute');mb.type='button';mb.dataset.lptap='mute';mb.dataset.sid=sid;ra.appendChild(mb);r.appendChild(ra);return r;}
@@ -4667,8 +4715,9 @@ function ui2ChatsPaint(){var box=lpG('lpChats');if(!box)return;ui2ChatsWire(box)
   if(lpNewTMachine()){var nb=lpEl('button','lpbtn lpntb');nb.type='button';nb.dataset.lptap='newt';nb.innerHTML=ui2Svg('plus',16);nb.appendChild(document.createTextNode('New terminal'));hd.appendChild(nb);}
   var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);f.appendChild(hd);
   var hl=lpHealthEl();if(hl&&hl.classList.contains('bad'))f.appendChild(hl);
+  var pj=ui2ProjectChips(f,list);
   if(!list.length){var em=lpEl('div','lpcn ui2empty');em.appendChild(lpEl('b',null,LP.data?'No terminals open':'Connecting to the laptop'));if(LP.data)em.appendChild(lpEl('span',null,'A Claude terminal on the laptop shows up here by itself.'));f.appendChild(em);}
-  var wait=[],run=[],pin=[],rest=[];list.forEach(function(t){var k=ui2ChatState(t).k,sid=String(t.sid);if(k==='wait')wait.push(t);else if(k==='run')run.push(t);else if(lpPinned(sid))pin.push(t);else rest.push(t);});
+  var wait=[],run=[],pin=[],rest=[];list.forEach(function(t){var k=ui2ChatState(t).k,sid=String(t.sid);if(k!=='wait'&&pj&&lpBase(t.row&&t.row.cwd)!==pj)return;if(k==='wait')wait.push(t);else if(k==='run')run.push(t);else if(lpPinned(sid))pin.push(t);else rest.push(t);});
   var byLast=function(a,b){return (lpLastAt(String(b.sid))||0)-(lpLastAt(String(a.sid))||0);};run.sort(byLast);pin.sort(byLast);rest.sort(byLast);
   /* a muted chat that is waiting stays in the list but does not take the card */
   var loud=wait.filter(function(t){return !lpMuted(String(t.sid));}),heroT=loud[0]||null;
@@ -4686,6 +4735,7 @@ function ui2RowsShut(keep){var b=document.getElementById('lpChats');if(!b)return
 /* tapping a row with its actions showing closes them rather than opening the chat */
 function ui2RowBack(el){if(!el||!(el.scrollLeft>4))return false;try{el.scrollTo({left:0,behavior:'smooth'});}catch(e){el.scrollLeft=0;}return true;}
 function ui2ChatsWire(box){if(box.__u2)return;box.__u2=1;var lx=0,ly=0;
+  box.addEventListener('click',function(e){var c=e.target.closest?e.target.closest('[data-ui2pj]'):null;if(!c)return;ui2Set('vr_ui2_pj',c.dataset.ui2pj||null);UI2.chatsSig='';lpChatsPaint();});
   var stop=function(){UI2.cT=false;UI2.cAt=Date.now();clearTimeout(UI2.cLong);};
   box.addEventListener('pointerdown',function(e){UI2.cT=true;UI2.cAt=Date.now();var t=e.target,r=t&&t.closest?t.closest('.lpcr'):null;ui2RowsShut(r);clearTimeout(UI2.cLong);
     if(e.pointerType==='touch'&&r&&!r.classList.contains('ui2hero')&&!r.classList.contains('lpcsr')&&!t.closest('button')){lx=e.clientX;ly=e.clientY;UI2.cLong=setTimeout(function(){LPT=null;try{r.scrollTo({left:r.scrollWidth,behavior:'smooth'});}catch(x){r.scrollLeft=r.scrollWidth;}try{if(navigator.vibrate)navigator.vibrate(8);}catch(x){}},480);}});
@@ -4720,6 +4770,55 @@ function ui2Key(e){if(!UI2.on)return;var a=document.activeElement,t=a&&a.tagName
   if(e.key==='Enter'){if(cur){e.preventDefault();cur.click();}return;}
   e.preventDefault();var i=Array.prototype.indexOf.call(rows,cur);i=Math.max(0,Math.min(rows.length-1,i+d));if(cur)cur.classList.remove('ui2cur');rows[i].classList.add('ui2cur');try{rows[i].scrollIntoView({block:'nearest'});}catch(x){}}
 document.addEventListener('keydown',ui2Key);
+/* S5: real data only. Anything the server or laptop does not send is simply not shown. */
+/* Now bar: the terminal that has waited longest, on every screen but Chats. Open always; Allow only for a plain request, and never for anything that can delete, overwrite or send. */
+function ui2NowWhat(p){var w='';if(p&&p.input){try{var i=typeof p.input==='string'?JSON.parse(p.input):p.input;w=(i&&(i.command||i.file_path||i.url))||(typeof p.input==='string'?p.input:JSON.stringify(p.input));}catch(e){w=String(p.input);}}return String(w||'');}
+function ui2NowPoll(){if(!UI2.on||UI2.nowOff||UI2.nowBusy||document.hidden||STATE.view==='laptop'||!STATE.me||STATE.me.role!=='owner')return;UI2.nowBusy=true;
+  api('/laptop/now').then(function(r){if(r&&r.status===404){UI2.nowOff=true;return;}if(r&&r.ok&&r.j&&Array.isArray(r.j.sessions)){UI2.nowS=r.j.sessions;UI2.nowClock=(Date.parse(r.j.server_now)||Date.now())-Date.now();}}).catch(function(){}).then(function(){UI2.nowBusy=false;try{ui2NowPaint();ui2Badges();ui2BriefCheck();}catch(e){}});}
+function ui2NowList(){var L=UI2.nowS||[],now=Date.now()+(UI2.nowClock||0),dn=UI2.nowDone||{};return L.filter(function(s){var p=s&&s.pending;if(!s||s.status!=='waiting'||!p||typeof p!=='object')return false;if(now-(Date.parse(s.updated_at)||0)>=LP_OFFLINE_MS)return false;if(dn[String(s.session_id)+'|'+String(p.eid||p.at||'')])return false;try{if(lpMuted(String(s.session_id)))return false;}catch(e){}return true;}).sort(function(a,b){return (Date.parse(a.pending.at)||0)-(Date.parse(b.pending.at)||0);});}
+function ui2NowPaint(){var e=document.getElementById('ui2Now');if(!e)return;var v=STATE.view,L=(v==='laptop'||UI2.more)?[]:ui2NowList(),s=L[0];
+  var sh=document.getElementById('sheet'),hide=!s||(sh&&sh.classList.contains('on'));
+  document.documentElement.toggleAttribute('data-ui2now',!hide);
+  if(hide){if(!e.hidden){e.hidden=true;e.textContent='';UI2.nowSig='';}return;}
+  var p=s.pending,eid=String(s.session_id)+'|'+String(p.eid||p.at||''),q=p.kind==='question',what=q?'':ui2NowWhat(p),rk=q?null:lpRisk(p.tool,what),safe=!q&&rk&&!rk.c,nq=lpNice(s.name),sig=[eid,L.length,safe,nq.title].join('|');
+  if(sig===UI2.nowSig&&!e.hidden)return;UI2.nowSig=sig;if(UI2.nowEid!==eid){UI2.nowEid=eid;UI2.nowShown=Date.now();}
+  e.textContent='';e.hidden=false;var av=lpEl('span','lpca',(nq.slot||nq.title.trim().charAt(0)||'C').toUpperCase());av.style.setProperty('--tc',ui2Tone(nq.slot,nq.title));e.appendChild(av);
+  var m=lpEl('div','nm');m.appendChild(lpEl('b',null,nq.title+(L.length>1?' +'+(L.length-1):'')));m.appendChild(lpEl('span',null,q?ui2AskText(s,null):(ui2Clean(p.tool||'Tool')+(what?': '+ui2Clean(what):''))));e.appendChild(m);
+  if(safe){var al=lpEl('button','lpbtn al','Allow');al.type='button';al.addEventListener('click',function(ev){ev.stopPropagation();ui2NowAllow(s,eid);});e.appendChild(al);}
+  var op=lpEl('button','lpbtn op','Open');op.type='button';op.addEventListener('click',function(ev){ev.stopPropagation();ui2NowOpen(s);});e.appendChild(op);}
+function ui2NowOpen(s){LP.want=String(s.session_id);LP.wantTries=0;ui2MoreClose();if(STATE.view!=='laptop')setView('laptop');try{lpChatsClose();}catch(e){}if(LP.sess&&LP.sess[LP.want])try{lpSelect(LP.want,true);}catch(e){}}
+function ui2NowAllow(s,eid){if(Date.now()-(UI2.nowShown||0)<800)return;(UI2.nowDone=UI2.nowDone||{})[eid]=1;ui2NowPaint();
+  api('/laptop/send',{method:'POST',body:JSON.stringify({machine_id:s.machine_id,session_id:s.session_id,kind:'key',body:'1',lp_build:LP_BUILD,client_id:lpCid()})}).then(function(r){if(r&&r.ok)toast('Allowed');else{delete UI2.nowDone[eid];UI2.nowSig='';ui2NowPaint();toast('Not sent: open the chat');}},function(){delete UI2.nowDone[eid];UI2.nowSig='';ui2NowPaint();toast('Not sent: no connection');});}
+
+/* Stuck: working, but nothing has moved for a while. Counted from what this page has seen, so a fresh load starts the clock again. */
+var UI2_STUCK_MS=600000;
+function ui2StuckMin(t){var sid=String(t.sid),r=t.row||{},pr=r.progress||{},k=JSON.stringify([pr.steps,pr.more,pr.tasks&&pr.tasks.done,pr.act&&pr.act.l,lpLastAt(sid)]),M=UI2.stuck||(UI2.stuck={}),o=M[sid],now=Date.now();if(!o||o.k!==k){M[sid]={k:k,at:now};return 0;}var ms=now-o.at;return ms>=UI2_STUCK_MS?Math.floor(ms/60000):0;}
+
+/* Tell the reporter: closes "resolved but the reporter was never told". told_at comes from the server; an older server sends nothing and this stays quiet. It proves the message landed in their inbox, not that they read it. */
+function ui2NotTold(t){if(!t||!t.done||t.told_at===undefined||!t.resolved)return false;var r=Date.parse(t.resolved)||0;if(Date.now()-r>30*864e5)return false;return !t.told_at||(Date.parse(t.told_at)||0)<r-120000;}
+function ui2Tell(id){var t=find(id);if(!t)return;var msg='Fixed and shipped'+(t.ver?' in v'+t.ver:'')+'. Update Velocity Nexus to get it.';
+  api('/reply',{method:'POST',body:JSON.stringify({initData:tg?tg.initData:'',ticket_id:id,text:msg})}).then(function(r){if(r&&r.ok){var j=r.j||r;if(j.notified===false)toast('Reply saved, but the message to '+t.who+' did not land');else{t.told_at=new Date().toISOString();toast('Message sent to '+t.who);}load();setTimeout(function(){if(STATE.cur===id)openT(id);},500);}else toast('Not sent: try again');},function(){toast('Not sent: no connection');});}
+function ui2Share(id){var t=find(id);if(!t)return;var u='https://johanvelo.github.io/qz31-cache/ticketapp/index.html?t='+Number(id),tt='#'+Number(id)+' '+String(t.title||'');if(navigator.share){navigator.share({title:tt,text:tt,url:u}).catch(function(){});}else copyLink(id);}
+function ui2SheetExtras(b){var id=STATE.cur,t=find(id);if(!t)return;var top=b.querySelector('.ui2sa');if(top&&navigator.share){var sh=lpEl('button','act ui2icb');sh.type='button';sh.setAttribute('aria-label','Share');sh.title='Share';sh.innerHTML=ui2Svg('share',17);sh.addEventListener('click',function(){ui2Share(id);});top.appendChild(sh);}
+  if(ui2NotTold(t)){var bx=lpEl('div','ui2tell');bx.appendChild(lpEl('span',null,String(t.who||'The reporter')+' has not been told this shipped.'));var go=lpEl('button','act','Tell '+String(t.who||'them'));go.type='button';go.addEventListener('click',function(){go.disabled=true;ui2Tell(id);});bx.appendChild(go);var db=b.querySelector('.db');if(db)db.parentNode.insertBefore(bx,db.nextSibling);}}
+
+/* Brief: back after 4 hours or more, one card of what happened. Only counts of real rows. */
+function ui2BriefMark(){ui2Set('vr_ui2_last',String(Date.now()));}
+function ui2BriefCheck(){if(!UI2.on||UI2.briefShut)return;var last=+ui2Get('vr_ui2_last')||0;if(!last){ui2BriefMark();return;}if(Date.now()-last<4*36e5||!STATE.tickets||!STATE.tickets.length)return;
+  var nw=0,sh=0,rp=0,nt=0;STATE.tickets.forEach(function(t){if((Date.parse(t.created)||0)>last)nw++;if(t.done&&(Date.parse(t.resolved)||0)>last)sh++;(t.thread||[]).forEach(function(m){if(m.author!=='office'&&(Date.parse(m.created_at)||0)>last)rp++;});if(ui2NotTold(t))nt++;});
+  var fin=0;(UI2.nowS||[]).forEach(function(s){if(s.status==='idle'&&s.progress&&s.progress.done&&(Date.parse(s.updated_at)||0)>last)fin++;});
+  var it=[];if(nw)it.push([nw,nw===1?'new ticket':'new tickets']);if(sh)it.push([sh,'shipped']);if(rp)it.push([rp,rp===1?'reply':'replies']);if(fin)it.push([fin,fin===1?'terminal finished':'terminals finished']);if(nt)it.push([nt,'not told']);
+  var e=document.getElementById('ui2Brief');if(!e)return;if(!it.length){e.hidden=true;return;}
+  var sig=JSON.stringify(it);if(e.__s===sig&&!e.hidden)return;e.__s=sig;e.textContent='';var hd=lpEl('div','hd');hd.appendChild(lpEl('b',null,'While you were away'));hd.appendChild(lpEl('span',null,'since '+ui2When(last).toLowerCase()));var x=lpEl('button','x');x.type='button';x.setAttribute('aria-label','Dismiss');x.innerHTML=ui2Svg('x',16);x.addEventListener('click',function(){UI2.briefShut=true;e.hidden=true;ui2BriefMark();});hd.appendChild(x);e.appendChild(hd);
+  var gr=lpEl('div','it');it.forEach(function(p){var c=lpEl('div','c');c.appendChild(lpEl('b',null,String(p[0])));c.appendChild(lpEl('span',null,p[1]));gr.appendChild(c);});e.appendChild(gr);e.hidden=false;}
+
+/* Read aloud: Claude's replies, from the long-press sheet. Stops on a second press or on leaving. Hidden where the browser has no voice. */
+function ui2SpeakSetup(){var sh=document.getElementById('lpSheet');if(!sh||sh.__sp||!('speechSynthesis' in window))return;sh.__sp=1;var b=lpEl('button','lpsi','Read aloud');b.type='button';b.id='ui2Speak';b.dataset.lptap='sheet';b.dataset.act='speak';var cancel=sh.querySelector('.lpsx');sh.insertBefore(b,cancel);}
+function ui2Speak(txt){try{var ss=window.speechSynthesis;if(ss.speaking){ss.cancel();return;}var t=String(txt||'').replace(/```[\s\S]*?```/g,' code block. ').replace(/[*_`#>|]/g,' ').replace(/https?:\/\/\S+/g,' link ').replace(/\s+/g,' ').trim().slice(0,3000);if(!t)return;var u=new SpeechSynthesisUtterance(t);u.rate=1.05;ss.speak(u);}catch(e){toast('Read aloud is not available here');}}
+
+/* Project filter: only when terminals sit in more than one folder. A waiting chat always shows, whatever is picked. */
+function ui2ProjectChips(f,list){var B={},n=0;list.forEach(function(t){var k=lpBase(t.row&&t.row.cwd);if(!k)return;if(!B[k]){B[k]=0;n++;}B[k]++;});var pick=ui2Get('vr_ui2_pj')||'';if(n<2){if(pick)UI2.pjOff=true;return '';}if(pick&&!B[pick])pick='';
+  var w=lpEl('div','ui2pj');var add=function(lb,val){var c=lpEl('button','chip'+(pick===val?' on':''),lb);c.type='button';c.dataset.ui2pj=val;w.appendChild(c);};add('All','');Object.keys(B).sort().forEach(function(k){add(k,k);});f.appendChild(w);return pick;}
 /* the owner is known once /me answers */
 try{var _ui2w=setInterval(function(){var me=STATE.me;if(!me||me.auth===undefined)return;clearInterval(_ui2w);ui2Check(me);},200);setTimeout(function(){clearInterval(_ui2w);},20000);}catch(e){}/*UI2JSEND*/
 </script></body></html>

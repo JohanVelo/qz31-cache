@@ -646,6 +646,22 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpnth2{font-size:13px;color:var(--txt2)}
 .lpntgo{min-height:48px;font-size:16px;font-weight:600}
 .lpntb{margin-left:auto;margin-right:8px}
+/* Item 16 broadcast, item 15 health line, item 12 risk line, item 11 finished card */
+#lpBr{position:fixed;inset:0;z-index:1600;background:var(--bg);display:flex;flex-direction:column}
+#lpBr[hidden]{display:none}
+#lpBrT{box-sizing:border-box;width:100%;min-height:120px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--cell);color:var(--txt);font-family:inherit;font-size:16px;line-height:1.4;resize:vertical}
+.lpbrr{display:flex;align-items:center;gap:12px;min-height:44px;font-size:15px;color:var(--txt)}
+.lpbrr input{width:22px;height:22px;flex:0 0 auto}
+.lphealth{padding:6px 12px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--line)}
+.lphealth.bad{color:var(--amber)}
+.lprisk{font-size:13px;font-weight:600;margin:4px 0 8px;color:var(--txt2)}
+.lprisk.warn{color:var(--amber)}
+.lprisk.bad{color:var(--red)}
+#lpDone{display:none;margin:6px 12px 10px;padding:10px 12px;border-radius:12px;background:var(--lprecv,var(--cell));font-size:13px;color:var(--lpwtx2,var(--txt2))}
+#lpDone.on{display:block}
+.lpdh{font-weight:700;color:var(--txt);margin-bottom:2px}
+.lpdn{word-break:break-all;margin-bottom:6px}
+#lpDone .lpbtn{min-height:40px;margin-top:6px}
 .lpqw{margin-top:4px;padding-left:8px;border-left:3px solid var(--red);font-size:12px;color:var(--txt)}
 .lpqr{margin-top:6px}
 .lptyping{align-self:flex-start;display:flex;gap:5px;padding:12px 14px;border-radius:12px;border-top-left-radius:4px;background:var(--lprecv);border:1px solid var(--line);animation:lpin .2s ease-out both}
@@ -1393,7 +1409,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261104-15';
+var LP_BUILD='CHAT-20261104-16';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -1711,7 +1727,7 @@ function lpSelect(sid,byUser){if(byUser)LP.userPicked=true;if(!sid||sid===LP.sel
 
 /* ── painting: each part repaints only what changed ── */
 function lpPaint(){if(STATE.view!=='laptop'||!LP.built)return;try{lpSeenMark();lpBadgeSync();if(LP.chatsOn)lpChatsPaint();}catch(e){}lpPaintHead();lpPaintTabs(lpTabList());var S=LP.sess[LP.sel];
-  lpPaintPrompt(S);lpPaintNow();lpPaintConv(false);lpPaintCmds();lpPaintChips();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
+  lpPaintPrompt(S);lpPaintNow();lpPaintConv(false);lpPaintCmds();lpPaintDone();lpPaintChips();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();}
 function lpPaintHead(){var t,cls='lpdot lpd-o',d=LP.data;
   if(LP.locked)t='owner only';
   else if(LP.connErr){t=LP.connErr;cls='lpdot lpd-b';if(t==='reconnecting'&&LP.lastOk)t+=' · '+lpAge(new Date(LP.lastOk).toISOString())+' ago';}
@@ -1818,6 +1834,7 @@ function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
     if(!bs.children.length)card.appendChild(lpEl('div','lpcn','Use the number keys below.'));}
   else{var t=lpEl('div','lpcq');t.appendChild(lpEl('b',null,p.tool||'Tool'));card.appendChild(t);var what='';
     if(p.input){try{var i=typeof p.input==='string'?JSON.parse(p.input):p.input;what=(i&&(i.command||i.file_path||i.url))||(typeof p.input==='string'?p.input:JSON.stringify(p.input));}catch(e){what=String(p.input);}}
+    var rk=lpRisk(p.tool,what);if(rk)card.appendChild(lpEl('div','lprisk'+(rk.c?' '+rk.c:''),rk.t));
     if(what)card.appendChild(lpEl('pre','lppre',typeof what==='string'?what:JSON.stringify(what)));else if(p.message)card.appendChild(lpEl('div','lpcq',p.message));
     var al=lpKeyBtn('1','Allow');al.classList.add('go');bs.appendChild(al);bs.appendChild(lpKeyBtn('Esc','Deny'));}
   if(bs.children.length)card.appendChild(bs);box.appendChild(card);}
@@ -2357,7 +2374,9 @@ function lpActText(a){if(!a||typeof a!=='object')return '';var l=a.l?String(a.l)
   case 'tool':return l||'Using a tool';
   case 'think':return 'Thinking';
   default:return '';}}
-function lpProg(row){var st=row&&row.status;if(st!=='busy'&&st!=='waiting')return null;var p=row.progress;if(!p||typeof p!=='object')p={};
+function lpProg(row){var st=row&&row.status;var dn=st==='idle'&&row.progress&&row.progress.done;
+  if(dn&&(dn.files||dn.commits)){var dp=[];if(dn.files)dp.push(dn.files+(dn.files===1?' file':' files'));if(dn.commits)dp.push(dn.commits+(dn.commits===1?' commit':' commits'));if(dn.tests)dp.push(String(dn.tests));return {text:'Finished \u00b7 '+dp.join(' \u00b7 '),bar:null,wait:false};}
+  if(st!=='busy'&&st!=='waiting')return null;var p=row.progress;if(!p||typeof p!=='object')p={};
   var t=p.tasks,parts=[],bar=null,hd=lpActText(p.act),asks=st==='waiting'||!!(p.act&&(p.act.k==='question'||p.act.k==='window'));
   if(!asks&&t&&typeof t==='object'&&t.total>0&&t.done>=0&&t.done<=t.total){parts.push(t.done+' of '+t.total);if(t.now)parts.push(String(t.now));else if(hd)parts.push(hd);bar=t.done/t.total;}
   else{parts.push(hd||(st==='waiting'?'Waiting for you':'Working'));
@@ -2368,6 +2387,44 @@ function lpProgEl(row){var g=lpProg(row);if(!g)return null;var el=lpEl('div','lp
   if(g.bar!==null){var b=lpEl('span','lpcmgb'),i=document.createElement('i');i.style.width=Math.round(g.bar*100)+'%';b.appendChild(i);el.appendChild(b);}return el;}
 /* Items 20-21 (JJ 2026-11-04): a new terminal from the phone. The laptop opens it, starts claude, and it shows up in
    Chats by itself. Folder choices = where terminals already run; login choices = what the laptop says it has (names only). */
+/* Item 15 laptop health: one line on top of Chats. Asleep or closed = not heard from it, in plain words. */
+function lpHealthEl(){var ms=(LP.data&&LP.data.machines)||[],m=null;ms.forEach(function(x){if(x&&(!m||lpT(x.seen_at)>lpT(m.seen_at)))m=x;});if(!m)return null;
+  var i=m.info||{},age=lpSrvNow()-lpT(m.seen_at),parts=[],off=age>LP_OFFLINE_MS;
+  parts.push(String(i.host||'Laptop'));
+  if(off)parts.push('asleep or VS Code closed, last heard '+lpClock(m.seen_at));
+  else{if(i.savepoint)parts.push('Savepoint '+i.savepoint);if(i.rt===true)parts.push('instant line on');else if(i.rt===false)parts.push('instant line off');
+    var b=i.battery;if(b&&typeof b.pct==='number')parts.push(b.pct+'%'+(b.charging?' charging':' on battery'));}
+  var low=!off&&i.battery&&i.battery.charging===false&&i.battery.pct<=20;return lpEl('div','lphealth'+(off||low?' bad':''),parts.join(' \u00b7 '));}
+/* Item 16 broadcast: one message to several terminals. One normal send per terminal, each with its own id, so ticks, retries and refusals work as usual. */
+function lpBrClose(){var b=lpG('lpBr');if(b){b.hidden=true;b.textContent='';}}
+function lpBrOpen(){var b=lpG('lpBr');if(!b)return;b.textContent='';var hd=lpEl('div','lpnth');hd.appendChild(lpEl('span','lpcht','Send to several'));var x=lpEl('button','lpbtn','Cancel');x.type='button';x.dataset.lptap='brx';hd.appendChild(x);b.appendChild(hd);
+  var bd=lpEl('div','lpntbd'),ta=lpEl('textarea');ta.id='lpBrT';ta.maxLength=LP_TEXT_MAX;ta.placeholder='Your message';ta.setAttribute('aria-label','Your message');bd.appendChild(ta);
+  lpTabList().forEach(function(t){if(t.off||t.ghost||t.cache)return;var l=lpEl('label','lpbrr'),c=lpEl('input');c.type='checkbox';c.dataset.sid=String(t.sid);l.appendChild(c);l.appendChild(lpEl('span',null,lpNice(t.row.name).title));bd.appendChild(l);});
+  var go=lpEl('button','lpbtn lpntgo','Send');go.type='button';go.id='lpBrGo';go.dataset.lptap='brgo';bd.appendChild(go);b.appendChild(bd);b.hidden=false;}
+function lpBrGo(){var ta=lpG('lpBrT'),go=lpG('lpBrGo');if(!ta||!go||go.disabled)return;var body=String(ta.value||'').trim();if(!body){toast('Type your message first');return;}
+  var sids=Array.prototype.slice.call(document.querySelectorAll('#lpBr input[type=checkbox]:checked')).map(function(c){return c.dataset.sid;});if(!sids.length){toast('Tick at least one terminal');return;}
+  go.disabled=true;var ok=0,bad=[],next=function(i){if(i>=sids.length){if(!bad.length){lpBrClose();toast('Sent to '+ok);}else{go.disabled=false;toast('Sent to '+ok+', not sent to '+bad.length);}lpLoad();return;}
+    lpSend('text',body,{armed:true,sid:sids[i],cid:lpCid()}).then(function(r){if(r&&r.ok)ok++;else bad.push(sids[i]);next(i+1);},function(){bad.push(sids[i]);next(i+1);});};next(0);}
+/* Item 12: what Allow would do, in plain words, from the command itself. A hint, never a guarantee. */
+function lpRisk(tool,what){var t=String(tool||''),w=String(what||'');
+  if(t==='Bash'||t==='PowerShell'){
+    if(/\b(rm|del|rmdir|Remove-Item|rd)\b|\bformat\b|git\s+(reset\s+--hard|clean|checkout\s+--)|--force\b|\bDROP\s+TABLE\b|\bDELETE\s+FROM\b|\btruncate\b/i.test(w))return {c:'bad',t:'Can delete or overwrite things. Read it before you allow.'};
+    if(/\bgit\s+push\b|\bpublish\b|\bdeploy\b|\bcurl\b[^|]*\b(-X|--request|-d|--data)\b|\bgh\s+(pr|release)\b/i.test(w))return {c:'warn',t:'Sends something off this laptop.'};
+    return {c:'',t:'Runs a command on the laptop.'};}
+  if(t==='Edit'||t==='Write'||t==='NotebookEdit'||t==='MultiEdit')return {c:'',t:'Changes a file on the laptop.'};
+  if(t==='Read'||t==='Grep'||t==='Glob')return {c:'',t:'Only reads.'};
+  if(t==='WebFetch'||t==='WebSearch')return {c:'',t:'Reads from the web.'};
+  if(t==='Agent'||t==='Task')return {c:'',t:'Starts a helper.'};
+  if(/^mcp__/.test(t))return {c:'warn',t:'Uses a connected tool: '+t.split('__')[1]+'.'};
+  return null;}
+/* Item 11: under the conversation when a terminal has finished. Only counts Savepoint saw in the transcript. */
+function lpDoneAsk(){var why=lpCantSend();if(why){toast(why);return;}if(LP.textBusy){toast('The last message is still going');return;}
+  lpDoSend({sid:LP.sel,text:'Send me a short report of what you just finished: what changed, what was tested, what is left.',at:performance.now(),ack:true,cid:lpCid(),files:[],over:false});}
+function lpPaintDone(){var b=lpG('lpDone');if(!b)return;var S=LP.sess[LP.sel],r=S&&S.row,d=r&&r.status==='idle'&&!S.ghost&&!S.cacheOnly&&r.progress&&r.progress.done;
+  var has=!!(d&&(d.files||d.commits||d.tests)),sig=has?JSON.stringify(d):'';if(sig===LP.sigs.done)return;LP.sigs.done=sig;lpTog(b,'on',has);b.textContent='';if(!has)return;
+  var parts=[];if(d.files)parts.push(d.files+(d.files===1?' file changed':' files changed'));if(d.commits)parts.push(d.commits+(d.commits===1?' commit':' commits'));if(d.tests)parts.push(String(d.tests));if(d.cmds)parts.push(d.cmds+(d.cmds===1?' command':' commands'));
+  b.appendChild(lpEl('div','lpdh','Finished \u00b7 '+parts.join(' \u00b7 ')));if(Array.isArray(d.names)&&d.names.length)b.appendChild(lpEl('div','lpdn',d.names.join(', ')));
+  var a=lpEl('button','lpbtn','Send me the report');a.type='button';a.dataset.lptap='doneask';b.appendChild(a);}
 function lpNewTMachine(){var ms=(LP.data&&LP.data.machines)||[],now=lpSrvNow(),best=null;
   ms.forEach(function(m){if(m&&lpVerGE(m.info&&m.info.savepoint,[0,6,15])&&now-lpT(m.seen_at)<=LP_OFFLINE_MS&&(!best||lpT(m.seen_at)>lpT(best.seen_at)))best=m;});return best;}
 function lpNewTClose(){var b=lpG('lpNewT');if(b){b.hidden=true;b.textContent='';}}
@@ -2377,7 +2434,7 @@ function lpNewTOpen(){var b=lpG('lpNewT'),m=lpNewTMachine();if(!b)return;if(!m){
   var row=function(label,el){var w=lpEl('label','lpntr');w.appendChild(lpEl('span','lpntl',label));w.appendChild(el);bd.appendChild(w);};
   var nm=lpEl('input');nm.id='lpNewTN';nm.type='text';nm.maxLength=60;nm.placeholder='Optional';nm.autocomplete='off';row('Name',nm);
   var cwds=[];(LP.vis||[]).forEach(function(s){var c=String(s.cwd||'');if(c&&cwds.indexOf(c)<0)cwds.push(c);});
-  var fd=lpEl('select');fd.id='lpNewTF';var o0=lpEl('option',null,'The laptop\u2019s open folder');o0.value='';fd.appendChild(o0);cwds.forEach(function(c){var o=lpEl('option',null,lpBase(c)||c);o.value=c;o.title=c;fd.appendChild(o);});row('Folder',fd);
+  var fd=lpEl('select');fd.id='lpNewTF';var o0=lpEl('option',null,'Same folder as the last terminal');o0.value='';fd.appendChild(o0);cwds.forEach(function(c){var o=lpEl('option',null,lpBase(c)||c);o.value=c;o.title=c;fd.appendChild(o);});row('Folder',fd);
   var accs=(m.info&&Array.isArray(m.info.accounts))?m.info.accounts:[];
   if(accs.length){var ac=lpEl('select');ac.id='lpNewTA';var a0=lpEl('option',null,'Default login');a0.value='';ac.appendChild(a0);accs.forEach(function(n){var o=lpEl('option',null,String(n));o.value=String(n);ac.appendChild(o);});row('Claude login',ac);
     bd.appendChild(lpEl('div','lpnth2','A new login needs /login once, on the laptop.'));}
@@ -2395,7 +2452,9 @@ function lpNewTWatch(){var w=LP.newT;if(!w)return;var cs=(LP.data&&LP.data.comma
 function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent='';var hd=lpEl('div','lpchh');hd.appendChild(lpEl('span','lpcht','Chats'));
   if(lpNewTMachine()){var nb=lpEl('button','lpbtn lpntb','New terminal');nb.type='button';nb.dataset.lptap='newt';hd.appendChild(nb);}
   var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);box.appendChild(hd);
+  var hl=lpHealthEl();if(hl)box.appendChild(hl);
   var list=lpTabList();if(!list.length)box.appendChild(lpEl('div','lpcn','No Claude terminal is open on the laptop.'));
+  if(list.filter(function(t){return !t.off&&!t.ghost&&!t.cache;}).length>1){var sb=lpEl('button','lpbtn lpbrb','Send to several');sb.type='button';sb.dataset.lptap='bropen';box.appendChild(sb);}
   list.forEach(function(t){var sid=String(t.sid),r=lpEl('div','lpcr'+(sid===LP.sel?' on':''));r.dataset.lptap='chatgo';r.dataset.sid=sid;
     var nq=lpNice(t.row.name),nm=nq.title,av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());r.appendChild(av);
     var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));var la=lpLastAt(sid);top.appendChild(lpEl('span','lpcmh',la?lpHm(new Date(la).toISOString()):''));mid.appendChild(top);
@@ -2729,7 +2788,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){lpChatsClose();lpSelect(t.el.dataset.sid,true);}
   else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
-  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='newt')lpNewTOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
+  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='bropen')lpBrOpen();else if(w==='brx')lpBrClose();else if(w==='brgo')lpBrGo();else if(w==='doneask')lpDoneAsk();else if(w==='newt')lpNewTOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
@@ -2768,9 +2827,9 @@ function lpStop(){if(LP.timer){clearTimeout(LP.timer);LP.timer=null;}if(!LP.star
   var el=lpG('laptop');if(el){el.classList.remove('lp-on','lp-kb','lp-attm');el.style.top='';el.style.height='';el.style.removeProperty('--lpinmax');}}
 function lpBuild(el){
   el.innerHTML='<div class="lpcol"><div class="lphead" id="lpHead"><span class="lpmark" aria-hidden="true">♞</span><button type="button" id="lpChatsB" class="lpbtn" data-lptap="chats" aria-label="All chats">Chats</button><span class="lpconn" id="lpConnW"><span class="lpdot lpd-o" id="lpConnD" aria-hidden="true"></span><span id="lpConnT">connecting</span></span></div>'+
-    '<div id="lpDbg"></div><div id="lpNewT" hidden></div><div id="lpSrch" hidden><input type="search" id="lpSrchI" placeholder="Search this chat" aria-label="Search this chat"><span id="lpSrchN"></span><button type="button" class="lpbtn" data-lptap="srchp" aria-label="Previous match">Up</button><button type="button" class="lpbtn" data-lptap="srchn" aria-label="Next match">Down</button><button type="button" class="lpbtn" data-lptap="srchx">Close</button></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><div class="lpnowr" id="lpNowR"><button type="button" id="lpNow" data-lptap="now"></button><button type="button" class="lpbtn lpstop" id="lpStop" data-lptap="key" data-lpk="Esc" aria-label="Stop Claude (sends Esc)">Stop</button></div>'+
+    '<div id="lpDbg"></div><div id="lpNewT" hidden></div><div id="lpBr" hidden></div><div id="lpSrch" hidden><input type="search" id="lpSrchI" placeholder="Search this chat" aria-label="Search this chat"><span id="lpSrchN"></span><button type="button" class="lpbtn" data-lptap="srchp" aria-label="Previous match">Up</button><button type="button" class="lpbtn" data-lptap="srchn" aria-label="Next match">Down</button><button type="button" class="lpbtn" data-lptap="srchx">Close</button></div><div id="lpTerms" role="tablist"></div><div id="lpPend"></div><div class="lpnowr" id="lpNowR"><button type="button" id="lpNow" data-lptap="now"></button><button type="button" class="lpbtn lpstop" id="lpStop" data-lptap="key" data-lpk="Esc" aria-label="Stop Claude (sends Esc)">Stop</button></div>'+
     '<div class="lppw"><div id="lpSelBar"><span>Select text: drag across messages</span><button type="button" class="lpbtn" data-lptap="selcopy">Copy all</button><button type="button" class="lpbtn" data-lptap="seldone">Done</button></div>'+
-    '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
+    '<div id="lpPane"><div id="lpConv"></div><div id="lpCmds"></div><div id="lpDone"></div><div id="lpSelB"></div></div><button type="button" id="lpPill" data-lptap="pill"></button></div>'+
     '<div class="lpcomp" id="lpComp"><div id="lpMicPrev" aria-live="polite"></div><div id="lpStat"></div><div id="lpChatOk" role="alert"><span>Restored after a restart: is this the right terminal? Sends wait until you say.</span><button type="button" class="lpbtn" data-lptap="chatok">Yes, this one</button></div><div id="lpChips"></div>'+
     '<div class="lpkeys" id="lpKeys" hidden><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="1" hidden>1</button><button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="2" hidden>2</button>'+
     '<button type="button" class="lpbtn lpk-n" data-lptap="key" data-lpk="3" hidden>3</button></div>'+

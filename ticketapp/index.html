@@ -99,6 +99,8 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .agec{font-size:10px;font-weight:600;min-width:0;padding:1px 6px;border-radius:9px;text-align:center;background:rgba(127,127,127,.14)}
 .agec.amb{color:var(--amber);background:rgba(255,176,32,.14)}
 .agec.red{color:var(--red);background:rgba(255,82,82,.14)}
+.onit{font-size:10px;font-weight:600;max-width:130px;padding:1px 7px;border-radius:9px;border:1px solid var(--line2);color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.onit.busy{color:var(--green);border-color:var(--green)}
 @media(max-width:759px){.row{flex-wrap:wrap}.row .ttl{flex:1 1 140px}}
 .empty{font-family:var(--m);font-size:13.5px;color:var(--green);text-align:center;padding:28px 18px;background:var(--cell);border:1px dashed rgba(61,255,154,.25);border-radius:10px;margin-top:4px;animation:clearpulse 2.6s ease-in-out infinite}
 @keyframes clearpulse{50%{box-shadow:0 0 24px rgba(61,255,154,.13);border-color:rgba(61,255,154,.4)}}
@@ -650,6 +652,19 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpnth2{font-size:13px;color:var(--txt2)}
 .lpntgo{min-height:48px;font-size:16px;font-weight:600}
 .lpntb{margin-left:auto;margin-right:8px}
+/* Item 6 search everything */
+#gsBtn{display:block;width:100%;min-height:44px;margin:0 0 10px}
+.gsb{margin-left:auto;margin-right:8px}.gsb+.lpntb{margin-left:0}
+#gSrch{position:fixed;inset:0;z-index:1700;background:var(--bg);color:var(--txt);display:flex;flex-direction:column}
+#gSrch[hidden]{display:none}
+#gsI{box-sizing:border-box;width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--cell);color:var(--txt);font-family:inherit;font-size:16px}
+.gsbd{padding:12px 14px 0;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+#gsR{flex:1;overflow-y:auto;padding:0 14px 24px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.gsh{font-size:12px;font-weight:600;color:var(--txt2);margin:16px 0 6px}
+.gsr{display:block;width:100%;box-sizing:border-box;text-align:left;background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;color:var(--txt);font-family:inherit;cursor:pointer;touch-action:manipulation}
+.gst{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gss{font-size:13px;color:var(--txt2);margin-top:3px;overflow-wrap:anywhere}
+.gsn{padding:14px 0 4px;color:var(--txt2);font-size:14px}
 /* Item 16 broadcast, item 15 health line, item 12 risk line, item 11 finished card */
 #lpBr{position:fixed;inset:0;z-index:1600;background:var(--bg);display:flex;flex-direction:column}
 #lpBr[hidden]{display:none}
@@ -744,6 +759,11 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .ntsend{background:var(--cyan);color:#04141A;border-color:transparent;min-width:140px}
 .ntft{padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;justify-content:flex-end;background:var(--bg)}
 .ntnote{font-size:13px;color:var(--txt2)}
+#ntVoice{margin-top:8px;width:100%;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#ntVoice[hidden]{display:none}
+#ntVoice.nvrec{background:var(--red);color:#fff;border-color:transparent}
+#ntVoiceN{margin-top:6px}
+#ntVoiceN:empty{display:none}
 #ntMk{position:fixed;inset:0;z-index:70;background:#000;display:none;flex-direction:column}
 #ntMk.on{display:flex}
 .ntmkbar{display:flex;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;background:#111;flex-wrap:wrap;align-items:center}
@@ -868,6 +888,16 @@ function safeQr(s){var m=/^data:image\/png;base64,([A-Za-z0-9+\/=]+)$/.exec(Stri
 function safeColor(c){var s=String(c==null?'':c);return (/^#[0-9A-Fa-f]{3,8}$/.test(s)||/^var\(--[a-z0-9-]+(,#[0-9A-Fa-f]{3,8})?\)$/.test(s))?s:'#9AA4B8';}
 function ageH(iso){try{return (Date.now()-new Date(iso).getTime())/3.6e6}catch(e){return 0}}
 function ageS(iso){var h=ageH(iso);if(isNaN(h))return '';if(h<1)return Math.max(0,(h*60)|0)+'m';return h<48?(h|0)+'h':((h/24)|0)+'d'}
+// Item 7 who's on it: terminals whose name or words name this ticket. It comes from what the terminals say, there is no
+// claim record. Owner only (the server refuses anyone else); trouble clears it, so an old answer is never shown as current.
+var WHO={on:{},busy:false,sig:'{}'};
+function whoList(id){var a=WHO.on[String(id)];if(!a||!a.length)return [];return a.slice().sort(function(x,y){return (y.status==='busy')-(x.status==='busy');});}
+function whoChip(id){var a=whoList(id);if(!a.length)return '';var w=whoSheet(id);return '<span class="onit'+(a[0].status==='busy'?' busy':'')+'" title="'+H(w)+'">'+H(a[0].name)+(a.length>1?' +'+(a.length-1):'')+'</span>';}
+function whoSheet(id){var a=whoList(id);return a.length?'Terminal: '+a.map(function(x){return x.name+(x.status==='busy'?' (working)':' (open)');}).join(', '):'';}
+function whoSet(on){var sig=JSON.stringify(on||{});if(sig===WHO.sig)return;WHO.on=on||{};WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)render();}
+function whoTick(){if(document.hidden||WHO.busy||!STATE.me||STATE.me.role!=='owner')return Promise.resolve();if(STATE.view&&STATE.view!=='list'&&STATE.view!=='board')return Promise.resolve();
+  WHO.busy=true;return api('/who-on-it').then(function(r){WHO.busy=false;whoSet(r.ok&&r.j&&r.j.on?r.j.on:{});},function(){WHO.busy=false;whoSet({});});}
+setInterval(whoTick,30000);
 function ageChip(t){var w=workingDaysSince(t.created);return '<span class="meta-r agec'+(w>=3?' red':(w>=1?' amb':''))+'" title="open '+w+' working days (weekends + SA holidays excluded)">'+ageS(t.created)+'</span>';}
 /* SA public holidays (weekday ones matter; weekends already skipped). 2026-2027. */
 var ZA_HOLIDAYS={'2026-01-01':1,'2026-03-21':1,'2026-04-03':1,'2026-04-06':1,'2026-04-27':1,'2026-05-01':1,'2026-06-16':1,'2026-08-09':1,'2026-08-10':1,'2026-09-24':1,'2026-12-16':1,'2026-12-25':1,'2026-12-26':1,'2027-01-01':1,'2027-03-21':1,'2027-03-22':1,'2027-03-26':1,'2027-03-29':1,'2027-04-27':1,'2027-05-01':1,'2027-06-16':1,'2027-08-09':1,'2027-09-24':1,'2027-12-16':1,'2027-12-25':1,'2027-12-26':1,'2027-12-27':1};
@@ -927,12 +957,12 @@ function ntInit(){if(ntG('ntFab'))return;var b=document.body;
     '<div class="ntbd"><div><div class="ntlab">Start from</div><div class="nttpl" id="ntTpl"></div></div>'+
     '<div><div class="ntlab">Type</div><div class="ntkind"><button type="button" class="ntchip" id="ntKBug">Bug</button><button type="button" class="ntchip" id="ntKFeat">Feature</button></div></div>'+
     '<div><label class="ntlab" for="ntTitle">Title</label><input class="ntin" id="ntTitle" maxlength="140" autocomplete="off" placeholder="What is wrong, in a few words"></div>'+
-    '<div><label class="ntlab" for="ntBody">Details</label><textarea class="ntta" id="ntBody" maxlength="4000" placeholder="Project, layer, what happened"></textarea></div>'+
+    '<div><label class="ntlab" for="ntBody">Details</label><textarea class="ntta" id="ntBody" maxlength="4000" placeholder="Project, layer, what happened"></textarea><button type="button" class="ntbtn" id="ntVoice" hidden>Hold to speak</button><div class="ntnote" id="ntVoiceN" role="status"></div></div>'+
     '<div><div class="ntlab">Photo</div><div class="ntph" id="ntPh"></div><input type="file" id="ntFile" accept="image/*" hidden></div>'+
     '<div class="ntnote" id="ntNote">Saved on this phone as you type. With no signal it sends itself when you are back online.</div></div>'+
     '<div class="ntft"><button type="button" class="ntbtn ntsend" id="ntSend">Send ticket</button></div>';
   b.appendChild(sh);
-  ntG('ntClose').onclick=ntClose;ntG('ntSend').onclick=ntSubmit;
+  ntG('ntClose').onclick=ntClose;ntG('ntSend').onclick=ntSubmit;nvInit();
   ntG('ntKBug').onclick=function(){ntKind('bug');};ntG('ntKFeat').onclick=function(){ntKind('feature');};
   ntG('ntTitle').addEventListener('input',ntFormSave);ntG('ntBody').addEventListener('input',ntFormSave);
   ntG('ntFile').addEventListener('change',function(){var f=this.files&&this.files[0];this.value='';if(f)ntPhotoIn(f);});
@@ -966,9 +996,47 @@ function ntPhotoIn(f){var u=URL.createObjectURL(f),im=new Image();im.onload=func
   var fail=function(){toast('That photo could not be read here: send a screenshot instead');};
   /* a browser that will not draw a blob: link gets the photo as a data: URL instead, once (as lpShrink does) */
   im.onerror=function(){URL.revokeObjectURL(u);im.onerror=fail;try{var fr=new FileReader();fr.onload=function(){im.src=String(fr.result||'');};fr.onerror=fail;fr.readAsDataURL(f);}catch(e){fail();}};im.src=u;}
-function ntOpen(){ntInit();var sh=ntG('ntSheet');ntFormLoad().then(function(f){f=f||{};NT.key=f.key||ntNewKey();NT.tpl=f.tpl||'';NT.shot=f.shot||'';
+function ntOpen(){ntInit();nvShow();var sh=ntG('ntSheet');ntFormLoad().then(function(f){f=f||{};NT.key=f.key||ntNewKey();NT.tpl=f.tpl||'';NT.shot=f.shot||'';
   ntG('ntTitle').value=f.title||'';ntG('ntBody').value=f.body||'';ntKind(f.kind||'bug');ntTplPaint();ntPhPaint();
   sh.classList.add('on');NT.open=true;document.body.classList.add('nt-on');});}
+// Item 8 voice to ticket: the phone records, the laptop writes it out, the words go into Details. Owner only (the laptop
+// is JJ's); anyone else, or any failure, has the keyboard's own mic. Words never land in a form other than the one that recorded.
+var NV={rec:null,busy:false,pollMs:1500,waitMs:100000,minMs:500,maxMs:120000};
+var NV_KB=' You can tap the mic on your keyboard instead.';
+function nvNote(t){var n=ntG('ntVoiceN');if(n)n.textContent=t||'';}
+function nvBtn(on,label){var b=ntG('ntVoice');if(!b)return;b.classList.toggle('nvrec',!!on);b.textContent=label||'Hold to speak';b.disabled=NV.busy;}
+function nvShow(){var b=ntG('ntVoice');if(!b)return;b.hidden=!(STATE.me&&STATE.me.role==='owner'&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder&&window.crypto&&crypto.subtle);}
+function nvInit(){var b=ntG('ntVoice');if(!b)return;b.addEventListener('pointerdown',function(e){e.preventDefault();try{if(e.pointerId!=null)b.setPointerCapture(e.pointerId);}catch(x){}nvDown();});
+  b.addEventListener('pointerup',nvUp);b.addEventListener('pointercancel',nvUp);b.addEventListener('contextmenu',function(e){e.preventDefault();});}
+function nvDown(){if(NV.rec||NV.busy)return;var r={up:false,chunks:[],key:NT.key};NV.rec=r;nvNote('');
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){r.st=st;
+    if(r.up){nvEnd(r);nvNote('Hold the button while you speak.');return;}
+    var mr;try{mr=new MediaRecorder(st);}catch(e){nvEnd(r);nvNote('This phone cannot record here.'+NV_KB);return;}r.mr=mr;
+    mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)r.chunks.push(ev.data);};mr.onstop=function(){nvStopped(r);};
+    r.t0=Date.now();mr.start();nvBtn(true,'Recording · let go when done');r.max=setTimeout(nvUp,NV.maxMs);},
+    function(){nvEnd(r);nvNote('Allow the microphone for Relay.'+NV_KB);});}
+function nvUp(){var r=NV.rec;if(!r||r.up)return;r.up=true;clearTimeout(r.max);if(r.mr&&r.mr.state!=='inactive'){try{r.mr.stop();}catch(e){nvEnd(r);}}}
+function nvEnd(r){clearTimeout(r.max);if(NV.rec===r)NV.rec=null;if(r.st){try{r.st.getTracks().forEach(function(k){k.stop();});}catch(e){}}nvBtn(false);}
+function nvStopped(r){nvEnd(r);if(Date.now()-r.t0<NV.minMs||!r.chunks.length){nvNote('Hold the button while you speak.');return;}
+  var type=((r.mr&&r.mr.mimeType)||r.chunks[0].type||'audio/mp4').split(';')[0],ext=/webm/.test(type)?'webm':/ogg/.test(type)?'ogg':/wav/.test(type)?'wav':'m4a';
+  nvSend(new Blob(r.chunks,{type:type}),type,ext,r.key);}
+function nvFail(t){NV.busy=false;nvBtn(false);nvNote(t+NV_KB);}
+function nvSend(blob,type,ext,key){NV.busy=true;nvBtn(false,'Writing it out…');nvNote('The laptop is writing it out…');var sha;
+  blob.arrayBuffer().then(function(buf){return crypto.subtle.digest('SHA-256',buf);}).then(function(h){sha=lpHex(h);
+    return api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:blob.size,ext:ext})});}).then(function(r){
+      if(!r.ok||!r.j||!r.j.url)throw String((r.j&&r.j.error)||'The laptop could not take it.');var up=r.j;
+      return fetch(up.url,{method:'PUT',headers:{'Content-Type':type,'x-upsert':'false'},body:blob}).then(function(p){if(!p.ok)throw 'The recording did not upload.';
+        return api('/laptop/voice-text',{method:'POST',body:JSON.stringify({machine_id:up.machine_id,path:up.path,size:blob.size,sha256:sha,mime:type,client_id:lpCid()})});});
+    }).then(function(r){if(!r.ok||!r.j||!r.j.id)throw String((r.j&&r.j.error)||'The laptop could not take it.');nvPoll(r.j.id,key,Date.now());
+    }).catch(function(e){nvFail(typeof e==='string'?e:'Could not reach Relay.');});}
+function nvPoll(id,key,t0){if(Date.now()-t0>NV.waitMs){nvFail('The laptop did not answer.');return;}
+  setTimeout(function(){api('/laptop/voice-text?id='+encodeURIComponent(id)).then(function(r){var j=r.j||{};
+      if(j.status==='done'){NV.busy=false;nvBtn(false);nvWords(String(j.text||''),key);return;}
+      if(j.status==='failed'){nvFail(String(j.reason||'The laptop could not write it out.')+'.');return;}
+      nvPoll(id,key,t0);},function(){nvPoll(id,key,t0);});},NV.pollMs);}
+function nvWords(text,key){if(key!==NT.key){nvNote('');toast('That recording came back after the ticket was sent, so it was not added');return;}
+  var b=ntG('ntBody');if(!b)return;var had=b.value.replace(/\s+$/,'');b.value=(had?had+' ':'')+text;if(b.maxLength>0&&b.value.length>b.maxLength)b.value=b.value.slice(0,b.maxLength);
+  ntFormSaveNow();nvNote('Written out by the laptop. Check it before sending.');}
 function ntClose(){ntFormSaveNow();var sh=ntG('ntSheet');if(sh)sh.classList.remove('on');NT.open=false;document.body.classList.remove('nt-on');}
 function ntSubmit(){var ti=ntG('ntTitle'),bo=ntG('ntBody'),title=ti.value.replace(/\s+/g,' ').trim();if(!title){toast('Add a title');ti.focus();return;}
   var d={key:NT.key||ntNewKey(),kind:NT.kind,title:title.slice(0,140),body:bo.value.trim().slice(0,4000),shot:NT.shot||'',at:Date.now(),tries:0,err:''};
@@ -1093,7 +1161,7 @@ function load(){
     if(tg&&tg.initData&&!STATE._tokmint){STATE._tokmint=true;api('/token').then(function(r){if(r.ok&&r.j&&r.j.token){try{localStorage.setItem('vr_devtoken',r.j.token)}catch(e){}}}).catch(function(){});}
     var _oldStatus={};STATE.tickets.forEach(function(t){_oldStatus[t.id]=t.status;});
     var prevMax=STATE.tickets.reduce(function(m,t){return Math.max(m,t.id)},0);
-    STATE.tickets=res.j.tickets||[];
+    STATE.tickets=res.j.tickets||[];setTimeout(whoTick,0);
     if(res.j.team)STATE.team=res.j.team;
     if(typeof res.j.pending_count!=='undefined'){var _prevPend=(STATE.me&&STATE.me.pending_count)||0;if(STATE.me)STATE.me.pending_count=res.j.pending_count;updateTeamBadge(res.j.pending_count);
       if(!STATE.first && res.j.pending_count>_prevPend){beep();var _vis2=(typeof document!=='undefined'&&document.visibilityState==='visible');if(_vis2)accessCard(res.j.pending_count-_prevPend);}}
@@ -1163,7 +1231,7 @@ function render(){
   else{al.classList.remove('on');}
   var _un=unreadCount();var _bell=document.getElementById('bell');var _bdg=document.getElementById('bdg');
   if(_un>0){_bell.classList.add('has');_bdg.textContent=_un>99?'99+':_un;}else{_bell.classList.remove('has');}
-  document.getElementById('list').innerHTML=listHtml();
+  document.getElementById('list').innerHTML=gsHint()+listHtml();
   buildTicker();
   if(STATE.view==='board')renderBoard();
   if(STATE.view==='stats')renderStats();
@@ -1414,7 +1482,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261105-17';
+var LP_BUILD='CHAT-20261105-20';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2432,6 +2500,38 @@ function lpPaintDone(){var b=lpG('lpDone');if(!b)return;var S=LP.sess[LP.sel],r=
   var a=lpEl('button','lpbtn','Send me the report');a.type='button';a.dataset.lptap='doneask';b.appendChild(a);}
 function lpNewTMachine(){var ms=(LP.data&&LP.data.machines)||[],now=lpSrvNow(),best=null;
   ms.forEach(function(m){if(m&&lpVerGE(m.info&&m.info.savepoint,[0,6,15])&&now-lpT(m.seen_at)<=LP_OFFLINE_MS&&(!best||lpT(m.seen_at)>lpT(best.seen_at)))best=m;});return best;}
+// Item 6: one box across tickets, comments and (owner, server side) laptop chats. Everything shown goes in as textContent.
+var GS={seq:0,timer:0};
+function gsEl(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function gsHint(){return String(STATE.q||'').trim().length>=2?'<button type="button" class="sortbtn" id="gsBtn" onclick="gsOpen(STATE.q)">Search all tickets, comments and chats</button>':'';}
+function gsOpen(pre){var b=document.getElementById('gSrch');if(!b){b=gsEl('div');b.id='gSrch';document.body.appendChild(b);}b.textContent='';
+  var hd=gsEl('div','lpnth');hd.appendChild(gsEl('span','lpcht','Search everything'));var x=gsEl('button','lpbtn','Cancel');x.type='button';x.onclick=gsClose;hd.appendChild(x);b.appendChild(hd);
+  var bd=gsEl('div','gsbd');var i=gsEl('input');i.id='gsI';i.type='search';i.placeholder='Tickets, comments, chats';i.autocomplete='off';i.setAttribute('aria-label','Search tickets, comments and chats');i.oninput=gsInput;bd.appendChild(i);b.appendChild(bd);
+  var r=gsEl('div');r.id='gsR';b.appendChild(r);b.hidden=false;gsMsg('Type at least 2 letters.');i.focus();if(typeof pre==='string'&&pre){i.value=pre;gsInput();}}
+function gsClose(){GS.seq++;clearTimeout(GS.timer);var b=document.getElementById('gSrch');if(b){b.hidden=true;b.textContent='';}}
+function gsMsg(t){var r=document.getElementById('gsR');if(!r)return;r.textContent='';r.appendChild(gsEl('div','gsn',t));}
+function gsInput(){var i=document.getElementById('gsI');if(!i)return;clearTimeout(GS.timer);var seq=++GS.seq,q=i.value.replace(/[*%\\]/g,' ').replace(/\s+/g,' ').trim();
+  if(q.length<2){gsMsg('Type at least 2 letters.');return;}
+  gsMsg('Searching…');GS.timer=setTimeout(function(){gsGo(q,seq);},300);}
+function gsGo(q,seq){api('/search?q='+encodeURIComponent(q)).then(function(res){if(seq!==GS.seq)return;
+    if(!res.ok||!res.j||!Array.isArray(res.j.tickets)){gsMsg('Could not search. Try again.');return;}gsPaint(res.j,q);
+  }).catch(function(){if(seq===GS.seq)gsMsg('Could not search. Check your signal.');});}
+function gsRow(box,title,snip,tap){var b=gsEl('button','gsr');b.type='button';b.appendChild(gsEl('div','gst',title));b.appendChild(gsEl('div','gss',snip||''));b.onclick=tap;box.appendChild(b);}
+function gsPaint(j,q){var r=document.getElementById('gsR');if(!r)return;r.textContent='';
+  var ts=j.tickets||[],cs=j.comments||[],ch=j.chats||[];
+  if(j.partial)r.appendChild(gsEl('div','gsn','Part of it could not be searched, so this list may be short.'));
+  if(j.more)r.appendChild(gsEl('div','gsn','Showing the newest 30. Add a word to narrow it.'));
+  if(!ts.length&&!cs.length&&!ch.length&&!j.partial){r.appendChild(gsEl('div','gsn','Nothing found for "'+q+'".'));return;}
+  if(ts.length){r.appendChild(gsEl('div','gsh','Tickets'));ts.forEach(function(t){gsRow(r,'#'+t.id+' '+(t.title||''),t.snip,function(){gsOpenTicket(t.id);});});}
+  if(cs.length){r.appendChild(gsEl('div','gsh','Comments'));cs.forEach(function(c){gsRow(r,'#'+c.ticket_id+' '+(c.title||''),(c.author?c.author+': ':'')+(c.snip||''),function(){gsOpenTicket(c.ticket_id);});});}
+  if(ch.length){r.appendChild(gsEl('div','gsh','Chats'));ch.forEach(function(c){gsRow(r,c.name||c.chat_key||'Chat',(c.role==='user'?'You: ':'Claude: ')+(c.snip||''),function(){gsOpenChat(c);});});}}
+function gsOpenTicket(id){if(!find(id)){toast('Ticket #'+id+' is not in this list');return;}gsClose();if(STATE.view!=='list'&&STATE.view!=='board')setView('list');openT(id);}
+function gsChatSid(c){var ss=(LP.data&&LP.data.sessions)||[],hit=ss.filter(function(s){return s.session_id===c.session_id;})[0];if(hit)return hit.session_id;
+  var by=LP.chatBy||{},found=null;ss.forEach(function(s){var k=by[String(s.session_id)];if(!found&&k&&k.chat_key===c.chat_key)found=s.session_id;});return found;}
+function gsOpenChat(c){var sid0=LP.data?gsChatSid(c):null;if(LP.data&&!sid0){toast('That chat is no longer open on the laptop');return;}
+  gsClose();if(STATE.view!=='laptop')setView('laptop');var n=0;(function go(){var sid=LP.data?gsChatSid(c):null;
+    if(sid){lpSelect(sid,true);if(LP.chatsOn)lpChatsClose();return;}
+    if(LP.data||n++>=15){toast('That chat is no longer open on the laptop');return;}setTimeout(go,300);})();}
 function lpNewTClose(){var b=lpG('lpNewT');if(b){b.hidden=true;b.textContent='';}}
 function lpNewTOpen(){var b=lpG('lpNewT'),m=lpNewTMachine();if(!b)return;if(!m){toast('The laptop is not online');return;}b.textContent='';
   var hd=lpEl('div','lpnth');hd.appendChild(lpEl('span','lpcht','New terminal'));var x=lpEl('button','lpbtn','Cancel');x.type='button';x.dataset.lptap='newtx';hd.appendChild(x);b.appendChild(hd);
@@ -2455,6 +2555,7 @@ function lpNewTWatch(){var w=LP.newT;if(!w)return;var cs=(LP.data&&LP.data.comma
   else if(c&&(c.status==='failed'||c.status==='expired'||c.status==='unconfirmed')){LP.newT=null;toast('Not opened: '+String((c.result&&c.result.reason)||'the laptop did not take it'));}
   else if(Date.now()-w.t>60000){LP.newT=null;toast('The laptop has not answered yet');}}
 function lpChatsPaint(){var box=lpG('lpChats');if(!box)return;box.textContent='';var hd=lpEl('div','lpchh');hd.appendChild(lpEl('span','lpcht','Chats'));
+  var gsb=lpEl('button','lpbtn gsb','Search');gsb.type='button';gsb.dataset.lptap='gsopen';hd.appendChild(gsb);
   if(lpNewTMachine()){var nb=lpEl('button','lpbtn lpntb','New terminal');nb.type='button';nb.dataset.lptap='newt';hd.appendChild(nb);}
   var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);box.appendChild(hd);
   var hl=lpHealthEl();if(hl)box.appendChild(hl);
@@ -2793,7 +2894,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){lpChatsClose();lpSelect(t.el.dataset.sid,true);}
   else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
-  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='bropen')lpBrOpen();else if(w==='brx')lpBrClose();else if(w==='brgo')lpBrGo();else if(w==='doneask')lpDoneAsk();else if(w==='newt')lpNewTOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
+  else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='bropen')lpBrOpen();else if(w==='brx')lpBrClose();else if(w==='brgo')lpBrGo();else if(w==='doneask')lpDoneAsk();else if(w==='newt')lpNewTOpen();else if(w==='gsopen')gsOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
 
 /* ── layout (F2): the column follows the keyboard through visualViewport; the top bar stays ── */
 function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started)return;var tb=document.querySelector('.top'),top=tb?tb.getBoundingClientRect().bottom:0,vv=window.visualViewport,h;
@@ -3119,7 +3220,7 @@ function bCard(t){
   var pri=priClass(t.priority)?'<span class="pri '+priClass(t.priority)+'">'+priLabel(t.priority)+'</span>':'';
   var asg=t.assignee?'<span class="asg">'+H(t.assignee)+'</span>':'';
   return '<div class="bcard" draggable="true" ondragstart="bStart(event,'+Number(t.id)+')" ondragend="bEnd(event)" onclick="openT('+Number(t.id)+')" style="border-left-color:'+safeColor(t.color)+'">'+
-    '<div class="bctop"><span class="tid">#'+H(t.id)+'</span>'+pri+asg+'</div>'+
+    '<div class="bctop"><span class="tid">#'+H(t.id)+'</span>'+pri+asg+whoChip(t.id)+'</div>'+
     '<div class="bctt">'+ic+' '+H(t.title)+'</div>'+
     '<div class="bcf"><span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span>'+(t.done?('<span class="meta-r">v'+(H(t.ver)||'?')+'</span>'):ageChip(t))+'</div></div>';
 }
@@ -3155,6 +3256,7 @@ function cmdItems(q){
   var acts=[{sec:'VIEW'},
     {lbl:'Go to List',hint:'view',run:function(){setView('list')}},
     {lbl:'Go to Board',hint:'view',run:function(){setView('board')}},
+    {lbl:'Search everything',hint:'tickets + chats',run:function(){gsOpen()}},
     {lbl:'Go to Stats',hint:'view',run:function(){setView('stats')}},
     {sec:'ACTIONS'},
     {lbl:'Refresh now',hint:'reload',run:function(){load()}},
@@ -3561,7 +3663,7 @@ function rowHtml(t){
   var selbox=STATE.selMode?('<span class="selbox'+(seld?' on':'')+'">'+(seld?'✓':'')+'</span>'):'';
   return '<div class="row'+(seld?' selrow':'')+'" style="border-left-color:'+safeColor(t.color)+'" onclick="rowClick(event,'+Number(t.id)+')">'+selbox+
    '<span class="tag '+tag+'">'+lab+'</span><span class="tid">#'+H(t.id)+'</span>'+
-   '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+dueb+stale+thread+asg+
+   '<div class="ttl"><div class="tl1">'+ic+' '+H(t.title)+'</div>'+(t.body?('<div class="rsnip">'+H(String(t.body).replace(/\s+/g," ").slice(0,90))+'</div>'):'')+'</div>'+isnew+pri+dueb+stale+thread+asg+whoChip(t.id)+
    '<span class="who" style="color:'+safeColor(t.color)+'"><i style="background:'+safeColor(t.color)+'"></i>'+H(t.who)+'</span>'+
    '<span class="star'+(isPinned(t.id)?' on':'')+'" onclick="togglePinEv(event,'+Number(t.id)+')" title="pin">'+(isPinned(t.id)?'★':'☆')+'</span>'+
    right+'</div>';
@@ -3621,7 +3723,7 @@ function openT(id){
   if(priClass(t.priority))meta+='<span>prio '+priLabel(t.priority)+'</span>';
   if(t.due&&!t.done){var _mdi=dueInfo(t.due);if(_mdi)meta+='<span'+(_mdi.overdue?' style="color:var(--red,#FF2E55)"':'')+'>📅 '+_mdi.txt+'</span>';}
   if(t.ver)meta+='<span>v'+H(t.ver)+'</span>';if(t.pv)meta+='<span>from v'+H(t.pv)+'</span>';
-  if(t.proj)meta+='<span>'+H(t.proj)+'</span>';meta+='<span>'+ageS(t.created)+' old</span>';
+  if(t.proj)meta+='<span>'+H(t.proj)+'</span>';meta+='<span>'+ageS(t.created)+' old</span>';if(whoSheet(id))meta+='<span>'+H(whoSheet(id))+'</span>';
   var _shots=(t.shots||[]).filter(function(u){return !!safeUrl(u);});var shots=_shots.length?('<div class="shots">'+_shots.map(function(u){return '<img src="'+H(safeUrl(u))+'">'}).join('')+'</div>'):'';
   var pdf=safeUrl(t.pdf)?('<a class="pdfbtn" href="'+H(safeUrl(t.pdf))+'" target="_blank" rel="noopener">📄 open PDF report</a>'):'';
   var thread=(t.thread||[]).map(function(m){return '<div class="tmsg '+(m.author==='office'?'office':'reporter')+'"><div class="a">'+(m.author==='office'?'OFFICE':H(t.who))+' · '+ageS(m.created_at)+'</div>'+H(m.body)+'</div>'}).join('');

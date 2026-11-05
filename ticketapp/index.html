@@ -894,7 +894,7 @@ var WHO={on:{},busy:false,sig:'{}'};
 function whoList(id){var a=WHO.on[String(id)];if(!a||!a.length)return [];return a.slice().sort(function(x,y){return (y.status==='busy')-(x.status==='busy');});}
 function whoChip(id){var a=whoList(id);if(!a.length)return '';var w=whoSheet(id);return '<span class="onit'+(a[0].status==='busy'?' busy':'')+'" title="'+H(w)+'">'+H(a[0].name)+(a.length>1?' +'+(a.length-1):'')+'</span>';}
 function whoSheet(id){var a=whoList(id);return a.length?'Terminal: '+a.map(function(x){return x.name+(x.status==='busy'?' (working)':' (open)');}).join(', '):'';}
-function whoSet(on){var sig=JSON.stringify(on||{});if(sig===WHO.sig)return;WHO.on=on||{};WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)render();}
+function whoSet(on){on=on||{};Object.keys(on).forEach(function(k){(on[k]||[]).forEach(function(x){x.name=lpMask(String(x.name||''));});});var sig=JSON.stringify(on);if(sig===WHO.sig)return;WHO.on=on;WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)render();}
 function whoTick(){if(document.hidden||WHO.busy||!STATE.me||STATE.me.role!=='owner')return Promise.resolve();if(STATE.view&&STATE.view!=='list'&&STATE.view!=='board')return Promise.resolve();
   WHO.busy=true;return api('/who-on-it').then(function(r){WHO.busy=false;whoSet(r.ok&&r.j&&r.j.on?r.j.on:{});},function(){WHO.busy=false;whoSet({});});}
 setInterval(whoTick,30000);
@@ -1035,7 +1035,7 @@ function nvPoll(id,key,t0){if(Date.now()-t0>NV.waitMs){nvFail('The laptop did no
       if(j.status==='failed'){nvFail(String(j.reason||'The laptop could not write it out.')+'.');return;}
       nvPoll(id,key,t0);},function(){nvPoll(id,key,t0);});},NV.pollMs);}
 function nvWords(text,key){if(key!==NT.key){nvNote('');toast('That recording came back after the ticket was sent, so it was not added');return;}
-  var b=ntG('ntBody');if(!b)return;var had=b.value.replace(/\s+$/,'');b.value=(had?had+' ':'')+text;if(b.maxLength>0&&b.value.length>b.maxLength)b.value=b.value.slice(0,b.maxLength);
+  var b=ntG('ntBody');if(!b)return;var had=b.value.replace(/\s+$/,'');b.value=(had?had+' ':'')+lpMask(text);if(b.maxLength>0&&b.value.length>b.maxLength)b.value=b.value.slice(0,b.maxLength);
   ntFormSaveNow();nvNote('Written out by the laptop. Check it before sending.');}
 function ntClose(){ntFormSaveNow();var sh=ntG('ntSheet');if(sh)sh.classList.remove('on');NT.open=false;document.body.classList.remove('nt-on');}
 function ntSubmit(){var ti=ntG('ntTitle'),bo=ntG('ntBody'),title=ti.value.replace(/\s+/g,' ').trim();if(!title){toast('Add a title');ti.focus();return;}
@@ -1482,7 +1482,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261105-20';
+var LP_BUILD='CHAT-20261105-21';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2524,7 +2524,7 @@ function gsPaint(j,q){var r=document.getElementById('gsR');if(!r)return;r.textCo
   if(!ts.length&&!cs.length&&!ch.length&&!j.partial){r.appendChild(gsEl('div','gsn','Nothing found for "'+q+'".'));return;}
   if(ts.length){r.appendChild(gsEl('div','gsh','Tickets'));ts.forEach(function(t){gsRow(r,'#'+t.id+' '+(t.title||''),t.snip,function(){gsOpenTicket(t.id);});});}
   if(cs.length){r.appendChild(gsEl('div','gsh','Comments'));cs.forEach(function(c){gsRow(r,'#'+c.ticket_id+' '+(c.title||''),(c.author?c.author+': ':'')+(c.snip||''),function(){gsOpenTicket(c.ticket_id);});});}
-  if(ch.length){r.appendChild(gsEl('div','gsh','Chats'));ch.forEach(function(c){gsRow(r,c.name||c.chat_key||'Chat',(c.role==='user'?'You: ':'Claude: ')+(c.snip||''),function(){gsOpenChat(c);});});}}
+  if(ch.length){r.appendChild(gsEl('div','gsh','Chats'));ch.forEach(function(c){gsRow(r,lpMask(String(c.name||c.chat_key||'Chat')),(c.role==='user'?'You: ':'Claude: ')+lpMask(String(c.snip||'')),function(){gsOpenChat(c);});});}}
 function gsOpenTicket(id){if(!find(id)){toast('Ticket #'+id+' is not in this list');return;}gsClose();if(STATE.view!=='list'&&STATE.view!=='board')setView('list');openT(id);}
 function gsChatSid(c){var ss=(LP.data&&LP.data.sessions)||[],hit=ss.filter(function(s){return s.session_id===c.session_id;})[0];if(hit)return hit.session_id;
   var by=LP.chatBy||{},found=null;ss.forEach(function(s){var k=by[String(s.session_id)];if(!found&&k&&k.chat_key===c.chat_key)found=s.session_id;});return found;}

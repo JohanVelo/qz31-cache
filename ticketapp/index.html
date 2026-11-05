@@ -928,24 +928,8 @@ html.ui2 .lphead{padding-top:calc(env(safe-area-inset-top) + 4px);background:var
 html.ui2 #lpChatsB{color:var(--accent);background:none;border:0;font-size:16px;font-weight:560;margin-left:2px;padding-left:4px}
 html.ui2 #lpChatsB::before{content:"\2039";font-size:26px;line-height:20px;margin-right:4px;vertical-align:-2px}
 html.ui2 #lpChats{background:var(--bg);padding:calc(env(safe-area-inset-top) + 14px) 16px calc(170px + env(safe-area-inset-bottom));z-index:4}
-html.ui2 .lpchh{position:static;background:none;padding:0 0 12px;border:0;gap:8px}
 html.ui2 .lpcht{font-size:32px;line-height:38px;font-weight:640;letter-spacing:-.028em;margin-right:auto}
 html.ui2 .lpchh [data-lptap=chatsx],html.ui2 .lpchh .gsb{display:none}
-html.ui2 .lpchh .lpntb{min-height:36px;border-radius:18px;background:var(--s1);border:0;box-shadow:inset 0 0 0 .75px var(--hair);color:var(--ink);font-size:13.5px;padding:0 13px}
-html.ui2 .lpbrb{min-height:40px;border-radius:14px;border:0;background:var(--s1);box-shadow:inset 0 0 0 .75px var(--hair);margin:0 0 10px;font-size:14px;color:var(--ink2)}
-html.ui2 .lpcr{position:relative;display:flex;align-items:center;gap:12px;padding:13px 14px;margin:0;background:var(--s1);border:0;min-height:74px;cursor:pointer;transition:background var(--t-fast)}
-html.ui2 .lpcr:active{background:var(--s2);transition:none}
-html.ui2 .lpcr+.lpcr::before{content:"";position:absolute;top:0;left:72px;right:0;height:.75px;background:var(--hair)}
-html.ui2 #lpChats>.lpcr:first-of-type{border-radius:var(--r-group) var(--r-group) 0 0}
-html.ui2 #lpChats>.lpcr:last-of-type{border-radius:0 0 var(--r-group) var(--r-group)}
-html.ui2 .lpcr.on{background:color-mix(in oklab,var(--accent) 9%,var(--s1))}
-html.ui2 .lpca{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:640;font-size:17px;background:color-mix(in oklab,var(--accent) 15%,var(--s2));color:var(--accent)}
-html.ui2 .lpcm{flex:1;min-width:0}
-html.ui2 .lpcmn{font-size:16px;font-weight:600}
-html.ui2 .lpcmh{font-size:13px;color:var(--ink2)}
-html.ui2 .lpcmp{font-size:14.5px;line-height:20px;color:var(--ink2)}
-html.ui2 .lppin,html.ui2 .lpmute{flex:none;min-width:44px;min-height:44px;padding:0 6px;border:0;background:none;font-size:13px;color:var(--ink3)}
-html.ui2 .lpun.on{background:var(--fill);color:var(--fill-ink);font-family:var(--sans);font-size:12.5px}
 html.ui2 .lpcomp{background:var(--bg);border-top:.75px solid var(--hair)}
 html.ui2 #lpIn{background:var(--s1);border:0;box-shadow:inset 0 0 0 .75px var(--hair2);font-family:var(--sans);font-size:16px}
 html.ui2 #lpSend{background:var(--fill);color:var(--fill-ink);border:0}
@@ -1041,17 +1025,6 @@ html.ui2 #laptop.lp-kb .lphead{display:flex}
 #ui2ChatT small{display:block;font:400 13px/16px var(--sans);color:var(--ink2);overflow:hidden;text-overflow:ellipsis}
 html.ui2 .lpconn{font-family:var(--sans);font-size:13px;letter-spacing:0}
 html.ui2 .lpm-a,html.ui2 .lpm-u{font-size:15.5px;line-height:22px}
-/* chat row: swipe left for Pin and Mute, so the name has the width */
-html.ui2 .lpcr{overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
-html.ui2 .lpcr::-webkit-scrollbar{display:none}
-html.ui2 .lpca{scroll-snap-align:start}
-html.ui2 .lpcm{flex:0 0 calc(100% - 58px);margin-right:6px}
-html.ui2 .lppin,html.ui2 .lpmute{background:var(--s2);border-radius:12px;color:var(--ink);min-width:60px;margin-left:4px}
-html.ui2 .lpcr.on{background:var(--s1)}
-html.ui2 .lpcmt{display:flex;justify-content:space-between;gap:8px}
-html.ui2 .lpcmn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-html.ui2 .lpcmb{display:flex;justify-content:space-between;gap:8px;align-items:center}
-html.ui2 .lpcmp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (min-width:960px){
  html.ui2 .tools{right:524px;top:18px}
  #ui2Hd .lv{margin-right:0;font-size:13px;gap:6px;position:absolute;right:680px}
@@ -1059,17 +1032,114 @@ html.ui2 .lpcmp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  html.ui2 #laptop .lpcol{margin-left:0}
  html.ui2 #lpChats{left:0}
  html.ui2 #lpConv,html.ui2 .lpcomp>*{max-width:860px;margin-left:auto;margin-right:auto;width:100%}
- html.ui2 .lpcr.on{background:color-mix(in oklab,var(--accent) 12%,var(--s1))}
- html.ui2 .lpcm{flex:1 1 auto;margin:0}
- html.ui2 .lpcr{overflow:hidden}
- html.ui2 .lppin,html.ui2 .lpmute{display:none}
- html.ui2 .lpcr:hover .lppin,html.ui2 .lpcr:hover .lpmute{display:block;min-width:50px}
  html.ui2 body:has(.sheet.on) .tools{right:calc(min(620px,48vw) + 16px)}
  html.ui2 body:has(.sheet.on) #ui2Hd .lv{display:none}
 }
 html.ui2 .dleg,html.ui2 .dleg *,html.ui2 .sprio,html.ui2 .sprio *{font-size:13px!important;font-family:var(--sans)!important}
 html.ui2 .lpntm,html.ui2 .lpnb2,html.ui2 .lphealth,html.ui2 .lpcmgt{font-size:13px!important;font-family:var(--sans)!important}
-html.ui2 .row.ui2cur{background:var(--s2)!important;box-shadow:inset 2px 0 0 var(--accent)!important}/*UI2CSSEND*/
+html.ui2 .row.ui2cur{background:var(--s2)!important;box-shadow:inset 2px 0 0 var(--accent)!important}
+html.ui2 .chips{scrollbar-width:none}html.ui2 .chips::-webkit-scrollbar{display:none}@media (min-width:960px){html.ui2 .chips{flex-wrap:wrap;overflow:visible}}
+/* Chats (JJ's iPhone picture, 2026-11-06): tiles, real groups, one soft status line, and a card only when something truly waits */
+html.ui2 #lpChats{scrollbar-width:none;overflow-x:hidden}
+html.ui2 #lpChats::-webkit-scrollbar{display:none}
+html.ui2 .lpchh{position:static;display:flex;align-items:center;gap:8px;background:none;padding:0 0 14px;border:0}
+html.ui2 .lpchh .lpntb,html.ui2 .lpchh .lpbrb{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:40px;margin:0;border:0;background:var(--s1);box-shadow:inset 0 0 0 .75px var(--hair);color:var(--ink);font:540 13.5px/18px var(--sans);letter-spacing:0;text-transform:none;transition:transform var(--t-tap),background var(--t-fast)}
+html.ui2 .lpchh .lpntb{border-radius:20px;padding:0 14px 0 10px}
+html.ui2 .lpchh .lpbrb{width:40px;padding:0;border-radius:50%;color:var(--ink2)}
+html.ui2 .lpchh .lpntb:active,html.ui2 .lpchh .lpbrb:active{transform:scale(.95);background:var(--s2);transition:none}
+html.ui2 .ui2gt{display:flex;justify-content:space-between;align-items:baseline;margin:20px 6px 8px;padding:0;font:600 14px/18px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink)}
+html.ui2 .ui2gt b{font:500 13px/18px var(--sans);color:var(--ink2)}
+html.ui2 .lpchh+.ui2gt{margin-top:2px}
+html.ui2 .ui2gp{isolation:isolate;overflow:hidden;border-radius:var(--r-group);background:var(--s1);box-shadow:inset 0 0 0 .75px var(--hair)}
+
+/* a row is a sideways scroller: the face fills it exactly, so nothing of Pin or Mute shows until a swipe or a long press */
+html.ui2 .lpcr{position:relative;display:flex;align-items:stretch;gap:0;margin:0;padding:0;min-height:0;border:0;background:none;cursor:pointer;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+html.ui2 .lpcr::-webkit-scrollbar{display:none}
+html.ui2 .ui2rm{position:relative;flex:0 0 100%;min-width:0;display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:74px;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always;transition:background var(--t-fast)}
+html.ui2 .lpcr+.lpcr .ui2rm::before{content:"";position:absolute;top:0;left:72px;right:0;height:.75px;background:var(--hair)}
+html.ui2 .lpcr:active .ui2rm{background:var(--s2);transition:none}
+html.ui2 .ui2ra{flex:none;display:flex;scroll-snap-align:end}
+html.ui2 .lppin,html.ui2 .lpmute{flex:none;width:72px;min-width:72px;min-height:44px;margin:0;padding:0;border:0;border-radius:0;background:var(--s2);color:var(--ink);font:540 13.5px/18px var(--sans);letter-spacing:0;text-transform:none}
+html.ui2 .lpmute{background:var(--s3)}
+
+/* tile: the terminal's own colour, its status on the corner */
+html.ui2 .lpca{position:relative;flex:0 0 46px;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;font:640 18px/1 var(--sans);letter-spacing:-.01em;background:color-mix(in oklab,var(--tc,var(--accent)) 19%,var(--s1));color:color-mix(in oklab,var(--tc,var(--accent)) 82%,var(--ink));box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--tc,var(--accent)) 30%,transparent)}
+html.ui2[data-finish=porcelain] .lpca{color:color-mix(in oklab,var(--tc,var(--accent)) 42%,var(--ink));background:color-mix(in oklab,var(--tc,var(--accent)) 22%,var(--s1))}
+html.ui2 .ui2dot{position:absolute;right:-3px;bottom:-3px;width:13px;height:13px;border-radius:50%;background:var(--ink3);box-shadow:0 0 0 2.5px var(--s1)}
+html.ui2 .u-idle .ui2dot{display:none}
+html.ui2 .u-off .ui2dot{background:var(--s1);box-shadow:0 0 0 2.5px var(--s1),inset 0 0 0 2px var(--ink3)}
+html.ui2 .u-wait .ui2dot{background:var(--warn)}
+html.ui2 .u-done .ui2dot{background:var(--ok)}
+html.ui2 .u-run .ui2dot{background:var(--accent)}
+html.ui2 .u-run .ui2dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--accent);animation:ui2ping 1.8s var(--e-out) infinite}
+@keyframes ui2ping{from{transform:scale(1);opacity:.55}to{transform:scale(2.3);opacity:0}}
+
+html.ui2 .lpcm{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+html.ui2 .lpcmt,html.ui2 .lpcmb{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+html.ui2 .lpcmn{flex:1 1 auto;min-width:0;font:600 16px/21px var(--sans);letter-spacing:-.006em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ui2 .lpcmh{flex:none;font:400 13px/18px var(--sans);color:var(--ink2);font-feature-settings:"tnum" 1}
+html.ui2 .lpcmp{flex:1 1 auto;min-width:0;font:400 14px/20px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ui2 .lpcr.unread .lpcmh{color:var(--accent);font-weight:560}
+html.ui2 .lpcr.unread .lpcmp{color:var(--ink)}
+html.ui2 .lpun.on{flex:none;min-width:21px;height:21px;padding:0 6px;display:inline-grid;place-items:center;border-radius:11px;background:var(--fill);color:var(--fill-ink);font:600 12.5px/1 var(--sans)}
+html.ui2 .lpcr.muted .lpcmn{color:var(--ink2)}
+html.ui2 .lpcr.muted .lpcmn::after{content:" \00b7 muted";font-weight:400;font-size:13px;color:var(--ink2)}
+html.ui2 .lpcr.muted .lpca{filter:saturate(.25)}
+
+/* one status line, a soft colour for what it means; red is not for good news */
+html.ui2 .lpcmg,html.ui2 .lpcmg.wait{display:flex;align-items:center;gap:6px;min-width:0;margin:1px 0 0;padding:0;background:none;border:0;color:var(--ink2);font:500 13px/18px var(--sans)}
+html.ui2 .lpcmgt{min-width:0;font:inherit!important;color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ui2 .u-wait .lpcmg{color:var(--warn)}
+html.ui2 .u-done .lpcmg{color:var(--ok)}
+html.ui2 .u-run .lpcmg::before{content:"";flex:none;width:11px;height:11px;box-sizing:border-box;border-radius:50%;border:1.6px solid color-mix(in oklab,var(--ink2) 30%,transparent);border-top-color:var(--ink2);animation:ui2spin .85s linear infinite}
+@keyframes ui2spin{to{transform:rotate(360deg)}}
+html.ui2 .lpcmgb{flex:0 0 44px;height:3px;margin:0 0 0 auto;border-radius:2px;background:var(--s3);overflow:hidden}
+html.ui2 .lpcmgb>i{display:block;height:100%;border-radius:2px;background:var(--ink2)}
+
+/* the card: only when a terminal is truly waiting. More than one waiting shows as a stack. */
+html.ui2 .ui2hw{position:relative;isolation:isolate;margin:0 0 6px;padding:12px 0 2px;border-radius:24px;background:linear-gradient(180deg,color-mix(in oklab,var(--warn) 13%,var(--s1)),var(--s1) 72%);box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 34%,transparent),0 12px 32px rgba(0,0,0,.28)}
+html.ui2 .ui2hw[data-more]{margin-bottom:18px;box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 34%,transparent),0 9px 0 -7px color-mix(in oklab,var(--warn) 12%,var(--s1)),0 9.75px 0 -7px color-mix(in oklab,var(--warn) 30%,transparent),0 16px 32px rgba(0,0,0,.28)}
+html.ui2 .ui2hl{display:flex;justify-content:space-between;align-items:baseline;padding:0 16px;font:600 14px/18px var(--sans);color:var(--warn)}
+html.ui2 .ui2hl b{font:500 13px/18px var(--sans)}
+html.ui2 .lpcr.ui2hero{display:block;overflow:visible;scroll-snap-type:none;touch-action:manipulation}
+html.ui2 .ui2hero .ui2rm{align-items:flex-start;padding:10px 16px 4px;min-height:0}
+html.ui2 .lpcr.ui2hero:active .ui2rm{background:none}
+html.ui2 .lpcr.ui2hero:active{opacity:.86;transition:none}
+html.ui2 .ui2hero .ui2dot{box-shadow:0 0 0 2.5px color-mix(in oklab,var(--warn) 10%,var(--s1))}
+html.ui2 .ui2hero .lpcmn{font-size:17px;line-height:22px}
+html.ui2 .ui2hero .lpcmp{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-top:2px;font-size:15px;line-height:21px;color:var(--ink)}
+html.ui2 .ui2hf{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 14px 12px 74px}
+html.ui2 .ui2hf .lpcmg{flex:1 1 auto;margin:0}
+html.ui2 .lpbtn.ui2open{flex:none;min-width:84px;min-height:42px;margin:0;padding:0 18px;border:0;border-radius:21px;background:var(--fill);color:var(--fill-ink);font:600 14.5px/1 var(--sans);letter-spacing:0;text-transform:none;box-shadow:0 6px 18px var(--glow);transition:transform var(--t-tap)}
+html.ui2 .lpbtn.ui2open:active{transform:scale(.96);transition:none}
+
+/* the laptop line sinks to a quiet footer; only bad news stays on top */
+html.ui2 .lphealth{margin:18px 8px 0;padding:0;background:none;border:0;text-align:center;color:var(--ink3);font:400 13px/18px var(--sans)!important}
+html.ui2 .lphealth.bad{margin:0 0 12px;padding:10px 14px;text-align:left;border-radius:14px;color:var(--ink);background:color-mix(in oklab,var(--warn) 12%,var(--s1));box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 32%,transparent)}
+html.ui2 .ui2empty{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;padding:72px 24px;color:var(--ink2);font:400 14px/20px var(--sans)}
+html.ui2 .ui2empty b{font:600 17px/22px var(--sans);color:var(--ink)}
+
+/* first open only */
+html.ui2 #lpChats.ui2in .ui2gp .lpcr{animation:ui2rowin 320ms var(--e-out) both;animation-delay:calc(var(--i,0)*22ms)}
+html.ui2 #lpChats.ui2in .ui2hw{animation:ui2herin 420ms var(--e-spring) both}
+@keyframes ui2rowin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ui2herin{from{opacity:0;transform:scale(.965)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+ html.ui2 .u-run .ui2dot::after,html.ui2 .u-run .lpcmg::before,html.ui2 #lpChats.ui2in .ui2gp .lpcr,html.ui2 #lpChats.ui2in .ui2hw{animation:none!important}
+}
+
+/* a mouse: no swipe, the actions come up on hover */
+@media (hover:hover) and (pointer:fine){
+ html.ui2 .lpcr{overflow:hidden}
+ html.ui2 .ui2ra{position:absolute;top:50%;right:10px;gap:4px;transform:translateY(-50%);opacity:0;pointer-events:none;transition:opacity var(--t-fast)}
+ html.ui2 .lpcr:hover .ui2ra,html.ui2 .lpcr:focus-within .ui2ra{opacity:1;pointer-events:auto}
+ html.ui2 .lppin,html.ui2 .lpmute{width:58px;min-width:58px;min-height:34px;border-radius:10px;background:var(--s3)}
+ html.ui2 .lpcr:hover .ui2rm{background:color-mix(in oklab,var(--ink) 4%,var(--s1))}
+ html.ui2 .lpcr.on:hover .ui2rm{background:color-mix(in oklab,var(--accent) 12%,var(--s1))}
+ html.ui2 .ui2hero:hover .ui2rm{background:none}
+ html.ui2 .ui2hw:not([data-more]){box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 34%,transparent)}
+}
+@media (min-width:960px){html.ui2 .lpcr.on:not(.ui2hero) .ui2rm{background:color-mix(in oklab,var(--accent) 12%,var(--s1))}}/*UI2CSSEND*/
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -1798,7 +1868,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261105-25';
+var LP_BUILD='CHAT-20261106-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3194,13 +3264,13 @@ function lpKeyDown(e){if(e.key!=='Escape')return;var am=lpG('laptop');if(lpQkIsO
 /* ── taps (F3T): own tap detection on pointerup inside the element's box, never click; keeps the keyboard up ── */
 var LPT=null;
 function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-lptap]'):null;if(!el){if(e.target&&e.target.closest&&!e.target.closest('#lpAttMenu'))lpAttMenu(false);if(e.target&&e.target.closest&&!e.target.closest('#lpQk'))lpQkClose();return;}
-  if(e.type!=='mousedown'&&(e.type==='pointerdown'||!LPT||LPT.el!==el||performance.now()-LPT.t>600))LPT={el:el,pid:e.type==='pointerdown'?e.pointerId:null,t:performance.now(),done:false};
+  if(e.type!=='mousedown'&&(e.type==='pointerdown'||!LPT||LPT.el!==el||performance.now()-LPT.t>600))LPT={el:el,pid:e.type==='pointerdown'?e.pointerId:null,t:performance.now(),done:false,x:e.clientX,y:e.clientY};
   /* a Copy button inside the conversation lets a touch start a scroll (its mousedown is still held, so focus stays) */
-  var w=el.getAttribute('data-lptap');if(w!=='pill'&&!((w==='copy'||w==='view')&&e.type==='touchstart')&&e.cancelable)e.preventDefault();}
-function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
+  var w=el.getAttribute('data-lptap');if(w!=='pill'&&!((w==='copy'||w==='view'||(vrU()&&(w==='chatgo'||w==='pin'||w==='mute')))&&e.type==='touchstart')&&e.cancelable)e.preventDefault();}
+function lpTapUp(e){var t=LPT;if(t&&e.type==='touchend'&&e.cancelable&&vrU()&&/^(chatgo|pin|mute)$/.test(t.el.getAttribute('data-lptap')||''))e.preventDefault();if(!t||t.done)return;var x,y;
   if(e.type==='touchend'){var c=e.changedTouches&&e.changedTouches[0];if(!c)return;x=c.clientX;y=c.clientY;}
   else{if(t.pid!=null&&e.pointerId!==t.pid)return;x=e.clientX;y=e.clientY;}
-  t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;
+  t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;if(vrU()&&t.x!=null&&t.el.getAttribute('data-lptap')==='chatgo'&&Math.abs(x-t.x)+Math.abs(y-t.y)>14)return;
   var w=t.el.getAttribute('data-lptap');
   if(w!=='att'&&w!=='attfile'&&w!=='paste')lpAttMenu(false);
   if(w!=='qk'&&w!=='qkgo'&&w!=='qkedit'&&w!=='qksave'&&w!=='qkx')lpQkClose();
@@ -3212,7 +3282,7 @@ function lpTapUp(e){var t=LPT;if(!t||t.done)return;var x,y;
   else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();
   else if(w==='fshare')lpFcShare(t.el);else if(w==='qreply')lpQReply(t.el);else if(w==='qpick')lpQPick(t.el);else if(w==='qsend')lpQSend();else if(w==='qnext')lpQNav('next');else if(w==='qback')lpQNav('back');
   else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
-  else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){lpChatsClose();lpSelect(t.el.dataset.sid,true);}
+  else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){if(vrU()&&ui2RowBack(t.el))return;lpChatsClose();lpSelect(t.el.dataset.sid,true);}
   else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
   else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='bropen')lpBrOpen();else if(w==='brx')lpBrClose();else if(w==='brgo')lpBrGo();else if(w==='doneask')lpDoneAsk();else if(w==='newt')lpNewTOpen();else if(w==='gsopen')gsOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}
 
@@ -4262,7 +4332,8 @@ var UI2_I={
  keys:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8"/>',
  cmd:'<path d="M5 7l5 5-5 5M12 18h7"/>',
  old:'<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4.5h4.5"/>',
- refresh:'<path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 4v4.5h-4.5"/>'};
+ refresh:'<path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 4v4.5h-4.5"/>',
+ several:'<circle cx="5.5" cy="12" r="2"/><path d="M7.5 12h12M7.5 12l11-6.5M7.5 12l11 6.5"/>'};
 function ui2Svg(n,s){s=s||24;return '<svg class="i2" width="'+Number(s)+'" height="'+Number(s)+'" viewBox="0 0 24 24" aria-hidden="true">'+(UI2_I[n]||'')+'</svg>';}
 function ui2El(id,cls,html){var e=document.createElement('div');e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 function ui2IsWide(){try{return matchMedia('(min-width:960px)').matches;}catch(e){return false;}}
@@ -4299,7 +4370,8 @@ function ui2Mount(){if(UI2.mounted){UI2.on=true;ui2Sync();return;}
     lpChatsClose=function(){if(ui2IsWide()&&UI2.on)return;_cc();ui2Sync();};
     var _ren=render;render=function(){_ren();ui2Badges();ui2Polish();};
     var _lph=lpPaintHead;lpPaintHead=function(){_lph();ui2ChatHead();};
-    var _lcp=lpChatsPaint;lpChatsPaint=function(){var sg=ui2ChatsSig();if(sg===UI2.chatsSig&&document.getElementById('lpChats').firstChild)return;UI2.chatsSig=sg;_lcp();};
+    var _lcp=lpChatsPaint;lpChatsPaint=function(){if(!UI2.on){_lcp();return;}var sg=ui2ChatsSig(),bx=document.getElementById('lpChats');if(sg===UI2.chatsSig&&bx&&bx.firstChild)return;if(ui2ChatsBusy())return;UI2.chatsSig=sg;try{ui2ChatsPaint();}catch(err){try{console.warn('ui2 chats paint failed',err);}catch(x){}_lcp();}};
+    var _lpt=lpPinToggle,_lmt=lpMuteToggle;lpPinToggle=function(x){UI2.cForce=true;try{_lpt(x);}finally{UI2.cForce=false;}};lpMuteToggle=function(x){UI2.cForce=true;try{_lmt(x);}finally{UI2.cForce=false;}};
     app.addEventListener('scroll',ui2OnScroll,{passive:true});
     var vv=window.visualViewport;if(vv){vv.addEventListener('resize',ui2Kb);vv.addEventListener('scroll',ui2Kb);}window.addEventListener('resize',ui2Sync);
     document.addEventListener('focusin',ui2Kb);document.addEventListener('focusout',function(){setTimeout(ui2Kb,60);});
@@ -4353,7 +4425,59 @@ function ui2ChatHead(){if(!UI2.on)return;var hd=document.getElementById('lpHead'
   var nm='',st='';if(row){nm=lpNice(row.name).title;var W={waiting:'Waiting for you',busy:'Working',idle:'Idle'};st=W[String(row.status||'idle')]||'';}
   if(e.firstChild.textContent!==nm)e.firstChild.textContent=nm;if(e.lastChild.textContent!==st)e.lastChild.textContent=st;}
 /* the chat list only rebuilds when something on it changed, so a tap or a swipe in progress survives the 2 s poll */
-function ui2ChatsSig(){try{return JSON.stringify(lpTabList().map(function(t){var sid=String(t.sid),r=t.row||{};return [sid,r.name,r.status,lpPreview(sid,r),lpUnread(sid),lpLastAt(sid),lpPinned(sid),lpMuted(sid),sid===LP.sel,t.off,t.ghost,r.progress];}))+'|'+(lpNewTMachine()?1:0)+'|'+((lpHealthEl()||{}).textContent||'');}catch(e){return String(Math.random());}}
+function ui2ChatsSig(){try{return JSON.stringify(lpTabList().map(function(t){var sid=String(t.sid),r=t.row||{},st=ui2ChatState(t);return [sid,r.name,st.k,st.g?st.g.text:'',st.g?st.g.bar:null,st.k==='wait'?ui2AskText(r,st.g):'',lpPreview(sid,r),lpUnread(sid),ui2When(lpLastAt(sid)),lpPinned(sid),lpMuted(sid),sid===LP.sel];}))+'|'+(lpNewTMachine()?1:0)+'|'+((lpHealthEl()||{}).textContent||'')+'|'+lpStarList().length+'|'+(LP.data?1:0);}catch(e){return String(Math.random());}}
+/* Chats: one state per row, real groups, and a card on top only when a terminal is truly waiting. textContent only. */
+var UI2_TC=['#7FB2FF','#B597F2','#5CC9C0','#FF7A85','#E3B341','#6FCF7F','#F08CC8','#9FB0C3'];
+function ui2Tone(slot,name){var k=0,n=String(name||''),i;if(slot)k=slot.charCodeAt(0)-65;else for(i=0;i<n.length;i++)k=(k*31+n.charCodeAt(i))>>>0;return UI2_TC[k%UI2_TC.length];}
+function ui2Clean(x){var v=String(x==null?'':x).replace(/\*\*|__|`/g,'').replace(/^#+\s*/,'').replace(/\s+/g,' ').trim();try{return lpMask(v);}catch(e){return v;}}
+function ui2ChatState(t){if(t.off||t.ghost||t.cache)return {k:'off',g:null};var g=null,st=String((t.row&&t.row.status)||'idle');try{g=lpProg(t.row);}catch(e){}
+  if(st==='waiting'||(g&&g.wait))return {k:'wait',g:g};if(st==='busy')return {k:'run',g:g};if(g)return {k:'done',g:g};return {k:'idle',g:null};}
+function ui2AskText(row,g){var p=row&&row.pending;if(p&&typeof p==='object'){if(p.kind==='question'){var q=p.question||p.message||(Array.isArray(p.questions)&&p.questions[0]&&p.questions[0].question);return q?ui2Clean(q):'Has a question';}return 'Allow '+ui2Clean(p.tool||'a tool')+'?';}return g&&g.text?ui2Clean(g.text):'Waiting for you';}
+function ui2When(ms){if(!ms)return '';var d=new Date(ms),n=new Date(),day=86400000,a=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),b=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),gap=Math.round((a-b)/day);
+  if(gap<=0)return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);if(gap===1)return 'Yesterday';if(gap<7)return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];}
+function ui2ChatRow(t,hero,idx){var sid=String(t.sid),row=t.row||{},nq=lpNice(row.name),nm=nq.title,s=ui2ChatState(t),un=sid===LP.sel?0:lpUnread(sid),mt=lpMuted(sid);
+  var r=lpEl('div','lpcr u-'+s.k+(sid===LP.sel?' on':'')+(mt?' muted':'')+(un?' unread':'')+(hero?' ui2hero':''));r.dataset.lptap='chatgo';r.dataset.sid=sid;r.style.setProperty('--i',String(Math.min(idx||0,8)));
+  var face=lpEl('div','ui2rm'),av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());av.style.setProperty('--tc',ui2Tone(nq.slot,nm));av.appendChild(lpEl('i','ui2dot'));face.appendChild(av);
+  var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));top.appendChild(lpEl('span','lpcmh',ui2When(lpLastAt(sid))));mid.appendChild(top);
+  var bot=lpEl('div','lpcmb'),txt=hero?ui2AskText(row,s.g):ui2Clean(lpPreview(sid,row));if(!txt&&s.k==='run')txt='Working';bot.appendChild(lpEl('span','lpcmp',txt));if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);
+  var pg=s.g?lpProgEl(row):null;if(!hero&&pg)mid.appendChild(pg);face.appendChild(mid);r.appendChild(face);
+  if(hero){var ft=lpEl('div','ui2hf'),ht=pg&&pg.querySelector('.lpcmgt'),more=s.g?String(s.g.text||'').split(' \u00b7 ').slice(1).join(' \u00b7 '):'';if(ht&&more)ht.textContent=more;ft.appendChild(ht&&more?pg:lpEl('span'));var op=lpEl('button','lpbtn ui2open','Open');op.type='button';op.dataset.lptap='chatgo';op.dataset.sid=sid;ft.appendChild(op);r.appendChild(ft);return r;}
+  var ra=lpEl('div','ui2ra'),pb=lpEl('button','lpbtn lppin',lpPinned(sid)?'Unpin':'Pin');pb.type='button';pb.dataset.lptap='pin';pb.dataset.sid=sid;ra.appendChild(pb);
+  var mb=lpEl('button','lpbtn lpmute',mt?'Unmute':'Mute');mb.type='button';mb.dataset.lptap='mute';mb.dataset.sid=sid;ra.appendChild(mb);r.appendChild(ra);return r;}
+function ui2ChatGroup(f,title,rows,base){if(!rows.length)return;if(title){var gt=lpEl('div','ui2gt');gt.appendChild(lpEl('span',null,title));if(rows.length>1)gt.appendChild(lpEl('b',null,String(rows.length)));f.appendChild(gt);}
+  var g=lpEl('div','ui2gp');rows.forEach(function(t,i){g.appendChild(ui2ChatRow(t,false,base+i));});f.appendChild(g);}
+function ui2ChatsPaint(){var box=lpG('lpChats');if(!box)return;ui2ChatsWire(box);var f=document.createDocumentFragment(),list=lpTabList();
+  var hd=lpEl('div','lpchh');hd.appendChild(lpEl('span','lpcht','Chats'));
+  var gsb=lpEl('button','lpbtn gsb','Search');gsb.type='button';gsb.dataset.lptap='gsopen';hd.appendChild(gsb);
+  if(list.filter(function(t){return !t.off&&!t.ghost&&!t.cache;}).length>1){var sb=lpEl('button','lpbtn lpbrb');sb.type='button';sb.dataset.lptap='bropen';sb.setAttribute('aria-label','Send to several');sb.title='Send to several';sb.innerHTML=ui2Svg('several',20);hd.appendChild(sb);}
+  if(lpNewTMachine()){var nb=lpEl('button','lpbtn lpntb');nb.type='button';nb.dataset.lptap='newt';nb.innerHTML=ui2Svg('plus',16);nb.appendChild(document.createTextNode('New terminal'));hd.appendChild(nb);}
+  var x=lpEl('button','lpbtn','Close');x.type='button';x.dataset.lptap='chatsx';hd.appendChild(x);f.appendChild(hd);
+  var hl=lpHealthEl();if(hl&&hl.classList.contains('bad'))f.appendChild(hl);
+  if(!list.length){var em=lpEl('div','lpcn ui2empty');em.appendChild(lpEl('b',null,LP.data?'No terminals open':'Connecting to the laptop'));if(LP.data)em.appendChild(lpEl('span',null,'A Claude terminal on the laptop shows up here by itself.'));f.appendChild(em);}
+  var wait=[],run=[],pin=[],rest=[];list.forEach(function(t){var k=ui2ChatState(t).k,sid=String(t.sid);if(k==='wait')wait.push(t);else if(k==='run')run.push(t);else if(lpPinned(sid))pin.push(t);else rest.push(t);});
+  var byLast=function(a,b){return (lpLastAt(String(b.sid))||0)-(lpLastAt(String(a.sid))||0);};run.sort(byLast);pin.sort(byLast);rest.sort(byLast);
+  /* a muted chat that is waiting stays in the list but does not take the card */
+  var loud=wait.filter(function(t){return !lpMuted(String(t.sid));}),heroT=loud[0]||null;
+  if(heroT){var hw=lpEl('div','ui2hw');if(loud.length>1)hw.dataset.more=String(loud.length);var hl2=lpEl('div','ui2hl');hl2.appendChild(lpEl('span',null,'Needs you'));if(loud.length>1)hl2.appendChild(lpEl('b',null,loud.length+' waiting'));hw.appendChild(hl2);hw.appendChild(ui2ChatRow(heroT,true,0));f.appendChild(hw);}
+  var also=wait.filter(function(t){return t!==heroT;}),n=1;ui2ChatGroup(f,heroT?'Also waiting':'Needs you',also,n);n+=also.length;ui2ChatGroup(f,'Working',run,n);n+=run.length;ui2ChatGroup(f,'Pinned',pin,n);n+=pin.length;
+  ui2ChatGroup(f,(heroT||also.length||run.length||pin.length)?'Earlier':'',rest,n);
+  var stars=lpStarList();if(stars.length){var sg=[];stars.slice(-30).reverse().forEach(function(s){var sr=lpEl('div','lpcr lpcsr');sr.dataset.lptap='chatgo';sr.dataset.sid=String(s.sid||'');var fc=lpEl('div','ui2rm'),m2=lpEl('div','lpcm'),t2=lpEl('div','lpcmt');t2.appendChild(lpEl('span','lpcmn',lpNice(s.name).title));t2.appendChild(lpEl('span','lpcmh',s.at?ui2When(lpT(s.at)):''));m2.appendChild(t2);m2.appendChild(lpEl('div','lpcmp',ui2Clean(String(s.text||'').slice(0,140))));fc.appendChild(m2);sr.appendChild(fc);sg.push(sr);});
+    f.appendChild(lpEl('div','lpchs ui2gt','Starred messages'));var gs=lpEl('div','ui2gp');sg.forEach(function(e){gs.appendChild(e);});f.appendChild(gs);}
+  if(hl&&!hl.classList.contains('bad'))f.appendChild(hl);
+  var st=box.scrollTop;box.textContent='';box.appendChild(f);if(st)box.scrollTop=st;
+  if(!UI2.cSeen&&list.length){UI2.cSeen=1;box.classList.add('ui2in');setTimeout(function(){box.classList.remove('ui2in');},700);}}
+/* a row being swiped or just swiped open is left alone; the next poll catches up. A row open and untouched for 5 s gives way, so a new question is never held back. */
+function ui2ChatsBusy(){if(UI2.cForce)return false;if(UI2.cT)return true;var b=document.getElementById('lpChats'),o=b&&b.querySelector('.lpcr.ui2open-row');return !!o&&Date.now()-(UI2.cAt||0)<5000;}
+function ui2RowsShut(keep){var b=document.getElementById('lpChats');if(!b)return;Array.prototype.forEach.call(b.querySelectorAll('.lpcr'),function(r){if(r!==keep&&r.scrollLeft>2)try{r.scrollTo({left:0,behavior:'smooth'});}catch(e){r.scrollLeft=0;}});}
+/* tapping a row with its actions showing closes them rather than opening the chat */
+function ui2RowBack(el){if(!el||!(el.scrollLeft>4))return false;try{el.scrollTo({left:0,behavior:'smooth'});}catch(e){el.scrollLeft=0;}return true;}
+function ui2ChatsWire(box){if(box.__u2)return;box.__u2=1;var lx=0,ly=0;
+  var stop=function(){UI2.cT=false;UI2.cAt=Date.now();clearTimeout(UI2.cLong);};
+  box.addEventListener('pointerdown',function(e){UI2.cT=true;UI2.cAt=Date.now();var t=e.target,r=t&&t.closest?t.closest('.lpcr'):null;ui2RowsShut(r);clearTimeout(UI2.cLong);
+    if(e.pointerType==='touch'&&r&&!r.classList.contains('ui2hero')&&!r.classList.contains('lpcsr')&&!t.closest('button')){lx=e.clientX;ly=e.clientY;UI2.cLong=setTimeout(function(){LPT=null;try{r.scrollTo({left:r.scrollWidth,behavior:'smooth'});}catch(x){r.scrollLeft=r.scrollWidth;}try{if(navigator.vibrate)navigator.vibrate(8);}catch(x){}},480);}});
+  box.addEventListener('pointermove',function(e){if(Math.abs(e.clientX-lx)+Math.abs(e.clientY-ly)>10)clearTimeout(UI2.cLong);});
+  box.addEventListener('pointerup',stop);box.addEventListener('pointercancel',stop);box.addEventListener('touchend',stop);box.addEventListener('touchcancel',stop);
+  box.addEventListener('scroll',function(e){clearTimeout(UI2.cLong);var r=e.target;if(r&&r.classList&&r.classList.contains('lpcr')){UI2.cAt=Date.now();r.classList.toggle('ui2open-row',r.scrollLeft>2);}},true);}
 /* More: real values only. Anything without real data is not shown. */
 function ui2MorePaint(){var m=document.getElementById('ui2More');if(!m)return;var me=STATE.me||{},nm=String(me.name||'You'),un=0,pend=(me.pending_count||0);try{un=unreadCount();}catch(e){}
   var fin=ui2Get('vr_ui2_fin')||'carbon',live=0;try{if(LP.data)live=LP.vis.length;}catch(e){}

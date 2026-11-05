@@ -101,6 +101,7 @@ body{font-family:var(--d);color:var(--txt);display:flex;flex-direction:column;he
 .agec.red{color:var(--red);background:rgba(255,82,82,.14)}
 .onit{font-size:10px;font-weight:600;max-width:130px;padding:1px 7px;border-radius:9px;border:1px solid var(--line2);color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
 .onit.busy{color:var(--green);border-color:var(--green)}
+.onit.person{color:var(--cyan);border-color:var(--cyan)}
 @media(max-width:759px){.row{flex-wrap:wrap}.row .ttl{flex:1 1 140px}}
 .empty{font-family:var(--m);font-size:13.5px;color:var(--green);text-align:center;padding:28px 18px;background:var(--cell);border:1px dashed rgba(61,255,154,.25);border-radius:10px;margin-top:4px;animation:clearpulse 2.6s ease-in-out infinite}
 @keyframes clearpulse{50%{box-shadow:0 0 24px rgba(61,255,154,.13);border-color:rgba(61,255,154,.4)}}
@@ -890,14 +891,24 @@ function ageH(iso){try{return (Date.now()-new Date(iso).getTime())/3.6e6}catch(e
 function ageS(iso){var h=ageH(iso);if(isNaN(h))return '';if(h<1)return Math.max(0,(h*60)|0)+'m';return h<48?(h|0)+'h':((h/24)|0)+'d'}
 // Item 7 who's on it: terminals whose name or words name this ticket. It comes from what the terminals say, there is no
 // claim record. Owner only (the server refuses anyone else); trouble clears it, so an old answer is never shown as current.
-var WHO={on:{},busy:false,sig:'{}'};
+var WHO={on:{},people:{},busy:false,sig:'{}'};
+var PR={id:null,at:0};
 function whoList(id){var a=WHO.on[String(id)];if(!a||!a.length)return [];return a.slice().sort(function(x,y){return (y.status==='busy')-(x.status==='busy');});}
-function whoChip(id){var a=whoList(id);if(!a.length)return '';var w=whoSheet(id);return '<span class="onit'+(a[0].status==='busy'?' busy':'')+'" title="'+H(w)+'">'+H(a[0].name)+(a.length>1?' +'+(a.length-1):'')+'</span>';}
-function whoSheet(id){var a=whoList(id);return a.length?'Terminal: '+a.map(function(x){return x.name+(x.status==='busy'?' (working)':' (open)');}).join(', '):'';}
-function whoSet(on){on=on||{};Object.keys(on).forEach(function(k){(on[k]||[]).forEach(function(x){x.name=lpMask(String(x.name||''));});});var sig=JSON.stringify(on);if(sig===WHO.sig)return;WHO.on=on;WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)render();}
-function whoTick(){if(document.hidden||WHO.busy||!STATE.me||STATE.me.role!=='owner')return Promise.resolve();if(STATE.view&&STATE.view!=='list'&&STATE.view!=='board')return Promise.resolve();
-  WHO.busy=true;return api('/who-on-it').then(function(r){WHO.busy=false;whoSet(r.ok&&r.j&&r.j.on?r.j.on:{});},function(){WHO.busy=false;whoSet({});});}
-setInterval(whoTick,30000);
+function whoPeople(id){return WHO.people[String(id)]||[];}
+function whoChip(id){var a=whoList(id),p=whoPeople(id),w=H(whoSheet(id)),h='';
+  if(p.length)h+='<span class="onit person" title="'+w+'">'+H(p[0].name)+(p.length>1?' +'+(p.length-1):'')+'</span>';
+  if(a.length)h+='<span class="onit'+(a[0].status==='busy'?' busy':'')+'" title="'+w+'">'+H(a[0].name)+(a.length>1?' +'+(a.length-1):'')+'</span>';
+  return h;}
+function whoSheet(id){var a=whoList(id),p=whoPeople(id),o=[];if(p.length)o.push('Open now: '+p.map(function(x){return x.name;}).join(', '));
+  if(a.length)o.push('Terminal: '+a.map(function(x){return x.name+(x.status==='busy'?' (working)':' (open)');}).join(', '));return o.join(' · ');}
+function whoSet(on,people){on=on||{};people=people||{};Object.keys(on).forEach(function(k){(on[k]||[]).forEach(function(x){x.name=lpMask(String(x.name||''));});});var sig=JSON.stringify([on,people]);if(sig===WHO.sig)return;WHO.on=on;WHO.people=people;WHO.sig=sig;if(STATE.view==='list'||STATE.view==='board'||!STATE.view)render();}
+function whoTick(){if(document.hidden||WHO.busy||!STATE.me)return Promise.resolve();if(STATE.view&&STATE.view!=='list'&&STATE.view!=='board')return Promise.resolve();
+  WHO.busy=true;return api('/who-on-it').then(function(r){WHO.busy=false;var ok=r.ok&&r.j;whoSet(ok?r.j.on:{},ok?r.j.people:{});},function(){WHO.busy=false;whoSet({},{});});}
+setInterval(whoTick,10000);
+// A heartbeat while a ticket sheet is open and the page is visible; the server forgets it 45 s after the last one.
+function presTick(){if(!STATE.me)return;var cur=document.hidden?null:(STATE.cur||null);if(cur===PR.id&&(cur===null||Date.now()-PR.at<20000))return;PR.id=cur;PR.at=Date.now();
+  api('/presence',{method:'POST',body:JSON.stringify({ticket_id:cur})}).catch(function(){});}
+setInterval(presTick,5000);document.addEventListener('visibilitychange',presTick);
 function ageChip(t){var w=workingDaysSince(t.created);return '<span class="meta-r agec'+(w>=3?' red':(w>=1?' amb':''))+'" title="open '+w+' working days (weekends + SA holidays excluded)">'+ageS(t.created)+'</span>';}
 /* SA public holidays (weekday ones matter; weekends already skipped). 2026-2027. */
 var ZA_HOLIDAYS={'2026-01-01':1,'2026-03-21':1,'2026-04-03':1,'2026-04-06':1,'2026-04-27':1,'2026-05-01':1,'2026-06-16':1,'2026-08-09':1,'2026-08-10':1,'2026-09-24':1,'2026-12-16':1,'2026-12-25':1,'2026-12-26':1,'2027-01-01':1,'2027-03-21':1,'2027-03-22':1,'2027-03-26':1,'2027-03-29':1,'2027-04-27':1,'2027-05-01':1,'2027-06-16':1,'2027-08-09':1,'2027-09-24':1,'2027-12-16':1,'2027-12-25':1,'2027-12-26':1,'2027-12-27':1};
@@ -1482,7 +1493,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261105-21';
+var LP_BUILD='CHAT-20261105-22';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3716,7 +3727,7 @@ function closeNotif(){document.getElementById('notifovl').style.display='none';}
 function notifGo(id){closeNotif();if(id)openT(id);}
 function find(id){for(var i=0;i<STATE.tickets.length;i++)if(STATE.tickets[i].id===id)return STATE.tickets[i];return null}
 function openT(id){
-  var t=find(id);if(!t)return;STATE.cur=id;
+  var t=find(id);if(!t)return;STATE.cur=id;setTimeout(presTick,0);
   var tag=t.done?'done':(t.prog?'prog':'new'),lab=t.done?'SHIPPED':(t.prog?'PROG':'NEW');
   document.getElementById('sh-id').textContent='#'+id+(t.assignee?(' · @'+t.assignee):'');
   var meta='<span style="color:'+safeColor(t.color)+'">●&nbsp;'+H(t.who)+'</span><span>'+H(t.status)+'</span>';
@@ -3764,7 +3775,7 @@ function openT(id){
   if(tg){tg.MainButton&&tg.MainButton.hide();tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('light');tg.BackButton&&(tg.BackButton.show(),tg.BackButton.onClick(closeT))}
 }
 function useTmpl(i){var box=document.getElementById('reply-text');box.value=TEMPLATES[i];box.focus()}
-function closeT(){document.getElementById('sheet').classList.remove('on');STATE.cur=null;if(tg){tg.BackButton&&tg.BackButton.hide();tg.MainButton&&tg.MainButton.show()}}
+function closeT(){document.getElementById('sheet').classList.remove('on');STATE.cur=null;setTimeout(presTick,0);if(tg){tg.BackButton&&tg.BackButton.hide();tg.MainButton&&tg.MainButton.show()}}
 document.getElementById('back').onclick=closeT;
 document.getElementById('reply-send').onclick=function(){
   var box=document.getElementById('reply-text'),txt=box.value.trim();if(!txt||!STATE.cur)return;

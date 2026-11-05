@@ -1068,7 +1068,8 @@ html.ui2 .lpcmp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  html.ui2 body:has(.sheet.on) #ui2Hd .lv{display:none}
 }
 html.ui2 .dleg,html.ui2 .dleg *,html.ui2 .sprio,html.ui2 .sprio *{font-size:13px!important;font-family:var(--sans)!important}
-html.ui2 .lpntm,html.ui2 .lpnb2,html.ui2 .lphealth,html.ui2 .lpcmgt{font-size:13px!important;font-family:var(--sans)!important}/*UI2CSSEND*/
+html.ui2 .lpntm,html.ui2 .lpnb2,html.ui2 .lphealth,html.ui2 .lpcmgt{font-size:13px!important;font-family:var(--sans)!important}
+html.ui2 .row.ui2cur{background:var(--s2)!important;box-shadow:inset 2px 0 0 var(--accent)!important}/*UI2CSSEND*/
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -1797,7 +1798,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261105-24';
+var LP_BUILD='CHAT-20261105-25';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -4332,7 +4333,9 @@ function ui2Head(v){var hd=document.getElementById('ui2Hd');if(!hd)return;var h;
   if(!hd.__w){hd.__w=1;hd.addEventListener('click',function(e){var t=e.target.closest?e.target:null;if(!t)return;var b=t.closest('[data-v],[data-m],[data-r]');if(!b)return;if(b.dataset.v)setView(b.dataset.v);else if(b.dataset.m)ui2MoreOpen();else load();});}}
 function ui2Badges(){if(!UI2.on)return;var un=0;try{un=unreadCount();}catch(e){}var b=document.getElementById('ui2BN');if(b)b.textContent=un?(un>99?'99+':String(un)):'';
   var chats=0;try{if(LP.data)LP.vis.forEach(function(s){chats+=lpUnread(s.session_id)||0;if(s.status==='waiting')chats++;});}catch(e){}
-  var c=document.querySelector('.ui2d em[data-n=chats]');if(c)c.textContent=chats?(chats>99?'99+':String(chats)):'';}
+  var c=document.querySelector('.ui2d em[data-n=chats]');if(c)c.textContent=chats?(chats>99?'99+':String(chats)):'';
+  /* the laptop app reads this for its taskbar dot; a browser tab shows it too */
+  var ttl=(un+chats)>0?'('+(un+chats)+') Velocity Relay':'Velocity Relay';if(document.title!==ttl)document.title=ttl;}
 function ui2Tick(){if(document.hidden||!UI2.on)return;ui2Badges();if(UI2.more)ui2MorePaint();}
 function ui2OnScroll(){var y=document.getElementById('app').scrollTop,t=document.getElementById('ui2Tool');if(!t)return;if(Math.abs(y-UI2.lastY)<8)return;var down=y>UI2.lastY&&y>60;UI2.lastY=y;if(t.classList.contains('tuck')!==down&&document.activeElement&&document.activeElement.id!=='q')t.classList.toggle('tuck',down);}
 /* keyboard up on a phone: the search pill rides above it and the bar steps aside */
@@ -4368,6 +4371,17 @@ function ui2MoreTap(e){var b=e.target.closest?e.target.closest('[data-a],[data-f
   if(V[a]){ui2MoreClose();setView(V[a]);return;}
   if(a==='notif')bellClick();else if(a==='team')openTeam();else if(a==='search')gsOpen('');else if(a==='cmd')openCmd();else if(a==='reload')load();else if(a==='install')smartInstall();else if(a==='qr')openQR();else if(a==='csv')exportCSV();else if(a==='help')openHelp();else if(a==='old')ui2UseOld();}
 function ui2Finish(n){ui2Set('vr_ui2_fin',n);document.documentElement.setAttribute('data-finish',n);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',n==='porcelain'?'#EFF1F4':n==='midnight'?'#0A1120':n==='graphite'?'#0B0E12':'#09090A');}
+/* laptop keys: Alt+1-4 change screen; arrows or J K walk the ticket list, Enter opens, Esc closes */
+function ui2Key(e){if(!UI2.on)return;var a=document.activeElement,t=a&&a.tagName,typing=t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||(a&&a.isContentEditable);
+  if(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.key>='1'&&e.key<='4'){e.preventDefault();ui2Go(['chats','tickets','stats','more'][+e.key-1]);return;}
+  if(typing||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='Escape'&&UI2.more){ui2MoreClose();return;}
+  if(STATE.view!=='list'||UI2.more)return;var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on'))return;
+  var d=(e.key==='ArrowDown'||e.key==='j')?1:(e.key==='ArrowUp'||e.key==='k')?-1:0;
+  if(!d&&e.key!=='Enter')return;var rows=document.querySelectorAll('#list .row');if(!rows.length)return;var cur=document.querySelector('#list .row.ui2cur');
+  if(e.key==='Enter'){if(cur){e.preventDefault();cur.click();}return;}
+  e.preventDefault();var i=Array.prototype.indexOf.call(rows,cur);i=Math.max(0,Math.min(rows.length-1,i+d));if(cur)cur.classList.remove('ui2cur');rows[i].classList.add('ui2cur');try{rows[i].scrollIntoView({block:'nearest'});}catch(x){}}
+document.addEventListener('keydown',ui2Key);
 /* the owner is known once /me answers */
 try{var _ui2w=setInterval(function(){var me=STATE.me;if(!me||me.auth===undefined)return;clearInterval(_ui2w);ui2Check(me);},200);setTimeout(function(){clearInterval(_ui2w);},20000);}catch(e){}/*UI2JSEND*/
 </script></body></html>

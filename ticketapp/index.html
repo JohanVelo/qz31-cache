@@ -1370,7 +1370,166 @@ html.ui2 .row .meta-r.agec.red{color:var(--bad)!important}
 @media (prefers-reduced-motion:reduce){#ui2S6,#ui2S6 .card{animation:none!important}}
 /* a long report folds, so Hand to Terminal and the controls stay near the top */
 html.ui2 .db.ui2clamp{max-height:212px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
-html.ui2 .ui2showall{display:block;min-height:44px;margin:0 auto;padding:0 16px;border:0;background:none;color:var(--accent);font:560 14px/1 var(--sans);cursor:pointer}/*UI2CSSEND*/
+html.ui2 .ui2showall{display:block;min-height:44px;margin:0 auto;padding:0 16px;border:0;background:none;color:var(--accent);font:560 14px/1 var(--sans);cursor:pointer}
+
+/* ---- Second pass, 2026-11-06 ---- */
+/* Ember: only while a terminal is waiting on you */
+#ui2Ember{position:fixed;left:var(--rail,0);right:0;top:0;height:min(46vh,380px);pointer-events:none;z-index:39;opacity:var(--ember,0);transition:opacity 700ms var(--e-out);transform-origin:top;background:radial-gradient(120% 100% at 50% -28%,color-mix(in oklab,var(--fill) 34%,transparent) 0,color-mix(in oklab,var(--fill) 13%,transparent) 42%,transparent 72%)}
+html:not(.ui2) #ui2Ember{display:none}
+html[data-ui3hot] #ui2Ember{animation:ui3breathe 4.2s ease-in-out infinite}
+@keyframes ui3breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.09)}}
+html.ui2[data-finish=porcelain] #ui2Ember{mix-blend-mode:multiply}
+/* Carbon gets a real weave, so the black is a material and not a flat fill */
+html.ui2[data-finish=carbon] body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 4px),repeating-linear-gradient(-45deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px)}
+/* the bars step back while you read */
+#ui2Dock{transition:height var(--t-base) var(--e-out),left var(--t-base) var(--e-out),right var(--t-base) var(--e-out)}
+.ui2d{transition:color var(--t-fast),transform var(--t-tap),font-size var(--t-fast)}
+@media(max-width:959.9px){
+ html[data-ui2slim] #ui2Dock{height:50px;left:15%;right:15%}
+ html[data-ui2slim] #ui2Pill{border-radius:20px}
+ html[data-ui2slim] .ui2d{font-size:0;line-height:0;gap:0}
+ html[data-ui2slim] .ui2d em{top:1px}
+ html[data-ui2slim] #ui2Fade{height:calc(92px + env(safe-area-inset-bottom))}
+}
+/* screens slide in from the side they sit on */
+.ui3in{animation:ui3in 240ms var(--e-out) both}
+@keyframes ui3in{from{opacity:0;transform:translateX(var(--dx,12px))}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.ui3in,html[data-ui3hot] #ui2Ember,.ui3s.a .ch .c i{animation:none!important}#ui2Dock,#ui2Ember{transition:none}}
+/* chat head: whose chat, at a glance */
+html.ui2 #ui2ChatA{flex:none;position:relative;width:34px;height:34px;margin-right:8px;font-size:15px;border-radius:11px}
+html.ui2 #ui2ChatA[hidden]{display:none}
+html.ui2 #ui2ChatA .ui2dot{right:-3px;bottom:-3px}
+html.ui2 #ui2ChatA[data-k=wait] .ui2dot{background:var(--warn)}
+html.ui2 #ui2ChatA[data-k=run] .ui2dot{background:var(--fill)}
+html.ui2 #ui2ChatA[data-k=idle] .ui2dot{background:var(--ink3)}
+
+/* Stats */
+.ui3s{display:grid;gap:12px;max-width:1100px}
+.ui3s .cd{background:linear-gradient(180deg,var(--s1),var(--s1b));border-radius:var(--r-group);padding:16px;box-shadow:inset 0 0 0 .75px var(--hair),inset 0 1px 0 var(--rim)}
+.ui3s h3{font:600 13.5px/18px var(--sans);color:var(--ink2);margin:0 0 10px;letter-spacing:0}
+.ui3s button{all:unset;box-sizing:border-box;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ui3s button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+.ui3s .hero{padding:18px 16px 14px;position:relative;overflow:hidden}
+.ui3s .ht{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.ui3s .ey{display:block;font:560 13.5px/18px var(--sans);color:var(--ink2)}
+.ui3s .big{display:block;font:680 68px/1 var(--sans);letter-spacing:-.045em;color:var(--ink);margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.ui3s .dl{display:block;font:500 13.5px/18px var(--sans);color:var(--ink2)}
+.ui3s .lg{text-align:right;display:grid;gap:3px;font:500 13px/18px var(--sans);color:var(--ink2);flex:none}
+.ui3s .lg b{color:var(--ink);font-weight:640;font-variant-numeric:tabular-nums}
+.ui3s .lg .u::before,.ui3s .lg .d::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var(--fill)}
+.ui3s .lg .d::before{background:var(--ink3)}
+.ui3s .lg small{font-size:13px;color:var(--ink3)}
+/* mirror chart: shipped rises, opened hangs */
+.ui3s .ch{display:flex;gap:2px;height:112px;margin-top:16px;position:relative}
+.ui3s .ch::before{content:"";position:absolute;left:0;right:0;top:62%;height:1px;background:var(--hair2)}
+.ui3s .ch .c{flex:1;min-width:0;position:relative}
+.ui3s .ch .c i{position:absolute;left:0;right:0;border-radius:2px}
+.ui3s .ch .c .u{bottom:38%;height:calc(var(--u)*.6);background:var(--fill);box-shadow:0 0 10px color-mix(in oklab,var(--fill) 45%,transparent);transform-origin:bottom}
+.ui3s .ch .c .d{top:calc(62% + 2px);height:calc(var(--d)*.36);background:var(--ink3);opacity:.72;transform-origin:top}
+.ui3s .ch .c.td::after{content:"";position:absolute;left:50%;bottom:-2px;width:3px;height:3px;margin-left:-1.5px;border-radius:50%;background:var(--ink)}
+.ui3s.a .ch .c i{animation:ui3grow 520ms var(--e-spring) both;animation-delay:calc(var(--i)*14ms)}
+@keyframes ui3grow{from{transform:scaleY(0)}to{transform:none}}
+.ui3s .ks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ui3s .k{display:flex;flex-direction:column;gap:3px;padding:12px 10px;min-height:76px;border-radius:16px;background:var(--s1);box-shadow:inset 0 0 0 .75px var(--hair);transition:transform var(--t-tap)}
+.ui3s button.k:active,.ui3s .rp:active,.ui3s .ol:active,.ui3s .fd:active,.ui3s .nt:active{transform:scale(.97);transition-duration:50ms}
+.ui3s .k b{font:660 24px/28px var(--sans);letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ui3s .k span{font:500 13px/16px var(--sans);color:var(--ink2)}
+.ui3s .k.hot b{color:var(--warn)}
+.ui3s .k.st b{font-size:19px}
+.ui3s .sb{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;padding:0 4px;font:500 13px/18px var(--sans);color:var(--ink2)}
+.ui3s .sb b{color:var(--ink);font-weight:620}
+.ui3s .nt{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:color-mix(in oklab,var(--warn) 11%,var(--s1));box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 35%,transparent);color:var(--ink);font:520 14px/19px var(--sans)}
+.ui3s .nt b{font:680 20px/1 var(--sans);color:var(--warn)}
+.ui3s .nt span{flex:1}
+.ui3s .nt svg{transform:rotate(180deg);color:var(--ink2)}
+.ui3s .ol{display:grid;grid-template-columns:52px 1fr;column-gap:10px;padding:10px 0;width:100%;border-top:.75px solid var(--hair)}
+.ui3s h3+.ol{border-top:0;padding-top:0}
+.ui3s .ol b{grid-row:1/3;font:650 17px/22px var(--sans);color:var(--warn);font-variant-numeric:tabular-nums}
+.ui3s .ol .tt{font:540 14.5px/20px var(--sans);color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ui3s .ol .wh{font:500 13px/18px var(--sans);color:var(--ink2)}
+.ui3s .rp{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;width:100%;min-height:36px;font:500 13.5px/18px var(--sans);color:var(--ink2)}
+.ui3s .rp .nm{color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ui3s .rp .tr{display:flex;height:8px;gap:2px;border-radius:4px;overflow:hidden;background:var(--s2)}
+.ui3s .rp .tr .o{background:var(--fill)}
+.ui3s .rp .tr .s{background:var(--ink3);opacity:.55}
+.ui3s .rp .ct{font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ui3s .rp .ct b{color:var(--ink);font-weight:620}
+.ui3s .pj{display:flex;flex-wrap:wrap;gap:8px}
+.ui3s .pj span{display:inline-flex;gap:7px;align-items:baseline;padding:7px 11px;border-radius:12px;background:var(--s2);font:500 13.5px/18px var(--sans);color:var(--ink2)}
+.ui3s .pj b{color:var(--ink);font-weight:640}
+.ui3s .fd{display:flex;gap:10px;justify-content:space-between;width:100%;padding:9px 0;border-top:.75px solid var(--hair);font:500 14px/19px var(--sans);color:var(--ink)}
+.ui3s h3+.fd{border-top:0;padding-top:0}
+.ui3s .fd .tx{min-width:0;flex:1}
+.ui3s .fd small{display:block;font-size:13px;color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ui3s .fd time{flex:none;font-size:13px;color:var(--ink3);font-variant-numeric:tabular-nums}
+@media(min-width:960px){.ui3s{grid-template-columns:repeat(6,1fr);gap:14px}.ui3s .hero{grid-column:1/-1}.ui3s .nt{grid-column:1/-1}.ui3s .ks{grid-column:1/-1;gap:12px}.ui3s .sb{grid-column:1/-1}.ui3s .cd:not(.hero){grid-column:span 3}.ui3s .ch{height:150px}.ui3s .rp{grid-template-columns:110px 1fr auto}}
+@media(max-width:380px){.ui3s .ks{grid-template-columns:repeat(2,1fr)}}
+
+/* Laptop, Agents: the old pages paint with inline colours, so the words they read get a stronger ink here */
+html.ui2 #agentic,html.ui2 #agents{--txt:var(--ink);--txt2:var(--ink2);--txt3:var(--ink2);--cyan:var(--accent);--cell:var(--s1);--line:var(--hair);--line2:var(--hair2);--violet:var(--ink2);color:var(--ink);font-family:var(--sans)}
+html.ui2 #agentic :is([style*="border-radius:10px"],[style*="border-radius:12px"]),html.ui2 #agents :is([style*="border-radius:10px"],[style*="border-radius:12px"]){border-radius:18px!important;box-shadow:inset 0 1px 0 var(--rim);border-color:var(--hair)!important;padding:14px!important;background:linear-gradient(180deg,var(--s1),var(--s1b))!important}
+html.ui2 #agentic :is(input,textarea),html.ui2 #agents :is(input,textarea){font-size:16px!important;font-family:var(--sans)!important;background:var(--bg)!important;border-radius:12px!important;padding:10px 12px!important}
+html.ui2 #agents b,html.ui2 #agentic b{font-weight:640;letter-spacing:-.005em}
+
+/* Sign in: the first thing anyone sees */
+html.ui2 .deny{font-family:var(--sans)!important;font-size:15px;line-height:22px;color:var(--ink2)!important}
+html.ui2 #signup{min-height:100dvh;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:radial-gradient(90% 46% at 50% 0,color-mix(in oklab,var(--fill) 24%,transparent),transparent 72%)}
+html.ui2 #signup[style*="block"]{display:flex!important}
+html.ui2 #signup>div:first-child{font-size:0!important;width:84px;height:84px;margin:0 0 18px!important;background:var(--fill);-webkit-mask:var(--ui2mark) center/contain no-repeat;mask:var(--ui2mark) center/contain no-repeat;filter:drop-shadow(0 8px 28px var(--glow))}
+html.ui2 #signup>b{font:680 30px/36px var(--sans)!important;letter-spacing:-.025em;color:var(--ink)!important}
+html.ui2 #signup>br{display:none}
+html.ui2 #signup>div:last-child{width:100%;margin-top:26px!important}
+html.ui2 #signupname{font:500 16px/22px var(--sans)!important;height:52px;padding:0 16px!important;background:var(--s1)!important;border:0!important;box-shadow:inset 0 0 0 1px var(--hair2);border-radius:16px!important;color:var(--ink)!important}
+html.ui2 #signupname:focus{outline:2px solid var(--accent);outline-offset:1px}
+html.ui2 #signup button[onclick="doSignup()"]{height:52px;margin-top:12px!important;background:var(--fill)!important;color:var(--fill-ink)!important;border-radius:16px!important;font:640 16px/1 var(--sans)!important;box-shadow:0 10px 28px var(--glow),inset 0 1px 0 rgba(255,255,255,.28)}
+html.ui2 #signupinstall{height:48px;border-radius:16px!important;color:var(--ink)!important;border:0!important;box-shadow:inset 0 0 0 1px var(--hair2);background:var(--s1)!important;font:600 15px/1 var(--sans)!important}
+html.ui2 #signupwarn{font:500 14px/20px var(--sans)!important;border-radius:14px!important;color:var(--warn)!important}
+html.ui2 #signuphint{font:500 13.5px/20px var(--sans)!important;color:var(--ink2)!important;margin-top:18px!important}
+/* phone: the chat name matters more than the words on the connection chip; the dot stays */
+@media(max-width:560px){html.ui2 #lpConnT{display:none}html.ui2 #lpConn,html.ui2 .lpconn{padding-left:9px;padding-right:9px}}
+
+/* Is this phone set up? */
+.ui3ck{display:grid;gap:0;margin:2px 0 14px;max-height:min(62vh,560px);overflow:auto;-webkit-overflow-scrolling:touch}
+.ui3ck .r{display:flex;gap:11px;padding:10px 2px;border-top:.75px solid var(--hair)}
+.ui3ck .r:first-child{border-top:0}
+.ui3ck .m{flex:none;width:18px;height:18px;margin-top:1px;border-radius:50%;background:var(--s3);position:relative}
+.ui3ck .ok .m{background:color-mix(in oklab,var(--ok,#4CC38A) 88%,transparent)}
+.ui3ck .ok .m::after{content:"";position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid #06140D;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.ui3ck .bad .m{background:var(--fill)}
+.ui3ck .bad .m::after{content:"!";position:absolute;inset:0;text-align:center;font:760 13px/18px var(--sans);color:var(--fill-ink)}
+.ui3ck .wait .m{background:none;border:2px solid var(--s3);border-top-color:var(--ink2);animation:ui3spin .8s linear infinite}
+@keyframes ui3spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.ui3ck .wait .m{animation:none}}
+.ui3ck .t{min-width:0;flex:1;display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:baseline}
+.ui3ck b{font:540 14.5px/20px var(--sans);color:var(--ink)}
+.ui3ck .v{font:500 13.5px/20px var(--sans);color:var(--ink2);text-align:right;overflow-wrap:anywhere}
+.ui3ck .bad .v{color:var(--bad,var(--fill))}
+.ui3ck small{grid-column:1/-1;font:500 13px/18px var(--sans);color:var(--ink2);margin-top:2px}
+
+/* the sheet's secondary button shares its class name with ticket section headings, which draw a line after the words */
+#ui2S6 .s6row .btn.sec::after,#ui2S6 .s6row .btn.sec::before{display:none!important;content:none!important}
+#ui2S6 .s6row{align-items:stretch}
+#ui2S6 .s6row .btn{flex:1;min-height:50px;margin:0;display:flex;align-items:center;justify-content:center;text-align:center;letter-spacing:0;text-transform:none;font:600 15.5px/1.2 var(--sans)}
+#ui2S6 .s6row .btn:disabled{opacity:.5}
+
+/* Laptop feed: stopped terminals, context ring, limits */
+html.ui2 .u-alert .ui2dot{background:var(--fill)}
+html.ui2 .lpcmg.ui3al{color:var(--bad,var(--fill));font:540 13.5px/18px var(--sans);margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html.ui2 .lpcmg.ui3al::before{display:none}
+html.ui2 .lpca.ui3r::before{content:"";position:absolute;inset:-4px;border-radius:17px;padding:2px;--rc:var(--ink3);background:conic-gradient(var(--rc) calc(var(--ctx)*1%),color-mix(in oklab,var(--ink3) 18%,transparent) 0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none}
+html.ui2 .lpca.ui3r[data-rg=warm]::before{--rc:var(--warn)}
+html.ui2 .lpca.ui3r[data-rg=hot]::before{--rc:var(--fill)}
+html.ui2 #ui2ChatA.ui3r::before{border-radius:14px;inset:-3px}
+html.ui2 .ui3lim{margin:12px 0 4px;padding:12px 14px;border-radius:16px;background:var(--s1);box-shadow:inset 0 0 0 .75px var(--hair)}
+html.ui2 .ui3lim .h{display:flex;justify-content:space-between;gap:10px;font:500 13.5px/18px var(--sans);color:var(--ink2)}
+html.ui2 .ui3lim b{font-weight:620;color:var(--ink)}
+html.ui2 .ui3lim .tr{height:5px;margin:8px 0 6px;border-radius:3px;background:var(--s3);overflow:hidden}
+html.ui2 .ui3lim .tr i{display:block;height:100%;border-radius:3px;background:var(--ink2)}
+html.ui2 .ui3lim.warm .tr i{background:var(--warn)}
+html.ui2 .ui3lim.hot{box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--fill) 55%,transparent)}
+html.ui2 .ui3lim.hot .tr i{background:var(--fill);box-shadow:0 0 10px color-mix(in oklab,var(--fill) 60%,transparent)}
+html.ui2 .ui3lim small{display:block;font:500 13px/17px var(--sans);color:var(--ink3);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#ui2S6 .s6row .btn[hidden]{display:none}/*UI2CSSEND*/
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -2099,7 +2258,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-5';
+var LP_BUILD='CHAT-20261106-7';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -4599,7 +4758,7 @@ function ui2Set(k,v){try{if(v==null)localStorage.removeItem(k);else localStorage
 function ui2Get(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 
 /* who gets it: the owner, unless they switched back; ?ui2=0 and ?ui2=1 win for this load */
-function ui2Check(me){if(!me||me.auth===undefined)return;var r=document.documentElement,owner=me.role==='owner';
+function ui2Check(me){if(!me||me.auth===undefined)return;/* signed out says nothing about who this is: keep what this phone already knows, so the owner's sign-in keeps the look */if(me.auth===false)return;var r=document.documentElement,owner=me.role==='owner';
   ui2Set('vr_ui2_on',owner?'1':null);
   var q=/[?&]ui2=([01])/.exec(location.search),want=q?q[1]==='1':(owner&&ui2Get('vr_ui2')!=='0');
   if(want&&!UI2.on){r.classList.add('ui2');ui2Mount();}else if(!want&&r.classList.contains('ui2')){ui2Off();}}
@@ -4628,7 +4787,7 @@ function ui2Mount(){if(UI2.mounted){UI2.on=true;ui2Sync();return;}
     lpChatsClose=function(){if(ui2IsWide()&&UI2.on)return;_cc();ui2Sync();};
     var _ren=render;render=function(){_ren();ui2Badges();ui2Polish();ui2BriefCheck();};
     var _lph=lpPaintHead;lpPaintHead=function(){_lph();ui2ChatHead();};
-    ui2Overlays();ui2WatchViews();ui2S6Mount();
+    ui2Overlays();ui2WatchViews();ui2S6Mount();ui3Mount();
     b.appendChild((function(){var e=ui2El('ui2Now','ui2gl');e.hidden=true;return e;})());
     var br=ui2El('ui2Brief');br.hidden=true;app.insertBefore(br,hd.nextSibling);
     setInterval(ui2NowPoll,8000);setTimeout(ui2NowPoll,800);document.addEventListener('visibilitychange',function(){if(document.hidden)ui2BriefMark();else{ui2NowPoll();ui2BriefCheck();}});
@@ -4725,27 +4884,28 @@ function ui2Overlays(){var setHd=function(id,t){var e=document.querySelector('#'
   var _ci=cmdItems;cmdItems=function(q){var L=_ci(q).filter(function(it){return it.hint!=='theme';}),qq=String(q||'').toLowerCase();[['carbon','Carbon'],['graphite','Graphite'],['midnight','Midnight'],['porcelain','Porcelain']].forEach(function(f){var lb='Finish: '+f[1];if(!qq||lb.toLowerCase().indexOf(qq)>=0)L.push({lbl:lb,hint:'finish',run:function(){ui2Finish(f[0]);}});});return L;};
   if(typeof cycleTheme==='function')cycleTheme=function(){var F=['carbon','graphite','midnight','porcelain'],i=F.indexOf(ui2Get('vr_ui2_fin')||'carbon');var nx=F[(i+1)%F.length];ui2Finish(nx);try{toast('Finish: '+nx);}catch(e){}};}
 /* chat header: which chat, and what it is doing */
-function ui2ChatHead(){if(!UI2.on)return;ui2SpeakSetup();var hd=document.getElementById('lpHead');if(!hd)return;var e=document.getElementById('ui2ChatT');if(!e){e=document.createElement('div');e.id='ui2ChatT';e.appendChild(document.createElement('span'));e.appendChild(document.createElement('small'));var ch=document.getElementById('lpChatsB');if(ch&&ch.nextSibling)hd.insertBefore(e,ch.nextSibling);else hd.appendChild(e);}
+function ui2ChatHead(){if(!UI2.on)return;ui2SpeakSetup();var hd=document.getElementById('lpHead');if(!hd)return;var e=document.getElementById('ui2ChatT');if(!e){e=document.createElement('div');e.id='ui2ChatT';e.appendChild(document.createElement('span'));e.appendChild(document.createElement('small'));var ch=document.getElementById('lpChatsB');if(ch&&ch.nextSibling)hd.insertBefore(e,ch.nextSibling);else hd.appendChild(e);var av0=lpEl('span','lpca');av0.id='ui2ChatA';av0.appendChild(document.createTextNode(''));av0.appendChild(lpEl('i','ui2dot'));hd.insertBefore(av0,e);}
+  var av=document.getElementById('ui2ChatA');if(av){var rw=null;try{rw=(LP.vis||[]).filter(function(s){return String(s.session_id)===String(LP.sel);})[0]||null;}catch(x){}if(rw){var nz=lpNice(rw.name),lt=(nz.slot||nz.title.trim().charAt(0)||'C').toUpperCase();if(av.firstChild.nodeValue!==lt)av.firstChild.nodeValue=lt;av.style.setProperty('--tc',ui2Tone(nz.slot,nz.title));var ks=String(rw.status||'idle');av.dataset.k=ks==='waiting'?'wait':ks==='busy'?'run':'idle';ui3Ring(av,rw);av.hidden=false;}else av.hidden=true;}
   var row=null;try{row=(LP.vis||[]).filter(function(s){return String(s.session_id)===String(LP.sel);})[0]||null;}catch(x){}
-  var nm='',st='';if(row){nm=lpNice(row.name).title;var W={waiting:'Waiting for you',busy:'Working',idle:'Idle'};st=W[String(row.status||'idle')]||'';}
+  var nm='',st='';if(row){nm=lpNice(row.name).title;var W={waiting:'Waiting for you',busy:'Working',idle:'Idle'};st=W[String(row.status||'idle')]||'';var al3=row.status!=='waiting'?ui3Alert(row):null;if(al3)st=ui3AlertText(al3);else{var g3=ui3Gauge(row);if(g3&&g3.ctx!=null)st+=(st?' \u00b7 ':'')+'context '+Number(g3.ctx)+'%';}}
   if(e.firstChild.textContent!==nm)e.firstChild.textContent=nm;if(e.lastChild.textContent!==st)e.lastChild.textContent=st;}
 /* the chat list only rebuilds when something on it changed, so a tap or a swipe in progress survives the 2 s poll */
-function ui2ChatsSig(){try{return JSON.stringify(lpTabList().map(function(t){var sid=String(t.sid),r=t.row||{},st=ui2ChatState(t);return [sid,r.name,st.k,st.g?st.g.text:'',st.g?st.g.bar:null,st.k==='wait'?ui2AskText(r,st.g):'',lpPreview(sid,r),lpUnread(sid),ui2When(lpLastAt(sid)),lpPinned(sid),lpMuted(sid),sid===LP.sel];}))+'|'+(lpNewTMachine()?1:0)+'|'+((lpHealthEl()||{}).textContent||'')+'|'+lpStarList().length+'|'+(LP.data?1:0)+'|'+(ui2Get('vr_ui2_pj')||'');}catch(e){return String(Math.random());}}
+function ui2ChatsSig(){try{return JSON.stringify(lpTabList().map(function(t){var sid=String(t.sid),r=t.row||{},st=ui2ChatState(t);return [sid,r.name,st.k,st.g?st.g.text:'',st.g?st.g.bar:null,st.k==='wait'?ui2AskText(r,st.g):'',lpPreview(sid,r),lpUnread(sid),ui2When(lpLastAt(sid)),lpPinned(sid),lpMuted(sid),sid===LP.sel,st.al?ui3AlertText(st.al):'',ui3RingB(r)];}))+'|'+ui3LimitSig(lpTabList())+'|'+(lpNewTMachine()?1:0)+'|'+((lpHealthEl()||{}).textContent||'')+'|'+lpStarList().length+'|'+(LP.data?1:0)+'|'+(ui2Get('vr_ui2_pj')||'');}catch(e){return String(Math.random());}}
 /* Chats: one state per row, real groups, and a card on top only when a terminal is truly waiting. textContent only. */
 var UI2_TC=['#7FB2FF','#B597F2','#5CC9C0','#FF7A85','#E3B341','#6FCF7F','#F08CC8','#9FB0C3'];
 function ui2Tone(slot,name){var k=0,n=String(name||''),i;if(slot)k=slot.charCodeAt(0)-65;else for(i=0;i<n.length;i++)k=(k*31+n.charCodeAt(i))>>>0;return UI2_TC[k%UI2_TC.length];}
 function ui2Clean(x){var v=String(x==null?'':x).replace(/\*\*|__|`/g,'').replace(/^#+\s*/,'').replace(/\s+/g,' ').trim();try{return lpMask(v);}catch(e){return v;}}
 function ui2ChatState(t){if(t.off||t.ghost||t.cache)return {k:'off',g:null};var g=null,st=String((t.row&&t.row.status)||'idle');try{g=lpProg(t.row);}catch(e){}
-  if(st==='waiting'||(g&&g.wait))return {k:'wait',g:g};if(st==='busy')return {k:'run',g:g};if(g)return {k:'done',g:g};return {k:'idle',g:null};}
+  if(st==='waiting'||(g&&g.wait))return {k:'wait',g:g};var al=ui3Alert(t.row);if(al)return {k:'alert',g:g,al:al};if(st==='busy')return {k:'run',g:g};if(g)return {k:'done',g:g};return {k:'idle',g:null};}
 function ui2AskText(row,g){var p=row&&row.pending;if(p&&typeof p==='object'){if(p.kind==='question'){var q=p.question||p.message||(Array.isArray(p.questions)&&p.questions[0]&&p.questions[0].question);return q?ui2Clean(q):'Has a question';}return 'Allow '+ui2Clean(p.tool||'a tool')+'?';}return g&&g.text?ui2Clean(g.text):'Waiting for you';}
 function ui2When(ms){if(!ms)return '';var d=new Date(ms),n=new Date(),day=86400000,a=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),b=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),gap=Math.round((a-b)/day);
   if(gap<=0)return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);if(gap===1)return 'Yesterday';if(gap<7)return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];}
 function ui2ChatRow(t,hero,idx){var sid=String(t.sid),row=t.row||{},nq=lpNice(row.name),nm=nq.title,s=ui2ChatState(t),un=sid===LP.sel?0:lpUnread(sid),mt=lpMuted(sid);
   var r=lpEl('div','lpcr u-'+s.k+(sid===LP.sel?' on':'')+(mt?' muted':'')+(un?' unread':'')+(hero?' ui2hero':''));r.dataset.lptap='chatgo';r.dataset.sid=sid;r.style.setProperty('--i',String(Math.min(idx||0,8)));
-  var face=lpEl('div','ui2rm'),av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());av.style.setProperty('--tc',ui2Tone(nq.slot,nm));av.appendChild(lpEl('i','ui2dot'));face.appendChild(av);
+  var face=lpEl('div','ui2rm'),av=lpEl('span','lpca',(nq.slot||nm.trim().charAt(0)||'C').toUpperCase());av.style.setProperty('--tc',ui2Tone(nq.slot,nm));av.appendChild(lpEl('i','ui2dot'));ui3Ring(av,row);face.appendChild(av);
   var mid=lpEl('div','lpcm'),top=lpEl('div','lpcmt');top.appendChild(lpEl('span','lpcmn',nm));top.appendChild(lpEl('span','lpcmh',ui2When(lpLastAt(sid))));mid.appendChild(top);
   var bot=lpEl('div','lpcmb'),txt=hero?ui2AskText(row,s.g):ui2Clean(lpPreview(sid,row));if(!txt&&s.k==='run')txt='Working';bot.appendChild(lpEl('span','lpcmp',txt));if(un)bot.appendChild(lpEl('span','lpun on',String(un>99?'99+':un)));mid.appendChild(bot);
-  var pg=s.g?lpProgEl(row):null;var sm=s.k==='run'?ui2StuckMin(t):0;if(sm&&pg){r.classList.add('u-stuck');var pgt=pg.querySelector('.lpcmgt');if(pgt)pgt.textContent='No change for '+lpAgo(sm*60000)+' \u00b7 '+pgt.textContent;}if(!hero&&pg)mid.appendChild(pg);face.appendChild(mid);r.appendChild(face);
+  var pg=s.g?lpProgEl(row):null;var sm=s.k==='run'?ui2StuckMin(t):0;if(sm&&pg){r.classList.add('u-stuck');var pgt=pg.querySelector('.lpcmgt');if(pgt)pgt.textContent='No change for '+lpAgo(sm*60000)+' \u00b7 '+pgt.textContent;}if(s.k==='alert'){mid.appendChild(lpEl('div','lpcmg ui3al',ui3AlertText(s.al)));}else if(!hero&&pg)mid.appendChild(pg);face.appendChild(mid);r.appendChild(face);
   if(hero){var ft=lpEl('div','ui2hf'),ht=pg&&pg.querySelector('.lpcmgt'),more=s.g?String(s.g.text||'').split(' \u00b7 ').slice(1).join(' \u00b7 '):'';if(ht&&more)ht.textContent=more;ft.appendChild(ht&&more?pg:lpEl('span'));var op=lpEl('button','lpbtn ui2open','Open');op.type='button';op.dataset.lptap='chatgo';op.dataset.sid=sid;ft.appendChild(op);r.appendChild(ft);return r;}
   var ra=lpEl('div','ui2ra'),pb=lpEl('button','lpbtn lppin',lpPinned(sid)?'Unpin':'Pin');pb.type='button';pb.dataset.lptap='pin';pb.dataset.sid=sid;ra.appendChild(pb);
   var mb=lpEl('button','lpbtn lpmute',mt?'Unmute':'Mute');mb.type='button';mb.dataset.lptap='mute';mb.dataset.sid=sid;ra.appendChild(mb);r.appendChild(ra);return r;}
@@ -4760,16 +4920,16 @@ function ui2ChatsPaint(){var box=lpG('lpChats');if(!box)return;ui2ChatsWire(box)
   var hl=lpHealthEl();if(hl&&hl.classList.contains('bad'))f.appendChild(hl);
   var pj=ui2ProjectChips(f,list);
   if(!list.length){var em=lpEl('div','lpcn ui2empty');em.appendChild(lpEl('b',null,LP.data?'No terminals open':'Connecting to the laptop'));if(LP.data)em.appendChild(lpEl('span',null,'A Claude terminal on the laptop shows up here by itself.'));f.appendChild(em);}
-  var wait=[],run=[],pin=[],rest=[];list.forEach(function(t){var k=ui2ChatState(t).k,sid=String(t.sid);if(k!=='wait'&&pj&&lpBase(t.row&&t.row.cwd)!==pj)return;if(k==='wait')wait.push(t);else if(k==='run')run.push(t);else if(lpPinned(sid))pin.push(t);else rest.push(t);});
+  var wait=[],stopd=[],run=[],pin=[],rest=[];list.forEach(function(t){var k=ui2ChatState(t).k,sid=String(t.sid);if(k!=='wait'&&k!=='alert'&&pj&&lpBase(t.row&&t.row.cwd)!==pj)return;if(k==='wait')wait.push(t);else if(k==='alert')stopd.push(t);else if(k==='run')run.push(t);else if(lpPinned(sid))pin.push(t);else rest.push(t);});
   var byLast=function(a,b){return (lpLastAt(String(b.sid))||0)-(lpLastAt(String(a.sid))||0);};run.sort(byLast);pin.sort(byLast);rest.sort(byLast);
   /* a muted chat that is waiting stays in the list but does not take the card */
   var loud=wait.filter(function(t){return !lpMuted(String(t.sid));}),heroT=loud[0]||null;
   if(heroT){var hw=lpEl('div','ui2hw');if(loud.length>1)hw.dataset.more=String(loud.length);var hl2=lpEl('div','ui2hl');hl2.appendChild(lpEl('span',null,'Needs you'));if(loud.length>1)hl2.appendChild(lpEl('b',null,loud.length+' waiting'));hw.appendChild(hl2);hw.appendChild(ui2ChatRow(heroT,true,0));f.appendChild(hw);}
-  var also=wait.filter(function(t){return t!==heroT;}),n=1;ui2ChatGroup(f,heroT?'Also waiting':'Needs you',also,n);n+=also.length;ui2ChatGroup(f,'Working',run,n);n+=run.length;ui2ChatGroup(f,'Pinned',pin,n);n+=pin.length;
-  ui2ChatGroup(f,(heroT||also.length||run.length||pin.length)?'Earlier':'',rest,n);
+  var also=wait.filter(function(t){return t!==heroT;}),n=1;ui2ChatGroup(f,heroT?'Also waiting':'Needs you',also,n);n+=also.length;ui2ChatGroup(f,'Stopped',stopd,n);n+=stopd.length;ui3Limits(f,list,true);ui2ChatGroup(f,'Working',run,n);n+=run.length;ui2ChatGroup(f,'Pinned',pin,n);n+=pin.length;
+  ui2ChatGroup(f,(heroT||also.length||stopd.length||run.length||pin.length)?'Earlier':'',rest,n);
   var stars=lpStarList();if(stars.length){var sg=[];stars.slice(-30).reverse().forEach(function(s){var sr=lpEl('div','lpcr lpcsr');sr.dataset.lptap='chatgo';sr.dataset.sid=String(s.sid||'');var fc=lpEl('div','ui2rm'),m2=lpEl('div','lpcm'),t2=lpEl('div','lpcmt');t2.appendChild(lpEl('span','lpcmn',lpNice(s.name).title));t2.appendChild(lpEl('span','lpcmh',s.at?ui2When(lpT(s.at)):''));m2.appendChild(t2);m2.appendChild(lpEl('div','lpcmp',ui2Clean(String(s.text||'').slice(0,140))));fc.appendChild(m2);sr.appendChild(fc);sg.push(sr);});
     f.appendChild(lpEl('div','lpchs ui2gt','Starred messages'));var gs=lpEl('div','ui2gp');sg.forEach(function(e){gs.appendChild(e);});f.appendChild(gs);}
-  if(hl&&!hl.classList.contains('bad'))f.appendChild(hl);
+  ui3Limits(f,list,false);if(hl&&!hl.classList.contains('bad'))f.appendChild(hl);
   var st=box.scrollTop;box.textContent='';box.appendChild(f);if(st)box.scrollTop=st;
   if(!UI2.cSeen&&list.length){UI2.cSeen=1;box.classList.add('ui2in');setTimeout(function(){box.classList.remove('ui2in');},700);}}
 /* a row being swiped or just swiped open is left alone; the next poll catches up. A row open and untouched for 5 s gives way, so a new question is never held back. */
@@ -4794,13 +4954,13 @@ function ui2MorePaint(){var m=document.getElementById('ui2More');if(!m)return;va
    '<div class="ui2tl"><button type="button" data-a="agentic">'+ui2Svg('agentic',22)+'<b>Laptop</b><small>Tasks, health</small></button><button type="button" data-a="agents">'+ui2Svg('agents',22)+'<b>Agents</b><small>Roster</small></button><button type="button" data-a="brain">'+ui2Svg('brain',22)+'<b>Brain</b><small>Project map</small></button></div>'+
    '<h2>App</h2><div class="ui2gr">'+li('notif','bell','Notifications','<span class="ui2rc">'+(un?(un>99?'99+':Number(un)):'')+'</span>')+((me.role==='owner')?li('team','team','Team access','<span class="ui2rc">'+(pend?Number(pend):'')+'</span>'):'')+li('search','search','Search everything')+li('cmd','cmd','Command palette','<span class="v">Ctrl K</span>')+li('reload','refresh','Refresh now')+'</div>'+
    '<h2>Appearance</h2><div class="ui2gr"><div class="ui2fin">'+[['carbon','Carbon'],['graphite','Graphite'],['midnight','Midnight'],['porcelain','Porcelain']].map(function(f){return '<button type="button" data-fin="'+f[0]+'" class="'+(fin===f[0]?'on':'')+'">'+f[1]+'</button>';}).join('')+'</div></div>'+
-   ui2S6More(li)+'<h2>Tools</h2><div class="ui2gr">'+li('install','install','Install the app')+li('qr','qr','Get it on another phone')+li('csv','csv','Export tickets to CSV')+li('help','keys','Keyboard shortcuts')+li('old','old','Use the old look')+'</div>'+
+   ui2S6More(li)+'<h2>Tools</h2><div class="ui2gr">'+li('install','install','Install the app')+li('qr','qr','Get it on another phone')+li('csv','csv','Export tickets to CSV')+li('help','keys','Keyboard shortcuts')+li('check','shield','Is this phone set up?')+li('old','old','Use the old look')+'</div>'+
    '<p class="ui2ft">Velocity Relay '+H(String(LP_BUILD))+'</p>';
   if(m.__h===h)return;m.__h=h;m.innerHTML=h;}
 function ui2MoreTap(e){var b=e.target.closest?e.target.closest('[data-a],[data-fin]'):null;if(!b)return;if(b.dataset.fin){ui2Finish(b.dataset.fin);ui2MorePaint();return;}
   var a=b.dataset.a,V={agentic:'agentic',agents:'agents',brain:'graph'};
   if(V[a]){ui2MoreClose();setView(V[a]);return;}
-  if(a==='s6pair'){ui2S6Pair();return;}if(a==='s6lock'){ui2S6LockAsk();return;}
+  if(a==='s6pair'){ui2S6Pair();return;}if(a==='s6lock'){ui2S6LockAsk();return;}if(a==='check'){ui3Check();return;}
   if(a==='notif')bellClick();else if(a==='team')openTeam();else if(a==='search')gsOpen('');else if(a==='cmd')openCmd();else if(a==='reload')load();else if(a==='install')smartInstall();else if(a==='qr')openQR();else if(a==='csv')exportCSV();else if(a==='help')openHelp();else if(a==='old')ui2UseOld();}
 function ui2Finish(n){ui2Set('vr_ui2_fin',n);document.documentElement.setAttribute('data-finish',n);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',n==='porcelain'?'#EFF1F4':n==='midnight'?'#0A1120':n==='graphite'?'#0B0E12':'#09090A');}
 /* laptop keys: Alt+1-4 change screen; arrows or J K walk the ticket list, Enter opens, Esc closes */
@@ -4957,6 +5117,94 @@ function ui2S6LockAsk(){if(!s6On())return;S6.sh='lock';
         if(!oks.some(Boolean)){go.disabled=false;line.textContent='Not sent: no connection. Try again.';return;}
         line.textContent='Sent. Waiting for the laptop to say it is locked…';var tries=0;
         (function wait(){S6.poll=setTimeout(function(){if(S6.sh!=='lock')return;ui2S6Load().then(function(){if(S6.sh!=='lock')return;if(s6Locked()){line.textContent='Locked. Only the laptop can unlock it now.';line.className='st ok';go.hidden=true;return;}if(++tries<12)wait();else line.textContent='Sent, but the laptop has not said it is locked. It may be asleep or offline.';});},2000);})();});});c.appendChild(r);});}
+/* Second pass, 2026-11-06. */
+/* Ember: a red glow at the top of the screen that only burns while a terminal is waiting on you. Nothing waiting, no glow. */
+function ui3WaitN(){var n=0;try{if(LP.data&&(STATE.view==='laptop'||!UI2.nowS))LP.vis.forEach(function(s){if((s.status==='waiting'||ui3Alert(s))&&!lpMuted(String(s.session_id)))n++;});else{n=ui2NowList().length;var now3=Date.now()+(UI2.nowClock||0);(UI2.nowS||[]).forEach(function(s){if(s&&s.status!=='waiting'&&ui3Alert(s)&&now3-(Date.parse(s.updated_at)||0)<LP_OFFLINE_MS&&!lpMuted(String(s.session_id)))n++;});}}catch(e){}return n;}
+function ui3Ember(){var r=document.documentElement,n=ui3WaitN(),v=n<=0?'0':n===1?'.6':n===2?'.8':'1';if(UI2.ember===v)return;UI2.ember=v;r.style.setProperty('--ember',v);if(n>0)r.setAttribute('data-ui3hot','1');else r.removeAttribute('data-ui3hot');}
+/* The bars step back while you read: scrolling down drops the tool row and slims the dock to icons; any scroll up brings them back. */
+function ui3Scroll(e){var t=e.target;if(!UI2.on||!t||!t.id||!/^(app|lpChats|ui2More)$/.test(t.id)||ui2IsWide())return;var y=t.scrollTop,prev=t.__sy||0;if(Math.abs(y-prev)<10)return;t.__sy=y;var down=y>prev&&y>70,r=document.documentElement;if(down)r.setAttribute('data-ui2slim','1');else r.removeAttribute('data-ui2slim');var tl=document.getElementById('ui2Tool'),a=document.activeElement;if(tl&&(!a||a.id!=='q'))tl.classList.toggle('tuck',down);}
+function ui3Quiet(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
+/* a change of tab slides the new screen in from the side it sits on; the bars stay still */
+function ui3TabIn(tab,v){var T=['chats','tickets','stats','more'],a=T.indexOf(UI2.lastTab),b=T.indexOf(tab),same=UI2.lastTab===tab;UI2.lastTab=tab;if(same||a<0||b<0||ui3Quiet())return;var id=UI2.more?'ui2More':v==='laptop'?'lpChats':v;var el=document.getElementById(id);if(!el)return;el.style.setProperty('--dx',(b>a?16:-16)+'px');el.classList.remove('ui3in');void el.offsetWidth;el.classList.add('ui3in');setTimeout(function(){el.classList.remove('ui3in');},300);}
+/* What the laptop says about a terminal: stopped by a limit or a lost login, how full its context is, how close its account is to a limit. An older Savepoint sends none of it and none of this shows. */
+function ui3Alert(row){var a=row&&row.progress&&row.progress.alert;if(!a||(a.k!=='limit'&&a.k!=='login'))return null;if(a.resets&&(Date.parse(a.resets)||0)<=Date.now())return null;return a;}
+function ui3AlertText(a){if(a.k==='login')return 'Signed out \u00b7 run /login on the laptop';var r=a.resets?Date.parse(a.resets):0;return 'Stopped at a limit'+(r?' \u00b7 back '+ui3Back(r):'');}
+function ui3Back(ms){var d=new Date(ms),hm=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2),n=new Date();if(d.toDateString()===n.toDateString())return 'at '+hm;return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]+' '+hm;}
+function ui3Gauge(row){var g=row&&row.progress&&row.progress.gauge;return g&&typeof g==='object'?g:null;}
+function ui3RingB(row){var g=ui3Gauge(row);return g&&g.ctx!=null?Math.floor(g.ctx/5):'';}
+/* the ring starts at half full, so a calm list stays calm */
+function ui3Ring(av,row){var g=ui3Gauge(row),c=g&&g.ctx;if(c==null||c<50){av.classList.remove('ui3r');return;}av.classList.add('ui3r');av.style.setProperty('--ctx',String(Math.min(100,Number(c))));av.dataset.rg=c>=85?'hot':c>=70?'warm':'';av.setAttribute('aria-label','Context '+Number(c)+' percent full');}
+/* Limits belong to an account and terminals can sit on different ones, so this names the closest terminal. It moves to the top at 85% or more. */
+function ui3LimitTop(list){var best=null;list.forEach(function(t){var g=ui3Gauge(t.row);if(!g||t.off||t.ghost||t.cache)return;[['r5','r5at','5 hour limit'],['r7','r7at','Weekly limit']].forEach(function(k){var v=g[k[0]],at=g[k[1]]?Date.parse(g[k[1]]):0;if(v==null||(at&&at<=Date.now()))return;if(!best||v>best.v)best={v:Number(v),at:at,l:k[2],nm:lpNice(t.row&&t.row.name).title};});});return best;}
+function ui3LimitSig(list){var b=ui3LimitTop(list);return b?[b.l,Math.floor(b.v/5),b.at].join(':'):'';}
+function ui3Limits(f,list,top){var b=ui3LimitTop(list);if(!b||(b.v>=85)!==top||b.v<20)return;var e=lpEl('div','ui3lim'+(b.v>=85?' hot':b.v>=70?' warm':''));var hd=lpEl('div','h');hd.appendChild(lpEl('b',null,b.l+' '+b.v+'%'));hd.appendChild(lpEl('span',null,b.at?'resets '+ui3Back(b.at).replace(/^at /,''):''));e.appendChild(hd);var tr=lpEl('div','tr'),i=lpEl('i');i.style.width=Math.min(100,b.v)+'%';tr.appendChild(i);e.appendChild(tr);e.appendChild(lpEl('small',null,b.nm));f.appendChild(e);}
+/* Stats: real tickets only. Shipped rises above the line, opened hangs below it, one column per day. */
+function ui3Dur(h){if(h==null||!isFinite(h))return '';return h<1?Math.max(1,Math.round(h*60))+' min':h<48?(h<10?h.toFixed(1):Math.round(h))+' h':Math.round(h/24)+' days';}
+function ui3Median(a){if(!a.length)return null;a=a.slice().sort(function(x,y){return x-y;});var m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2;}
+function ui3Stats(){var el=document.getElementById('stats');if(!el)return;var ts=STATE.tickets||[],now=Date.now(),day=864e5,d0=new Date();d0.setHours(24,0,0,0);var end=d0.getTime(),N=30,op=[],sh=[],i;for(i=0;i<N;i++){op.push(0);sh.push(0);}
+  var ix=function(ms){if(!ms)return -1;var k=Math.floor((end-ms)/day);return k>=0&&k<N?N-1-k:-1;};
+  var openAll=[],prog=0,over=0,hrs=[],ship7=0,prev7=0,reps={},pr={},hi=0,md=0,lo=0,nt=[];
+  ts.forEach(function(t){var c=Date.parse(t.created)||0,r=Date.parse(t.resolved)||0,k=ix(c);if(k>=0)op[k]++;var who=String(t.who||'Unknown'),R=reps[who]||(reps[who]={n:who,o:0,d:0});
+    if(t.done&&r){k=ix(r);if(k>=0)sh[k]++;if(now-r<7*day)ship7++;else if(now-r<14*day)prev7++;if(c&&r>=c&&now-r<90*day)hrs.push((r-c)/36e5);}
+    if(t.done)R.d++;if(t.open){R.o++;openAll.push(t);if(t.prog)prog++;if(workingDaysSince(t.created)>=2)over++;var p=priClass(t.priority);if(p==='high')hi++;else if(p==='med')md++;else if(p==='low')lo++;if(t.proj){var q=String(t.proj);pr[q]=(pr[q]||0)+1;}}
+    if(ui2NotTold(t))nt.push(t);});
+  var mx=Math.max.apply(null,op.concat(sh).concat([1])),sumO=op.reduce(function(a,b){return a+b;},0),sumS=sh.reduce(function(a,b){return a+b;},0);
+  var bars='';for(i=0;i<N;i++){bars+='<div class="c'+(i===N-1?' td':'')+'" style="--u:'+Math.round(sh[i]/mx*100)+'%;--d:'+Math.round(op[i]/mx*100)+'%;--i:'+i+'"><i class="u"></i><i class="d"></i></div>';}
+  var delta=ship7-prev7,dl=(ship7||prev7)?(delta===0?'Same as the week before':(delta>0?delta+' more':(-delta)+' fewer')+' than the week before'):'Nothing shipped in two weeks';
+  var mh=ui3Median(hrs),fast=hrs.length?Math.min.apply(null,hrs):null;
+  var kp=function(key,n,l,cls){return '<button type="button" class="k '+(cls||'')+'" data-f="'+key+'"><b>'+n+'</b><span>'+l+'</span></button>';};
+  var repA=Object.keys(reps).map(function(k){return reps[k];}).sort(function(a,b){return b.o-a.o||b.d-a.d;}).slice(0,8),rmx=Math.max.apply(null,repA.map(function(r){return r.o+r.d;}).concat([1]));
+  var repH=repA.map(function(r){return '<button type="button" class="rp" data-rep="'+H(r.n)+'"><span class="nm">'+H(r.n)+'</span><span class="tr"><i class="o" style="width:'+(r.o/rmx*100).toFixed(1)+'%"></i><i class="s" style="width:'+(r.d/rmx*100).toFixed(1)+'%"></i></span><span class="ct">'+(r.o?'<b>'+Number(r.o)+'</b> open':'')+(r.o&&r.d?' · ':'')+(r.d?Number(r.d)+' shipped':'')+'</span></button>';}).join('');
+  var old=openAll.slice().sort(function(a,b){return (Date.parse(a.created)||0)-(Date.parse(b.created)||0);}).slice(0,3).map(function(t){var dd=Math.floor((now-(Date.parse(t.created)||now))/day);return '<button type="button" class="ol" data-t="'+Number(t.id)+'"><b>'+(dd>0?dd+' d':'Today')+'</b><span class="tt">'+H(String(t.title||''))+'</span><span class="wh">#'+Number(t.id)+' · '+H(String(t.who||''))+'</span></button>';}).join('');
+  var pjK=Object.keys(pr).sort(function(a,b){return pr[b]-pr[a];}).slice(0,6),pjH=pjK.length>1?'<section class="cd"><h3>Open by project</h3><div class="pj">'+pjK.map(function(k){return '<span><b>'+Number(pr[k])+'</b>'+H(k)+'</span>';}).join('')+'</div></section>':'';
+  var feed=[];try{feed=buildFeed().slice(0,6);}catch(e){}
+  var fdH=feed.map(function(f){return '<button type="button" class="fd" data-t="'+Number(f.id)+'"><span class="tx">'+f.text+(f.sub?'<small>'+f.sub+'</small>':'')+'</span><time>'+H(ui2When(f.when))+'</time></button>';}).join('');
+  var ntH=nt.length?'<button type="button" class="nt" data-t="'+Number(nt[0].id)+'"><b>'+nt.length+'</b><span>shipped and the reporter was not told</span>'+ui2Svg('back',18)+'</button>':'';
+  var h='<div class="ui3s'+(UI2.statsSeen?'':' a')+'"><section class="cd hero"><div class="ht"><div><span class="ey">Shipped this week</span><b class="big">'+Number(ship7)+'</b><span class="dl">'+H(dl)+'</span></div><div class="lg"><span class="u"><b>'+sumS+'</b> shipped</span><span class="d"><b>'+sumO+'</b> opened</span><small>last 30 days</small></div></div><div class="ch" role="img" aria-label="'+sumS+' shipped and '+sumO+' opened in the last 30 days">'+bars+'</div></section>'+
+    ntH+'<div class="ks">'+kp('open',openAll.length-prog,'Open')+kp('prog',prog,'In progress')+kp('over',over,'Overdue',over?'hot':'')+'<div class="k st"><b>'+(mh==null?'—':H(ui3Dur(mh)))+'</b><span>Typical to ship</span></div></div>'+
+    '<p class="sb"><span>High <b>'+hi+'</b></span><span>Medium <b>'+md+'</b></span><span>Low <b>'+lo+'</b></span><span>Unset <b>'+Math.max(0,openAll.length-hi-md-lo)+'</b></span>'+(fast!=null?'<span>Fastest <b>'+H(ui3Dur(fast))+'</b></span>':'')+'</p>'+
+    (old?'<section class="cd"><h3>Waiting longest</h3>'+old+'</section>':'')+
+    (repH?'<section class="cd"><h3>By reporter</h3>'+repH+'</section>':'')+pjH+
+    (fdH?'<section class="cd"><h3>Latest</h3>'+fdH+'</section>':'')+'</div>';
+  vrSet(el,h);if(ts.length)UI2.statsSeen=1;
+  if(!el.__u3){el.__u3=1;el.addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-f],[data-rep],[data-t]'):null;if(!b||!UI2.on)return;if(b.dataset.t){openT(Number(b.dataset.t));return;}ui3Filter(b.dataset.f,b.dataset.rep);});}}
+/* a stat you can tap: the list opens showing exactly the tickets behind the number */
+function ui3Filter(f,rep){STATE.kind='all';STATE.mineOnly=false;STATE.smart=null;STATE.reporter=null;STATE.q='';var q=document.getElementById('q');if(q)q.value='';STATE.tab='all';if(f==='open')STATE.tab='open';else if(f==='prog')STATE.tab='prog';else if(f==='over')STATE.smart='overdue';if(rep)STATE.reporter=rep;setView('list');render();}
+function ui3Mount(){if(UI2.u3)return;UI2.u3=1;document.body.appendChild(ui2El('ui2Ember'));document.addEventListener('scroll',ui3Scroll,{capture:true,passive:true});
+  var _bd=ui2Badges;ui2Badges=function(){_bd();ui3Ember();};
+  var _sy=ui2Sync;ui2Sync=function(){var was=UI2.lastSV;_sy();if(!UI2.on)return;var v=STATE.view||'list',tab=ui2Tab(),key=tab+'|'+v;if(key!==was){UI2.lastSV=key;document.documentElement.removeAttribute('data-ui2slim');var tl=document.getElementById('ui2Tool');if(tl)tl.classList.remove('tuck');ui3TabIn(tab,v);}};
+  var _rs=renderStats;renderStats=function(){if(!UI2.on){_rs();return;}try{ui3Stats();}catch(err){try{console.warn('ui3 stats',err);}catch(x){}_rs();}};
+  ui3OutMount();var _tk=ui2Tick;ui2Tick=function(){_tk();try{ui3OutRestore();}catch(e){}};}
+/* Is this phone set up? One screen of real checks, to turn "not proven on an iPhone" into something you can read and send. Nothing here changes anything: it only looks, and tries a signature with the key. */
+function ui3CkList(){var reg=null,getReg=function(){if(reg)return Promise.resolve(reg);if(!navigator.serviceWorker||!navigator.serviceWorker.getRegistration)return Promise.resolve(null);return navigator.serviceWorker.getRegistration().then(function(r){reg=r||null;return reg;},function(){return null;});};
+  var R=function(ok,v,fix){return {ok:ok,v:v,fix:fix||''};},phone=s6Name()!=='Browser';
+  return [
+   ['Relay version',function(){return R(true,String(LP_BUILD));}],
+   ['This device',function(){var u=String(navigator.userAgent||''),m=/OS (\d+)[_.](\d+)/.exec(u);return R(null,s6Name()+(m&&/iPhone|iPad/.test(u)?' · iOS '+m[1]+'.'+m[2]:''));}],
+   ['On the Home Screen',function(){var y=navigator.standalone===true;try{y=y||matchMedia('(display-mode: standalone)').matches;}catch(e){}return y?R(true,'Yes'):R(phone?false:null,'No',phone?'In Safari tap Share, then Add to Home Screen. Notifications need this.':'');}],
+   ['Works when offline',function(){return getReg().then(function(r){var a=r&&(r.active||r.waiting);return a?R(true,navigator.serviceWorker.controller?'Ready':'Ready after the next open'):R(false,'Not running','Close the app fully and open it again.');});}],
+   ['Notifications allowed',function(){if(typeof Notification==='undefined')return R(phone?false:null,'Not on this device',phone?'Only an app on the Home Screen can get them.':'');var p=Notification.permission;return p==='granted'?R(true,'Yes'):p==='denied'?R(false,'Blocked','Open iPhone Settings, Notifications, Relay.'):R(null,'Not asked yet');}],
+   ['Signed up for pushes',function(){return getReg().then(function(r){if(!r||!r.pushManager)return R(null,'Not on this device');return r.pushManager.getSubscription().then(function(s){return s?R(true,'Yes'):R(null,'No');},function(){return R(false,'Could not check');});});}],
+   ['Number on the app icon',function(){return R('setAppBadge' in navigator?true:null,'setAppBadge' in navigator?'Available':'Not on this device');}],
+   ['Phone keeps Relay data',function(){if(!navigator.storage||!navigator.storage.persisted)return R(null,'Cannot tell');return navigator.storage.persisted().then(function(p){return p?R(true,'Promised'):R(null,'Not promised','The phone may clear it if it runs short of space.');},function(){return R(null,'Cannot tell');});}],
+   ['Signing key',function(){if(!s6On())return R(null,'Not here');return s6Key().then(function(rec){if(!rec)return R(null,'Not made yet','More, Pair this phone makes it.');var bin=atob(rec.spki.replace(/-/g,'+').replace(/_/g,'/')),sp=new Uint8Array(bin.length),i;for(i=0;i<bin.length;i++)sp[i]=bin.charCodeAt(i);var alg={name:'ECDSA',namedCurve:'P-256'},h={name:'ECDSA',hash:'SHA-256'},msg=new TextEncoder().encode('phone check '+Date.now());return crypto.subtle.importKey('spki',sp,alg,false,['verify']).then(function(pub){return crypto.subtle.sign(h,rec.priv,msg).then(function(sg){return crypto.subtle.verify(h,pub,sg,msg);});}).then(function(ok){return ok?R(true,'Survived and signs'):R(false,'Signs wrongly','Pair this phone again.');});}).catch(function(e){return R(false,'Lost: '+String((e&&e.message)||e).slice(0,60),'Pair this phone again.');});}],
+   ['Server',function(){var t=performance.now();return api('/me').then(function(r){var ms=Math.round(performance.now()-t);return r&&r.ok?R(true,ms+' ms'):R(false,'Answered '+String((r&&r.status)||'nothing'));},function(){return R(false,'No connection');});}],
+   ['Laptop',function(){return ui2S6Load().then(function(){var ms=(S6.m||[]).slice().sort(function(a,b){return (Date.parse(b.seen_at)||0)-(Date.parse(a.seen_at)||0);}),m=ms[0];if(!m)return R(null,'Never seen');var age=Date.now()+S6.skew-(Date.parse(m.seen_at)||0),nm=String((m.info&&m.info.host)||'Laptop');return age<LP_OFFLINE_MS?R(true,nm+' · '+Math.round(age/1000)+' s ago'):R(false,nm+' · '+lpAgo(age)+' ago','VS Code is closed or the laptop is asleep.');});}],
+   ['Paired with the laptop',function(){if(!s6On())return R(null,'Not here');var live=s6Machines().length;if(!live)return R(null,'Laptop not live');return s6Paired()?R(true,'Yes'):R(null,'No','More, Pair this phone.');}]];}
+function ui3Check(){S6.sh='check';var res=[],L=ui3CkList();ui2S6Show('Is this phone set up?',function(c){var w=lpEl('div','ui3ck');w.id='ui3Ck';L.forEach(function(it){var row=lpEl('div','r wait'),mk=lpEl('i','m');row.appendChild(mk);var tx=lpEl('div','t');tx.appendChild(lpEl('b',null,it[0]));var vv=lpEl('span','v','Checking');tx.appendChild(vv);row.appendChild(tx);w.appendChild(row);it.row=row;it.vv=vv;it.tx=tx;});c.appendChild(w);var r=lpEl('div','s6row');var cp=s6Btn(r,'sec','Copy results',function(){var txt=res.join('\n');(navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){toast('Copied');},function(){if(navigator.share)navigator.share({text:txt}).catch(function(){});else toast('Could not copy here');});});cp.disabled=true;s6Btn(r,'pri','Close',ui2S6Close);c.appendChild(r);
+    var done=function(it,x){var k=x.ok===true?'ok':x.ok===false?'bad':'na';it.row.className='r '+k;it.vv.textContent=x.v;if(x.fix&&x.ok!==true)it.tx.appendChild(lpEl('small',null,x.fix));return (x.ok===true?'OK   ':x.ok===false?'FAIL ':'-    ')+it[0]+': '+x.v;};
+    Promise.all(L.map(function(it){var p;try{p=Promise.resolve(it[1]());}catch(e){p=Promise.resolve(R0(e));}return p.then(function(x){return done(it,x);},function(e){return done(it,R0(e));});})).then(function(lines){res=lines;cp.disabled=false;});});
+  function R0(e){return {ok:false,v:'Check failed: '+String((e&&e.message)||e).slice(0,60)};}}
+/* Nothing typed is lost: the words wait in storage until the server has answered. If the app dies first they come back to the box next time, with a word that they may already have gone. Cleared with the rest of the lp_ keys on sign-out. */
+var UI3_UN='lp_unsent';
+function ui3UnGet(){try{var a=JSON.parse(lpLS(UI3_UN)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function ui3UnSet(a){if(a.length)lpLSset(UI3_UN,JSON.stringify(a.slice(-10)));else lpLSdel(UI3_UN);}
+function ui3OutMount(){UI2.t0=Date.now();var _ds=lpDoSend,_ls=lpSend,_rf=lpRefill;
+  lpDoSend=function(a){try{if(a&&a.text&&a.cid){var u=ui3UnGet();u.push({cid:String(a.cid),sid:String(a.sid),text:String(a.text).slice(0,20000),t:Date.now()});ui3UnSet(u);}}catch(e){}return _ds(a);};
+  lpSend=function(kind,body,o){var p=_ls(kind,body,o);if(kind==='text'&&o&&o.cid&&p&&p.then){var cl=function(){try{var c=String(o.cid);ui3UnSet(ui3UnGet().filter(function(x){return x.cid!==c;}));}catch(e){}};p.then(cl,cl);}return p;};
+  lpRefill=function(o,why){try{ui3UnSet(ui3UnGet().filter(function(x){return !(x.sid===String(o.sid)&&x.text===String(o.text));}));}catch(e){}return _rf(o,why);};}
+function ui3OutRestore(){if(UI2.outDone||!LP.data||!LP.built)return;UI2.outDone=1;var keep=[],now=Date.now(),cmds=(LP.data&&LP.data.commands)||[];ui3UnGet().forEach(function(x){if(x.t>=UI2.t0){keep.push(x);return;}if(now-x.t>3*864e5||!x.text)return;var went=cmds.some(function(c){return c&&c.session_id===x.sid&&c.body===x.text;});if(went)return;try{lpRefill({sid:x.sid,text:x.text},'Put back in the box: the app closed while this was sending. It may already have gone, so check the chat first.');}catch(e){}});ui3UnSet(keep);}
+try{document.documentElement.style.setProperty('--ui2mark','url("data:image/svg+xml,'+encodeURIComponent(UI2_MARK)+'")');}catch(e){}
 /* the owner is known once /me answers */
 try{var _ui2w=setInterval(function(){var me=STATE.me;if(!me||me.auth===undefined)return;clearInterval(_ui2w);ui2Check(me);},200);setTimeout(function(){clearInterval(_ui2w);},20000);}catch(e){}/*UI2JSEND*/
 </script></body></html>

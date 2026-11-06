@@ -1404,7 +1404,7 @@ html.ui2 #ui2ChatA[data-k=run] .ui2dot{background:var(--fill)}
 html.ui2 #ui2ChatA[data-k=idle] .ui2dot{background:var(--ink3)}
 
 /* Stats */
-.ui3s{display:grid;gap:12px;max-width:1100px}
+.ui3s{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}
 .ui3s .cd{background:linear-gradient(180deg,var(--s1),var(--s1b));border-radius:var(--r-group);padding:16px;box-shadow:inset 0 0 0 .75px var(--hair),inset 0 1px 0 var(--rim)}
 .ui3s h3{font:600 13.5px/18px var(--sans);color:var(--ink2);margin:0 0 10px;letter-spacing:0}
 .ui3s button{all:unset;box-sizing:border-box;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -1442,12 +1442,12 @@ html.ui2 #ui2ChatA[data-k=idle] .ui2dot{background:var(--ink3)}
 .ui3s .nt b{font:680 20px/1 var(--sans);color:var(--warn)}
 .ui3s .nt span{flex:1}
 .ui3s .nt svg{transform:rotate(180deg);color:var(--ink2)}
-.ui3s .ol{display:grid;grid-template-columns:52px 1fr;column-gap:10px;padding:10px 0;width:100%;border-top:.75px solid var(--hair)}
+.ui3s .ol{display:grid;grid-template-columns:52px minmax(0,1fr);column-gap:10px;padding:10px 0;width:100%;border-top:.75px solid var(--hair)}
 .ui3s h3+.ol{border-top:0;padding-top:0}
 .ui3s .ol b{grid-row:1/3;font:650 17px/22px var(--sans);color:var(--warn);font-variant-numeric:tabular-nums}
 .ui3s .ol .tt{font:540 14.5px/20px var(--sans);color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .ui3s .ol .wh{font:500 13px/18px var(--sans);color:var(--ink2)}
-.ui3s .rp{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;width:100%;min-height:36px;font:500 13.5px/18px var(--sans);color:var(--ink2)}
+.ui3s .rp{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;min-height:36px;font:500 13.5px/18px var(--sans);color:var(--ink2)}
 .ui3s .rp .nm{color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .ui3s .rp .tr{display:flex;height:8px;gap:2px;border-radius:4px;overflow:hidden;background:var(--s2)}
 .ui3s .rp .tr .o{background:var(--fill)}
@@ -1462,7 +1462,7 @@ html.ui2 #ui2ChatA[data-k=idle] .ui2dot{background:var(--ink3)}
 .ui3s .fd .tx{min-width:0;flex:1}
 .ui3s .fd small{display:block;font-size:13px;color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .ui3s .fd time{flex:none;font-size:13px;color:var(--ink3);font-variant-numeric:tabular-nums}
-@media(min-width:960px){.ui3s{grid-template-columns:repeat(6,1fr);gap:14px}.ui3s .hero{grid-column:1/-1}.ui3s .nt{grid-column:1/-1}.ui3s .ks{grid-column:1/-1;gap:12px}.ui3s .sb{grid-column:1/-1}.ui3s .cd:not(.hero){grid-column:span 3}.ui3s .ch{height:150px}.ui3s .rp{grid-template-columns:110px 1fr auto}}
+@media(min-width:960px){.ui3s{grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}.ui3s .hero{grid-column:1/-1}.ui3s .nt{grid-column:1/-1}.ui3s .ks{grid-column:1/-1;gap:12px}.ui3s .sb{grid-column:1/-1}.ui3s .cd:not(.hero){grid-column:span 3}.ui3s .ch{height:150px}.ui3s .rp{grid-template-columns:110px minmax(0,1fr) auto}}
 @media(max-width:380px){.ui3s .ks{grid-template-columns:repeat(2,1fr)}}
 
 /* Laptop, Agents: the old pages paint with inline colours, so the words they read get a stronger ink here */
@@ -2258,7 +2258,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-7';
+var LP_BUILD='CHAT-20261106-8';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3792,6 +3792,8 @@ function renderAgentic(){
   }
   agLoadDash();
 }
+function agV(v){if(v==null||v==='')return '–';if(typeof v==='object'){var n=Array.isArray(v)?v.length:Object.keys(v).length;return n?String(n):'–';}return v;}
+function agAge(m){m=Number(m);if(!isFinite(m))return '–';return m<60?m+'m':m<2880?Math.round(m/60)+'h':Math.round(m/1440)+'d';}
 function agLoadToday(){
   var el=document.getElementById('agToday');if(!el)return;
   api('/agentic-digest').then(function(r){
@@ -3812,12 +3814,12 @@ function agLoadDash(){
       var age=Math.round((now-(Date.parse(s.agent_seen_at)||0))/1000);
       var bl=age<60?['LIVE','var(--green)']:age<600?['STALE','var(--amber)']:['OFFLINE','var(--txt2)'];
       var sn=s.snapshot||{};var hld=sn.hld||{};var tot=(hld.pass||0)+(hld.fail||0)+(hld.note||0);
-      var ft=(sn.ft_status||[]).map(function(f){return '<span style="font-family:var(--m);font-size:10px;background:var(--cell);border:1px solid var(--line);border-radius:6px;padding:3px 7px;margin:2px;display:inline-block">'+agEsc(f.num)+' · '+(f.age_min!=null?agEsc(f.age_min)+'m':'–')+'</span>';}).join('');
+      var ft=(sn.ft_status||[]).map(function(f){return '<span style="font-family:var(--m);font-size:10px;background:var(--cell);border:1px solid var(--line);border-radius:6px;padding:3px 7px;margin:2px;display:inline-block">'+agEsc(f.num)+' · '+(f.age_min!=null?agEsc(agAge(f.age_min)):'–')+'</span>';}).join('');
       var br=sn.bridge_online?('online '+(sn.bridge_ms!=null?sn.bridge_ms+'ms':'')):'offline';
       return '<div style="background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:12px">'+
         '<div style="display:flex;justify-content:space-between;align-items:center"><b>'+agEsc(s.project_name||s.machine_id||'?')+'</b>'+
         '<span style="font-family:var(--m);font-size:11px;color:'+safeColor(bl[1])+'">● AGENT '+bl[0]+' · '+age+'s</span></div>'+
-        '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+kpi((hld.pass!=null?hld.pass:'–')+'/'+(tot||'–'),'HLD PASS')+kpi(sn.zones!=null?sn.zones:'–','ZONES')+kpi(sn.pon_range||'–','PON')+kpi(br,'BRIDGE')+'</div>'+
+        '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+kpi(tot?(hld.pass!=null?hld.pass:'–')+'/'+tot:'–','HLD PASS')+kpi(agV(sn.zones),'ZONES')+kpi(agV(sn.pon_range),'PON')+kpi(br,'BRIDGE')+'</div>'+
         '<div style="margin-top:8px">'+ft+'</div>'+
         '<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">'+
           (sn.context_health?'<span style="font-family:var(--m);font-size:10px;padding:2px 8px;border-radius:6px;background:var(--cell);border:1px solid var(--line);color:'+(sn.context_health==='GREEN'?'var(--green)':sn.context_health==='AMBER'?'var(--amber)':'var(--red,#FF2E55)')+'">ctx '+agEsc(sn.context_health)+(sn.compactions!=null?' · '+agEsc(sn.compactions)+'cmp':'')+'</span>':'')+
@@ -5149,7 +5151,7 @@ function ui3Stats(){var el=document.getElementById('stats');if(!el)return;var ts
     if(t.done)R.d++;if(t.open){R.o++;openAll.push(t);if(t.prog)prog++;if(workingDaysSince(t.created)>=2)over++;var p=priClass(t.priority);if(p==='high')hi++;else if(p==='med')md++;else if(p==='low')lo++;if(t.proj){var q=String(t.proj);pr[q]=(pr[q]||0)+1;}}
     if(ui2NotTold(t))nt.push(t);});
   var mx=Math.max.apply(null,op.concat(sh).concat([1])),sumO=op.reduce(function(a,b){return a+b;},0),sumS=sh.reduce(function(a,b){return a+b;},0);
-  var bars='';for(i=0;i<N;i++){bars+='<div class="c'+(i===N-1?' td':'')+'" style="--u:'+Math.round(sh[i]/mx*100)+'%;--d:'+Math.round(op[i]/mx*100)+'%;--i:'+i+'"><i class="u"></i><i class="d"></i></div>';}
+  var bars='';for(i=0;i<N;i++){bars+='<div class="c'+(i===N-1?' td':'')+'" style="--u:'+Math.round(Math.sqrt(sh[i]/mx)*100)+'%;--d:'+Math.round(Math.sqrt(op[i]/mx)*100)+'%;--i:'+i+'"><i class="u"></i><i class="d"></i></div>';}
   var delta=ship7-prev7,dl=(ship7||prev7)?(delta===0?'Same as the week before':(delta>0?delta+' more':(-delta)+' fewer')+' than the week before'):'Nothing shipped in two weeks';
   var mh=ui3Median(hrs),fast=hrs.length?Math.min.apply(null,hrs):null;
   var kp=function(key,n,l,cls){return '<button type="button" class="k '+(cls||'')+'" data-f="'+key+'"><b>'+n+'</b><span>'+l+'</span></button>';};
@@ -5176,7 +5178,7 @@ function ui3Mount(){if(UI2.u3)return;UI2.u3=1;document.body.appendChild(ui2El('u
   var _rs=renderStats;renderStats=function(){if(!UI2.on){_rs();return;}try{ui3Stats();}catch(err){try{console.warn('ui3 stats',err);}catch(x){}_rs();}};
   ui3OutMount();var _tk=ui2Tick;ui2Tick=function(){_tk();try{ui3OutRestore();}catch(e){}};}
 /* Is this phone set up? One screen of real checks, to turn "not proven on an iPhone" into something you can read and send. Nothing here changes anything: it only looks, and tries a signature with the key. */
-function ui3CkList(){var reg=null,getReg=function(){if(reg)return Promise.resolve(reg);if(!navigator.serviceWorker||!navigator.serviceWorker.getRegistration)return Promise.resolve(null);return navigator.serviceWorker.getRegistration().then(function(r){reg=r||null;return reg;},function(){return null;});};
+function ui3CkList(){var fresh=null,getFresh=function(){if(!fresh)fresh=api('/laptop/state?v=2').then(function(r){if(r&&r.ok&&r.j){S6.m=Array.isArray(r.j.machines)?r.j.machines:[];S6.s=Array.isArray(r.j.sessions)?r.j.sessions:[];S6.skew=(Date.parse(r.j.server_now)||Date.now())-Date.now();return true;}return false;},function(){return false;});return fresh;},reg=null,getReg=function(){if(reg)return Promise.resolve(reg);if(!navigator.serviceWorker||!navigator.serviceWorker.getRegistration)return Promise.resolve(null);return navigator.serviceWorker.getRegistration().then(function(r){reg=r||null;return reg;},function(){return null;});};
   var R=function(ok,v,fix){return {ok:ok,v:v,fix:fix||''};},phone=s6Name()!=='Browser';
   return [
    ['Relay version',function(){return R(true,String(LP_BUILD));}],
@@ -5189,8 +5191,8 @@ function ui3CkList(){var reg=null,getReg=function(){if(reg)return Promise.resolv
    ['Phone keeps Relay data',function(){if(!navigator.storage||!navigator.storage.persisted)return R(null,'Cannot tell');return navigator.storage.persisted().then(function(p){return p?R(true,'Promised'):R(null,'Not promised','The phone may clear it if it runs short of space.');},function(){return R(null,'Cannot tell');});}],
    ['Signing key',function(){if(!s6On())return R(null,'Not here');return s6Key().then(function(rec){if(!rec)return R(null,'Not made yet','More, Pair this phone makes it.');var bin=atob(rec.spki.replace(/-/g,'+').replace(/_/g,'/')),sp=new Uint8Array(bin.length),i;for(i=0;i<bin.length;i++)sp[i]=bin.charCodeAt(i);var alg={name:'ECDSA',namedCurve:'P-256'},h={name:'ECDSA',hash:'SHA-256'},msg=new TextEncoder().encode('phone check '+Date.now());return crypto.subtle.importKey('spki',sp,alg,false,['verify']).then(function(pub){return crypto.subtle.sign(h,rec.priv,msg).then(function(sg){return crypto.subtle.verify(h,pub,sg,msg);});}).then(function(ok){return ok?R(true,'Survived and signs'):R(false,'Signs wrongly','Pair this phone again.');});}).catch(function(e){return R(false,'Lost: '+String((e&&e.message)||e).slice(0,60),'Pair this phone again.');});}],
    ['Server',function(){var t=performance.now();return api('/me').then(function(r){var ms=Math.round(performance.now()-t);return r&&r.ok?R(true,ms+' ms'):R(false,'Answered '+String((r&&r.status)||'nothing'));},function(){return R(false,'No connection');});}],
-   ['Laptop',function(){return ui2S6Load().then(function(){var ms=(S6.m||[]).slice().sort(function(a,b){return (Date.parse(b.seen_at)||0)-(Date.parse(a.seen_at)||0);}),m=ms[0];if(!m)return R(null,'Never seen');var age=Date.now()+S6.skew-(Date.parse(m.seen_at)||0),nm=String((m.info&&m.info.host)||'Laptop');return age<LP_OFFLINE_MS?R(true,nm+' · '+Math.round(age/1000)+' s ago'):R(false,nm+' · '+lpAgo(age)+' ago','VS Code is closed or the laptop is asleep.');});}],
-   ['Paired with the laptop',function(){if(!s6On())return R(null,'Not here');var live=s6Machines().length;if(!live)return R(null,'Laptop not live');return s6Paired()?R(true,'Yes'):R(null,'No','More, Pair this phone.');}]];}
+   ['Laptop',function(){return getFresh().then(function(got){if(!got)return R(false,'Could not read it');var ms=(S6.m||[]).slice().sort(function(a,b){return (Date.parse(b.seen_at)||0)-(Date.parse(a.seen_at)||0);}),m=ms[0];if(!m)return R(null,'Never seen');var age=Date.now()+S6.skew-(Date.parse(m.seen_at)||0),nm=String((m.info&&m.info.host)||'Laptop');return age<LP_OFFLINE_MS?R(true,nm+' · '+Math.round(age/1000)+' s ago'):R(false,nm+' · '+lpAgo(age)+' ago','VS Code is closed or the laptop is asleep.');});}],
+   ['Paired with the laptop',function(){if(!s6On())return R(null,'Not here');return getFresh().then(function(){return s6Key();}).then(function(){if(!s6Machines().length)return R(null,'Laptop not live');return s6Paired()?R(true,'Yes'):R(null,'No','More, Pair this phone.');});}]];}
 function ui3Check(){S6.sh='check';var res=[],L=ui3CkList();ui2S6Show('Is this phone set up?',function(c){var w=lpEl('div','ui3ck');w.id='ui3Ck';L.forEach(function(it){var row=lpEl('div','r wait'),mk=lpEl('i','m');row.appendChild(mk);var tx=lpEl('div','t');tx.appendChild(lpEl('b',null,it[0]));var vv=lpEl('span','v','Checking');tx.appendChild(vv);row.appendChild(tx);w.appendChild(row);it.row=row;it.vv=vv;it.tx=tx;});c.appendChild(w);var r=lpEl('div','s6row');var cp=s6Btn(r,'sec','Copy results',function(){var txt=res.join('\n');(navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){toast('Copied');},function(){if(navigator.share)navigator.share({text:txt}).catch(function(){});else toast('Could not copy here');});});cp.disabled=true;s6Btn(r,'pri','Close',ui2S6Close);c.appendChild(r);
     var done=function(it,x){var k=x.ok===true?'ok':x.ok===false?'bad':'na';it.row.className='r '+k;it.vv.textContent=x.v;if(x.fix&&x.ok!==true)it.tx.appendChild(lpEl('small',null,x.fix));return (x.ok===true?'OK   ':x.ok===false?'FAIL ':'-    ')+it[0]+': '+x.v;};
     Promise.all(L.map(function(it){var p;try{p=Promise.resolve(it[1]());}catch(e){p=Promise.resolve(R0(e));}return p.then(function(x){return done(it,x);},function(e){return done(it,R0(e));});})).then(function(lines){res=lines;cp.disabled=false;});});

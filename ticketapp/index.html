@@ -1020,7 +1020,6 @@ html.ui2 #lpConv>.lpm-u{background:var(--mine);color:var(--mine-ink);border:0;bo
 html.ui2 #lpConv>.lpm-a{background:var(--s1);border:0;border-radius:20px 20px 20px 6px;box-shadow:inset 0 0 0 .75px var(--hair)}
 html.ui2 #lpSend{background:var(--fill);color:var(--fill-ink);box-shadow:0 6px 18px var(--glow)}
 html.ui2 #lpTerms{display:none}
-html.ui2 #laptop.lp-kb .lphead{display:flex}
 #ui2ChatT{flex:1;min-width:0;font:600 16px/20px var(--sans);letter-spacing:0;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ui2ChatT small{display:block;font:400 13px/16px var(--sans);color:var(--ink2);overflow:hidden;text-overflow:ellipsis}
 html.ui2 .lpconn{font-family:var(--sans);font-size:13px;letter-spacing:0}
@@ -1329,7 +1328,46 @@ html.ui2:not([data-ui2v=list]) #ui2Brief{display:none}
 html.ui2 .ui2pj{display:flex;gap:6px;margin:-2px -16px 8px;padding:0 16px 4px;overflow-x:auto;scrollbar-width:none}
 html.ui2 .ui2pj::-webkit-scrollbar{display:none}
 html.ui2 .ui2pj .chip{flex:none;cursor:pointer}
-@media (min-width:960px){#ui2Brief{margin:0 24px 12px}html.ui2 .ui2pj{margin:-2px 0 8px;padding:0 0 4px;flex-wrap:wrap}}/*UI2CSSEND*/
+@media (min-width:960px){#ui2Brief{margin:0 24px 12px}html.ui2 .ui2pj{margin:-2px 0 8px;padding:0 0 4px;flex-wrap:wrap}}
+
+/* step 5 walk: nothing under the type floor, tap targets, inline sizes from the old screens */
+html.ui2 :is(#agentic,#agents,#graph,#stats,#qrovl,#teamovl,#notifovl) :is([style*="font-size:8"],[style*="font-size:9"],[style*="font-size:10"],[style*="font-size:11"],[style*="font-size:12px"]){font-size:13px!important;letter-spacing:0!important}
+html.ui2 .lpcn,html.ui2 .bcolh,html.ui2 .bn,html.ui2 .ntlab,html.ui2 .devline,html.ui2 .ft,html.ui2 .bempty,html.ui2 .lpage,html.ui2 .lprisk{font-size:13px!important;letter-spacing:0!important;font-family:var(--sans)!important}
+html.ui2 .bcolh{text-transform:none;font-weight:600;color:var(--ink)}
+#ui2Hd .lv{min-width:32px;min-height:36px;justify-content:center}
+html.ui2 #agentic button,html.ui2 #agents button{min-height:36px}
+/* age keeps its meaning under the new look */
+html.ui2 .row .meta-r.agec.amb{color:var(--warn)!important}
+html.ui2 .row .meta-r.agec.red{color:var(--bad)!important}
+
+/* S6 laptop security: pairing and lock sheet */
+#ui2S6{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;padding:0 10px calc(env(safe-area-inset-bottom) + 10px);background:color-mix(in oklab,#000 56%,transparent);animation:ui2s6bg var(--t-fast) var(--e-out) both}
+#ui2S6[hidden]{display:none}
+@keyframes ui2s6bg{from{opacity:0}to{opacity:1}}
+@keyframes ui2s6in{from{transform:translateY(26px);opacity:.4}to{transform:none;opacity:1}}
+#ui2S6 .card{width:100%;max-width:460px;padding:20px 18px 14px;border-radius:26px;background:linear-gradient(180deg,var(--s1),var(--s1b));box-shadow:var(--shade),inset 0 0 0 .75px var(--hair2),inset 0 1px 0 var(--rim);animation:ui2s6in var(--t-base) var(--e-spring) both}
+#ui2S6 h3{margin:0 0 12px;font:640 22px/28px var(--sans);letter-spacing:-.018em;color:var(--ink)}
+#ui2S6 p{margin:0 0 10px;font:400 15px/21px var(--sans);color:var(--ink2);text-wrap:pretty}
+#ui2S6 p.st{min-height:21px;color:var(--ink)}
+#ui2S6 p.st:empty{display:none}
+#ui2S6 p.st.ok{color:var(--ok);font-weight:600}
+#ui2S6 p.warn{color:var(--warn)}
+/* the code: read in fives, so the eye compares one block at a time against the laptop */
+#ui2S6 .code{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:2px 0 14px;padding:4px;border-radius:18px;background:var(--bg);box-shadow:inset 0 0 0 .75px var(--hair)}
+#ui2S6 .code span{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:14px;background:var(--s2);font:600 clamp(13px,4.1vw,17px)/1 var(--mono);letter-spacing:.02em;color:var(--ink);font-variant-ligatures:none;font-feature-settings:"zero" 1}
+#ui2S6 .s6row{display:flex;gap:8px;margin-top:4px}
+#ui2S6 .btn{flex:1;min-height:50px;padding:0 14px;border:0;border-radius:16px;font:600 15.5px/1 var(--sans);cursor:pointer;transition:transform var(--t-tap),background var(--t-fast)}
+#ui2S6 .btn:active{transform:scale(.97);transition-duration:50ms}
+#ui2S6 .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#ui2S6 .btn[disabled]{opacity:.55;cursor:default}
+#ui2S6 .btn[hidden]{display:none}
+#ui2S6 .pri{background:var(--fill);color:var(--fill-ink)}
+#ui2S6 .sec{background:var(--s3);color:var(--ink)}
+#ui2S6 .dng{background:color-mix(in oklab,var(--warn) 20%,var(--s2));color:var(--warn);box-shadow:inset 0 0 0 .75px color-mix(in oklab,var(--warn) 45%,transparent)}
+.ui2li .ui2s6on{color:var(--warn);font-weight:600}
+.ui2s6n{margin:8px 4px 0;font:400 13px/18px var(--sans);color:var(--ink2)}
+@media (min-width:960px){#ui2S6{align-items:center;padding:24px}}
+@media (prefers-reduced-motion:reduce){#ui2S6,#ui2S6 .card{animation:none!important}}/*UI2CSSEND*/
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -2058,7 +2096,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-3';
+var LP_BUILD='CHAT-20261106-4';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -4106,9 +4144,9 @@ function notifyFromFeed(){
 function buildFeed(){
   var ev=[];
   STATE.tickets.forEach(function(t){
-    (t.history||[]).forEach(function(h){ev.push({id:t.id,icon:h.field==='shipped'?'🚀':h.field==='priority'?'⚑':h.field==='assignee'?'👤':'🔄',when:new Date(h.created_at).getTime()||0,text:'#'+Number(t.id)+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
+    (t.history||[]).forEach(function(h){ev.push({id:t.id,icon:h.field==='shipped'?'🚀':h.field==='priority'?'⚑':h.field==='assignee'?'👤':'🔄',when:new Date(h.created_at).getTime()||0,text:'#'+Number(t.id)+' '+H(h.field)+' → <b>'+H(h.new_val)+'</b>',sub:vrU()?H(String(t.title)).slice(0,60):H(String(t.title)).slice(0,42).toUpperCase(),color:h.field==='shipped'?'var(--green)':'var(--cyan,#22D3EE)'});});
     (t.thread||[]).forEach(function(m){if(m.author==='office')ev.push({id:t.id,icon:'💬',when:new Date(m.created_at).getTime()||0,text:'office replied on #'+t.id,sub:H(String(m.body)).slice(0,44),color:'var(--violet)'});});
-    ev.push({id:t.id,icon:'🆕',when:new Date(t.created).getTime()||0,text:'#'+Number(t.id)+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
+    ev.push({id:t.id,icon:'🆕',when:new Date(t.created).getTime()||0,text:'#'+Number(t.id)+' new · <b>'+H(t.who)+'</b>'+(priClass(t.priority)?' · <span style="color:var(--red,#FF2E55)">'+priLabel(t.priority)+'</span>':''),sub:vrU()?H(String(t.title)).slice(0,60):H(String(t.title)).slice(0,42).toUpperCase(),color:(priClass(t.priority)==='high')?'var(--red,#FF2E55)':'var(--amber)'});
   });
   ev.sort(function(a,b){return b.when-a.when;});
   return ev;
@@ -4548,6 +4586,7 @@ var UI2_I={
  compass:'<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
  scale:'<path d="M12 4v16M7 20h10M5 7h14M5 7l-2.5 6h5zM19 7l-2.5 6h5z"/>',
  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ lock:'<rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>',
  share:'<path d="M12 15V4M8 7.5L12 3.5l4 4M6 11.5v7A1.5 1.5 0 0 0 7.5 20h9a1.5 1.5 0 0 0 1.5-1.5v-7"/>',
  sat:'<path d="M5 19a10 10 0 0 1 0-14l14 14a10 10 0 0 1-14 0zM13 11l3.5-3.5M15 4.5a4.5 4.5 0 0 1 4.5 4.5"/>'};
 function ui2Svg(n,s){s=s||24;return '<svg class="i2" width="'+Number(s)+'" height="'+Number(s)+'" viewBox="0 0 24 24" aria-hidden="true">'+(UI2_I[n]||'')+'</svg>';}
@@ -4586,7 +4625,7 @@ function ui2Mount(){if(UI2.mounted){UI2.on=true;ui2Sync();return;}
     lpChatsClose=function(){if(ui2IsWide()&&UI2.on)return;_cc();ui2Sync();};
     var _ren=render;render=function(){_ren();ui2Badges();ui2Polish();ui2BriefCheck();};
     var _lph=lpPaintHead;lpPaintHead=function(){_lph();ui2ChatHead();};
-    ui2Overlays();ui2WatchViews();
+    ui2Overlays();ui2WatchViews();ui2S6Mount();
     b.appendChild((function(){var e=ui2El('ui2Now','ui2gl');e.hidden=true;return e;})());
     var br=ui2El('ui2Brief');br.hidden=true;app.insertBefore(br,hd.nextSibling);
     setInterval(ui2NowPoll,8000);setTimeout(ui2NowPoll,800);document.addEventListener('visibilitychange',function(){if(document.hidden)ui2BriefMark();else{ui2NowPoll();ui2BriefCheck();}});
@@ -4611,7 +4650,7 @@ function ui2Go(t){if(t==='more'){ui2MoreOpen();return;}ui2MoreClose();
   if(t==='chats'){if(STATE.view!=='laptop')setView('laptop');try{lpChatsOpen();}catch(e){}return;}
   if(t==='stats'){setView('stats');return;}
   if(t==='tickets'){setView(STATE.view==='board'?'board':(STATE.view==='list'?'list':UI2.tk));}}
-function ui2MoreOpen(){UI2.more=true;ui2MorePaint();var m=document.getElementById('ui2More');m.hidden=false;m.scrollTop=0;ui2Sync();}
+function ui2MoreOpen(){UI2.more=true;ui2MorePaint();ui2S6Load();var m=document.getElementById('ui2More');m.hidden=false;m.scrollTop=0;ui2Sync();}
 function ui2MoreClose(){if(!UI2.more)return;UI2.more=false;document.getElementById('ui2More').hidden=true;ui2Sync();}
 function ui2Sync(){if(!UI2.on)return;var r=document.documentElement,v=STATE.view||'list',tab=ui2Tab();
   if(v==='list'||v==='board')UI2.tk=v;
@@ -4751,12 +4790,13 @@ function ui2MorePaint(){var m=document.getElementById('ui2More');if(!m)return;va
    '<div class="ui2tl"><button type="button" data-a="agentic">'+ui2Svg('agentic',22)+'<b>Laptop</b><small>Tasks, health</small></button><button type="button" data-a="agents">'+ui2Svg('agents',22)+'<b>Agents</b><small>Roster</small></button><button type="button" data-a="brain">'+ui2Svg('brain',22)+'<b>Brain</b><small>Project map</small></button></div>'+
    '<h2>App</h2><div class="ui2gr">'+li('notif','bell','Notifications','<span class="ui2rc">'+(un?(un>99?'99+':Number(un)):'')+'</span>')+((me.role==='owner')?li('team','team','Team access','<span class="ui2rc">'+(pend?Number(pend):'')+'</span>'):'')+li('search','search','Search everything')+li('cmd','cmd','Command palette','<span class="v">Ctrl K</span>')+li('reload','refresh','Refresh now')+'</div>'+
    '<h2>Appearance</h2><div class="ui2gr"><div class="ui2fin">'+[['carbon','Carbon'],['graphite','Graphite'],['midnight','Midnight'],['porcelain','Porcelain']].map(function(f){return '<button type="button" data-fin="'+f[0]+'" class="'+(fin===f[0]?'on':'')+'">'+f[1]+'</button>';}).join('')+'</div></div>'+
-   '<h2>Tools</h2><div class="ui2gr">'+li('install','install','Install the app')+li('qr','qr','Get it on another phone')+li('csv','csv','Export tickets to CSV')+li('help','keys','Keyboard shortcuts')+li('old','old','Use the old look')+'</div>'+
+   ui2S6More(li)+'<h2>Tools</h2><div class="ui2gr">'+li('install','install','Install the app')+li('qr','qr','Get it on another phone')+li('csv','csv','Export tickets to CSV')+li('help','keys','Keyboard shortcuts')+li('old','old','Use the old look')+'</div>'+
    '<p class="ui2ft">Velocity Relay '+H(String(LP_BUILD))+'</p>';
   if(m.__h===h)return;m.__h=h;m.innerHTML=h;}
 function ui2MoreTap(e){var b=e.target.closest?e.target.closest('[data-a],[data-fin]'):null;if(!b)return;if(b.dataset.fin){ui2Finish(b.dataset.fin);ui2MorePaint();return;}
   var a=b.dataset.a,V={agentic:'agentic',agents:'agents',brain:'graph'};
   if(V[a]){ui2MoreClose();setView(V[a]);return;}
+  if(a==='s6pair'){ui2S6Pair();return;}if(a==='s6lock'){ui2S6LockAsk();return;}
   if(a==='notif')bellClick();else if(a==='team')openTeam();else if(a==='search')gsOpen('');else if(a==='cmd')openCmd();else if(a==='reload')load();else if(a==='install')smartInstall();else if(a==='qr')openQR();else if(a==='csv')exportCSV();else if(a==='help')openHelp();else if(a==='old')ui2UseOld();}
 function ui2Finish(n){ui2Set('vr_ui2_fin',n);document.documentElement.setAttribute('data-finish',n);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',n==='porcelain'?'#EFF1F4':n==='midnight'?'#0A1120':n==='graphite'?'#0B0E12':'#09090A');}
 /* laptop keys: Alt+1-4 change screen; arrows or J K walk the ticket list, Enter opens, Esc closes */
@@ -4819,6 +4859,100 @@ function ui2Speak(txt){try{var ss=window.speechSynthesis;if(ss.speaking){ss.canc
 /* Project filter: only when terminals sit in more than one folder. A waiting chat always shows, whatever is picked. */
 function ui2ProjectChips(f,list){var B={},n=0;list.forEach(function(t){var k=lpBase(t.row&&t.row.cwd);if(!k)return;if(!B[k]){B[k]=0;n++;}B[k]++;});var pick=ui2Get('vr_ui2_pj')||'';if(n<2){if(pick)UI2.pjOff=true;return '';}if(pick&&!B[pick])pick='';
   var w=lpEl('div','ui2pj');var add=function(lb,val){var c=lpEl('button','chip'+(pick===val?' on':''),lb);c.type='button';c.dataset.ui2pj=val;w.appendChild(c);};add('All','');Object.keys(B).sort().forEach(function(k){add(k,k);});f.appendChild(w);return pick;}
+/* S6: a key on this phone that signs commands, pairing with the laptop, and a panic lock. Owner, new look only.
+   Rule for this whole block: signing can never stop a send. Any fault or delay and the command goes unsigned, exactly as before, and the laptop logs it. */
+var S6={m:null,s:null,skew:0,busy:false,rec:undefined,sh:null,poll:0};
+var S6_WAIT=800,S6_DB='vr_s6',S6_B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',S6_LOCK='[[relay-lock]]',S6_PAIR='[[relay-pair]]';
+function s6On(){try{return !!(UI2.on&&STATE.me&&STATE.me.role==='owner'&&window.crypto&&crypto.subtle&&window.indexedDB);}catch(e){return false;}}
+function s6B64u(buf){var b=new Uint8Array(buf),s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function s6Hex(buf){return Array.prototype.map.call(new Uint8Array(buf),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
+function s6Sha(str){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(s6Hex);}
+/* 100 bits as 20 characters, same as the laptop's fingerprintOf */
+function s6Fp(digest){var h=new Uint8Array(digest),bits=0,n=0,out='';for(var i=0;i<h.length&&out.length<20;i++){bits=(bits<<8)|h[i];n+=8;while(n>=5&&out.length<20){out+=S6_B32[(bits>>>(n-5))&31];n-=5;}bits&=(1<<n)-1;}return out.match(/.{4}/g).join('-');}
+/* A new connection for every use, never one kept open: a Home Screen app can lose it while suspended (WebKit 197050, 277615). */
+function s6Open(){return new Promise(function(res,rej){var rq=indexedDB.open(S6_DB,1);rq.onupgradeneeded=function(){var d=rq.result;if(!d.objectStoreNames.contains('keys'))d.createObjectStore('keys');};rq.onsuccess=function(){res(rq.result);};rq.onerror=function(){rej(rq.error||new Error('open'));};rq.onblocked=function(){rej(new Error('blocked'));};});}
+function s6GetOnce(){return s6Open().then(function(d){return new Promise(function(res,rej){var q=d.transaction('keys','readonly').objectStore('keys').get('device');q.onsuccess=function(){try{d.close();}catch(e){}res(q.result||null);};q.onerror=function(){try{d.close();}catch(e){}rej(q.error||new Error('get'));};});});}
+function s6Get(){return s6GetOnce().catch(function(){return s6GetOnce();});}
+function s6Put(rec){return s6Open().then(function(d){return new Promise(function(res,rej){var tx=d.transaction('keys','readwrite');tx.objectStore('keys').put(rec,'device');tx.oncomplete=function(){try{d.close();}catch(e){}res(rec);};tx.onerror=tx.onabort=function(){try{d.close();}catch(e){}rej(tx.error||new Error('put'));};});});}
+/* the stored key, or null. Unreadable means not paired, never an error that reaches a send. */
+function s6Key(){if(S6.rec!==undefined)return Promise.resolve(S6.rec);return s6Get().then(function(r){var ok=r&&r.priv&&r.spki&&r.id&&r.fp?r:null;S6.rec=ok;return ok;},function(){return null;});}
+/* Makes the key once, on the owner's tap. Read back from a new connection and tried, because some key types read back as null on iOS (WebKit 312279). */
+function s6Make(){var alg={name:'ECDSA',namedCurve:'P-256'},rec={};return crypto.subtle.generateKey(alg,false,['sign','verify']).then(function(kp){rec.priv=kp.privateKey;rec.made=Date.now();
+    return crypto.subtle.exportKey('spki',kp.publicKey).then(function(spki){rec.spki=s6B64u(spki);return crypto.subtle.digest('SHA-256',spki);}).then(function(dg){rec.id=s6Hex(dg).slice(0,16);rec.fp=s6Fp(dg);return s6Put(rec);}).then(function(){return s6GetOnce();}).then(function(back){
+      if(!back||!back.priv)throw new Error('the key did not survive being stored');
+      var probe=new TextEncoder().encode('probe');return crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},back.priv,probe).then(function(sg){return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},kp.publicKey,sg,probe);}).then(function(ok){if(!ok)throw new Error('the stored key signs wrongly');S6.rec=back;return back;});});
+  }).then(function(r){try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().then(function(g){ui2Set('vr_s6_persist',g?'1':'0');},function(){});}catch(e){}return r;});}
+/* the /laptop/send body with its signature, or null to send it as it is. Never rejects. */
+function s6SignBody(raw){var pl;try{pl=JSON.parse(raw);}catch(e){return Promise.resolve(null);}if(!pl||pl.sig)return Promise.resolve(null);
+  return s6Key().then(function(rec){if(!rec)return null;
+    var nb=new Uint8Array(16);crypto.getRandomValues(nb);
+    var sig={v:1,dev:rec.id,sid:String(pl.session_id||''),n:s6B64u(nb),t:Date.now(),w:pl.when_idle?1:0},atts=Array.isArray(pl.attachments)&&pl.attachments.length?pl.attachments.map(function(a){return [a&&a.sha256,a&&a.size,a&&a.kind,a&&a.mime].map(function(x){return x==null?'':String(x);}).join(':');}).join(','):null;
+    return Promise.all([s6Sha(String(pl.body==null?'':pl.body)),atts==null?'':s6Sha(atts)]).then(function(h){
+      var data=['velocity-relay-cmd-v1',sig.dev,sig.sid,String(pl.kind),h[0],h[1],sig.n,String(sig.t),sig.w?'1':'0'].join('\n');
+      return crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},rec.priv,new TextEncoder().encode(data));}).then(function(sg){sig.s=s6B64u(sg);pl.sig=sig;return JSON.stringify(pl);});
+  }).catch(function(){return null;});}
+/* Every send goes through api(), so the Now bar's Allow and every retry are covered and lpSend is not touched. S6_WAIT is the most a send can ever wait for its signature. */
+function ui2S6Mount(){if(S6.wrapped)return;S6.wrapped=true;var _api=api;api=function(p,opt){
+    if(p!=='/laptop/send'||!opt||typeof opt.body!=='string'||!s6On())return _api(p,opt);
+    var timer=null,late=new Promise(function(res){timer=setTimeout(function(){res(null);},S6_WAIT);}),sign;
+    try{sign=s6SignBody(opt.body);}catch(e){sign=Promise.resolve(null);}
+    return Promise.race([sign,late]).then(function(b){clearTimeout(timer);return b;},function(){clearTimeout(timer);return null;}).then(function(b){if(typeof b!=='string')return _api(p,opt);var o={};for(var k in opt)o[k]=opt[k];o.body=b;return _api(p,o);});};
+  /* read the key ahead, so a normal send only spends the few ms of signing, never a cold key store (the 800 ms limit is for faults) */
+  setTimeout(function(){if(s6On())s6Key();},1500);
+  /* the pair and lock words never show as chat bubbles */
+  try{var _cf=lpCmdsFor;lpCmdsFor=function(sid){return _cf(sid).filter(function(c){var b=String((c&&c.body)||'');return b!==S6_LOCK&&b.indexOf(S6_PAIR)!==0;});};}catch(e){}}
+
+/* laptop state: real data only. A Savepoint without relay_sec is older than 0.6.19 and would type these words into Claude, so it is never sent any. */
+function ui2S6Load(){if(!s6On()||S6.busy)return Promise.resolve();S6.busy=true;return api('/laptop/state?v=2').then(function(r){if(r&&r.ok&&r.j){S6.m=Array.isArray(r.j.machines)?r.j.machines:[];S6.s=Array.isArray(r.j.sessions)?r.j.sessions:[];S6.skew=(Date.parse(r.j.server_now)||Date.now())-Date.now();}},function(){}).then(function(){S6.busy=false;return s6Key();}).then(function(){if(UI2.more)ui2MorePaint();},function(){});}
+function s6Live(m){return !!(m&&m.info&&m.info.relay_sec&&Date.now()+S6.skew-(Date.parse(m.seen_at)||0)<LP_OFFLINE_MS);}
+function s6Machines(){return (S6.m||[]).filter(s6Live).sort(function(a,b){return (Date.parse(b.seen_at)||0)-(Date.parse(a.seen_at)||0);});}
+/* newest live terminal per laptop: one window is enough, they share the lock and the allowlist */
+function s6Targets(){var host={},out=[];s6Machines().forEach(function(m){var h=String(m.info.host||m.machine_id);if(host[h])return;var ss=(S6.s||[]).filter(function(x){return x&&x.machine_id===m.machine_id&&x.session_id&&Date.now()+S6.skew-(Date.parse(x.updated_at)||0)<LP_OFFLINE_MS;}).sort(function(a,b){return (Date.parse(b.updated_at)||0)-(Date.parse(a.updated_at)||0);});if(!ss.length)return;host[h]=1;out.push(ss[0]);});return out;}
+function s6Locked(){return s6Machines().some(function(m){return !!m.info.relay_sec.locked;});}
+function s6Paired(){var r=S6.rec;return !!r&&s6Machines().some(function(m){var d=m.info.relay_sec.devices;return Array.isArray(d)&&d.indexOf(r.id)>=0;});}
+function s6Mark(t,body){return api('/laptop/send',{method:'POST',body:JSON.stringify({machine_id:t.machine_id,session_id:t.session_id,kind:'text',body:body,lp_build:LP_BUILD,client_id:lpCid()})});}
+function s6Name(){var u=String(navigator.userAgent||'');return /iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android phone':'Browser';}
+
+/* the group in More; nothing at all until a laptop reports it can do this */
+function ui2S6More(li){if(!s6On()||!s6Machines().length)return '';var lk=s6Locked(),pr=s6Paired();
+  var h='<h2>Laptop security</h2><div class="ui2gr">'+li('s6pair','shield',pr?'This phone is paired':'Pair this phone','<span class="v">'+(pr?'Show code':'Not paired')+'</span>')+li('s6lock','lock',lk?'Laptop is locked':'Lock the laptop',lk?'<span class="v ui2s6on">Locked</span>':'')+'</div>';
+  var mode=String(s6Machines()[0].info.relay_sec.mode||'');
+  if(mode==='warn')h+='<p class="ui2s6n">The laptop checks each command and logs the result. It refuses none of them yet.</p>';else if(mode==='enforce')h+='<p class="ui2s6n">The laptop refuses any command not signed by a paired phone.</p>';
+  return h;}
+
+/* one sheet for pairing and the lock */
+function ui2S6Close(){var e=document.getElementById('ui2S6');if(e)e.hidden=true;S6.sh=null;clearTimeout(S6.poll);S6.poll=0;if(S6.back){try{S6.back.focus();}catch(x){}S6.back=null;}}
+function ui2S6Sheet(){var e=document.getElementById('ui2S6');if(e)return e;e=lpEl('div');e.id='ui2S6';e.hidden=true;e.setAttribute('role','dialog');e.setAttribute('aria-modal','true');e.setAttribute('aria-labelledby','ui2S6T');document.body.appendChild(e);
+  e.addEventListener('click',function(ev){if(ev.target===e)ui2S6Close();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!e.hidden){ev.stopPropagation();ui2S6Close();}},true);return e;}
+function ui2S6Show(title,fill){var e=ui2S6Sheet();e.textContent='';var c=lpEl('div','card');var t=lpEl('h3',null,title);t.id='ui2S6T';c.appendChild(t);fill(c);e.appendChild(c);if(e.hidden){S6.back=document.activeElement;e.hidden=false;}var b=c.querySelector('button');if(b)try{b.focus();}catch(x){}return c;}
+function s6Btn(c,cls,label,fn){var b=lpEl('button','btn '+cls,label);b.type='button';b.addEventListener('click',fn);c.appendChild(b);return b;}
+function s6Code(c,fp){var w=lpEl('div','code');w.setAttribute('aria-label',fp.split('').join(' '));String(fp).split('-').forEach(function(g){w.appendChild(lpEl('span',null,g));});c.appendChild(w);}
+
+function ui2S6Pair(){if(!s6On())return;S6.sh='pair';ui2S6Show('Pair this phone',function(c){c.appendChild(lpEl('p',null,'Making the key on this phone…'));});
+  s6Key().then(function(r){return r||s6Make();}).then(function(rec){if(S6.sh!=='pair')return;
+    if(s6Paired()){ui2S6Show('This phone is paired',function(c){s6Code(c,rec.fp);c.appendChild(lpEl('p',null,'The laptop trusts this code. To take it away, on the laptop run Savepoint: Paired phones.'));if(ui2Get('vr_s6_persist')==='0')c.appendChild(lpEl('p','warn','This phone did not promise to keep the key. If it is lost, pair again.'));var r=lpEl('div','s6row');s6Btn(r,'pri','Done',ui2S6Close);c.appendChild(r);});return;}
+    var tgs=s6Targets();
+    if(!tgs.length){ui2S6Show('Pair this phone',function(c){c.appendChild(lpEl('p',null,'No Claude terminal is live on the laptop, so the request has no way there. Open one, then try again.'));var r=lpEl('div','s6row');s6Btn(r,'pri','Close',ui2S6Close);c.appendChild(r);});return;}
+    var line;ui2S6Show('Compare this code',function(c){s6Code(c,rec.fp);c.appendChild(lpEl('p',null,'VS Code on your laptop is showing a box with a code. Click Approve there only if every character matches this one.'));line=lpEl('p','st','Sending the request…');line.setAttribute('role','status');c.appendChild(line);var r=lpEl('div','s6row');s6Btn(r,'sec','Close',ui2S6Close);c.appendChild(r);});
+    s6Mark(tgs[0],S6_PAIR+JSON.stringify({v:1,pub:rec.spki,name:s6Name()})).then(function(res){if(S6.sh!=='pair')return;
+      if(!res||!res.ok){line.textContent='Not sent: '+String((res&&res.j&&res.j.error)||'the server refused it')+'. Close and try again.';return;}
+      line.textContent='Waiting for you to approve it on the laptop…';var tries=0;
+      (function wait(){S6.poll=setTimeout(function(){if(S6.sh!=='pair')return;ui2S6Load().then(function(){if(S6.sh!=='pair')return;if(s6Paired()){line.textContent='Paired. The laptop trusts this phone now.';line.className='st ok';return;}if(++tries<48)wait();else line.textContent='Nothing yet from the laptop. Close this and pair again when you are there.';});},2500);})();
+    },function(){if(S6.sh==='pair')line.textContent='Not sent: no connection. Close and try again.';});
+  }).catch(function(err){if(S6.sh!=='pair')return;ui2S6Show('This phone cannot pair yet',function(c){c.appendChild(lpEl('p',null,'It could not keep a signing key: '+String((err&&err.message)||err)+'. Your commands still go through as normal.'));var r=lpEl('div','s6row');s6Btn(r,'pri','Close',ui2S6Close);c.appendChild(r);});});}
+
+function ui2S6LockAsk(){if(!s6On())return;S6.sh='lock';
+  if(s6Locked()){ui2S6Show('Laptop is locked',function(c){c.appendChild(lpEl('p',null,'Everything you send from this phone is refused. Only the laptop can unlock it: click Relay LOCKED in VS Code. This phone has no way to.'));var r=lpEl('div','s6row');s6Btn(r,'pri','Close',ui2S6Close);c.appendChild(r);});return;}
+  var tgs=s6Targets();
+  ui2S6Show('Lock the laptop?',function(c){
+    if(!tgs.length){c.appendChild(lpEl('p',null,'No Claude terminal is live on the laptop, so there is nothing to type into and no way to reach it.'));var r0=lpEl('div','s6row');s6Btn(r0,'pri','Close',ui2S6Close);c.appendChild(r0);return;}
+    c.appendChild(lpEl('p',null,'Every command from any phone is refused until someone unlocks it at the laptop. You cannot undo this from your phone.'));var line=lpEl('p','st','');line.setAttribute('role','status');c.appendChild(line);
+    var r=lpEl('div','s6row');s6Btn(r,'sec','Cancel',ui2S6Close);var go=s6Btn(r,'dng','Lock the laptop',function(){if(go.disabled)return;go.disabled=true;line.textContent='Locking…';
+      Promise.all(tgs.map(function(t){return s6Mark(t,S6_LOCK).then(function(x){return !!(x&&x.ok);},function(){return false;});})).then(function(oks){if(S6.sh!=='lock')return;
+        if(!oks.some(Boolean)){go.disabled=false;line.textContent='Not sent: no connection. Try again.';return;}
+        line.textContent='Sent. Waiting for the laptop to say it is locked…';var tries=0;
+        (function wait(){S6.poll=setTimeout(function(){if(S6.sh!=='lock')return;ui2S6Load().then(function(){if(S6.sh!=='lock')return;if(s6Locked()){line.textContent='Locked. Only the laptop can unlock it now.';line.className='st ok';go.hidden=true;return;}if(++tries<12)wait();else line.textContent='Sent, but the laptop has not said it is locked. It may be asleep or offline.';});},2000);})();});});c.appendChild(r);});}
 /* the owner is known once /me answers */
 try{var _ui2w=setInterval(function(){var me=STATE.me;if(!me||me.auth===undefined)return;clearInterval(_ui2w);ui2Check(me);},200);setTimeout(function(){clearInterval(_ui2w);},20000);}catch(e){}/*UI2JSEND*/
 </script></body></html>

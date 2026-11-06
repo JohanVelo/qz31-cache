@@ -2258,7 +2258,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-8';
+var LP_BUILD='CHAT-20261106-9';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3471,7 +3471,7 @@ function lpSelSnap(){var ta=lpG('lpIn'),f=document.activeElement===ta,o={f:f,s:f
 function lpSelSame(a,b){return a.f===b.f&&a.s===b.s&&a.e===b.e&&a.an===b.an&&a.ao===b.ao&&a.fn===b.fn&&a.fo===b.fo;}
 /* ONE TAP (JJ 2026-11-04, replaces F3T D85's arm/confirm): Send sends. The box names the terminal, so the target is always on screen.
    After a network error the same text goes with the same id, so the server answers 'already queued' instead of typing it twice. */
-function lpOnSend(when){when=when===true;if(when)lpAttMenu(false);if(LP.rec||LP.recSwallow)return;if(LP.textBusy)return;var v=lpBoxVal().trim(),n=lpTray().length;if(!v&&!n){if(when)toast('Type your message first');return;}var why=lpCantSend();if(why){toast(why);return;}
+function lpOnSend(when){when=when===true;if(when)lpAttMenu(false);if(LP.rec||LP.recSwallow)return;if(LP.textBusy){toast('The last message is still going');return;}var v=lpBoxVal().trim(),n=lpTray().length;if(!v&&!n){if(when)toast('Type your message first');return;}var why=lpCantSend();if(why){toast(why);return;}
   var aw=lpAttWhy();if(n&&aw){toast(aw);return;}
   if(lpIsOver(v)&&aw&&v.length>LP_TEXT_MAX){toast('Over 4,000 characters: '+aw.charAt(0).toLowerCase()+aw.slice(1)+' to send it as a .txt');return;}
   var a={sid:LP.sel,text:v,at:performance.now(),ack:true,cid:lpCid(),files:lpTrayIds(LP.sel),over:lpIsOver(v)&&!lpAttWhy(),whenIdle:when},rk=LP.risky[a.sid+'\u0001'+v];
@@ -3657,7 +3657,7 @@ function lpTapDown(e){var el=e.target&&e.target.closest?e.target.closest('[data-
   if(e.type!=='mousedown'&&(e.type==='pointerdown'||!LPT||LPT.el!==el||performance.now()-LPT.t>600))LPT={el:el,pid:e.type==='pointerdown'?e.pointerId:null,t:performance.now(),done:false,x:e.clientX,y:e.clientY};
   /* a Copy button inside the conversation lets a touch start a scroll (its mousedown is still held, so focus stays) */
   var w=el.getAttribute('data-lptap');if(w!=='pill'&&!((w==='copy'||w==='view'||(vrU()&&(w==='chatgo'||w==='pin'||w==='mute')))&&e.type==='touchstart')&&e.cancelable)e.preventDefault();}
-function lpTapUp(e){var t=LPT;if(t&&e.type==='touchend'&&e.cancelable&&vrU()&&/^(chatgo|pin|mute)$/.test(t.el.getAttribute('data-lptap')||''))e.preventDefault();if(!t||t.done)return;var x,y;
+function lpTapUp(e){var t=LPT;if(t&&e.type==='touchend'&&e.cancelable&&vrU()&&/^(chatgo|pin|mute)$/.test(t.el.getAttribute('data-lptap')||'')&&t.el.contains(e.target))e.preventDefault();if(!t||t.done)return;var x,y;
   if(e.type==='touchend'){var c=e.changedTouches&&e.changedTouches[0];if(!c)return;x=c.clientX;y=c.clientY;}
   else{if(t.pid!=null&&e.pointerId!==t.pid)return;x=e.clientX;y=e.clientY;}
   t.done=true;var r=t.el.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom||t.el.disabled)return;if(vrU()&&t.x!=null&&t.el.getAttribute('data-lptap')==='chatgo'&&Math.abs(x-t.x)+Math.abs(y-t.y)>14)return;

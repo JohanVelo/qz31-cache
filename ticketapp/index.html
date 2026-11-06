@@ -1367,7 +1367,10 @@ html.ui2 .row .meta-r.agec.red{color:var(--bad)!important}
 .ui2li .ui2s6on{color:var(--warn);font-weight:600}
 .ui2s6n{margin:8px 4px 0;font:400 13px/18px var(--sans);color:var(--ink2)}
 @media (min-width:960px){#ui2S6{align-items:center;padding:24px}}
-@media (prefers-reduced-motion:reduce){#ui2S6,#ui2S6 .card{animation:none!important}}/*UI2CSSEND*/
+@media (prefers-reduced-motion:reduce){#ui2S6,#ui2S6 .card{animation:none!important}}
+/* a long report folds, so Hand to Terminal and the controls stay near the top */
+html.ui2 .db.ui2clamp{max-height:212px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
+html.ui2 .ui2showall{display:block;min-height:44px;margin:0 auto;padding:0 16px;border:0;background:none;color:var(--accent);font:560 14px/1 var(--sans);cursor:pointer}/*UI2CSSEND*/
 </style></head><body>
 <div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="top">
@@ -2096,7 +2099,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-4';
+var LP_BUILD='CHAT-20261106-5';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -4702,6 +4705,7 @@ function ui2SheetPolish(){if(!UI2.on)return;var b=document.getElementById('sh-bo
   Array.prototype.forEach.call(b.querySelectorAll('.sec'),function(x){var t=x.textContent.replace(/^\/\/\s*/,'');x.textContent=t.charAt(0)+t.slice(1).toLowerCase();});
   Array.prototype.forEach.call(b.querySelectorAll('.tmsg .a'),function(x){var c=x.firstChild;if(c&&c.nodeType===3&&c.nodeValue.indexOf('OFFICE')===0)c.nodeValue=c.nodeValue.replace('OFFICE','Office');});
   var pdf=b.querySelector('.pdfbtn');if(pdf&&pdf.firstChild&&pdf.firstChild.nodeType===3)pdf.firstChild.nodeValue=pdf.firstChild.nodeValue.replace('open PDF report','Open PDF report');
+  var dbx=b.querySelector('.db');if(dbx&&dbx.textContent.length>420){dbx.classList.add('ui2clamp');var mr=lpEl('button','ui2showall','Show all');mr.type='button';mr.addEventListener('click',function(){dbx.classList.remove('ui2clamp');mr.remove();});dbx.parentNode.insertBefore(mr,dbx.nextSibling);}
   ui2SheetExtras(b);ui2Deemoji(b,17);}
 /* the old look's '// LABEL' headings read as plain words */
 function ui2Word(t){t=t.replace(/^\/\/\s*/,'');var m=/^([0-9A-Z][0-9A-Z &/-]+[A-Z])\b(.*)$/.exec(t);if(!m)return t;var h=m[1].charAt(0)+m[1].slice(1).toLowerCase();return (h.replace(/\b(os|qr|pdf|boq|csv)\b/g,function(x){return x.toUpperCase();}))+m[2];}

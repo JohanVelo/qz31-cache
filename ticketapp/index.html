@@ -2258,7 +2258,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261106-9';
+var LP_BUILD='CHAT-20261107-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2431,6 +2431,9 @@ function lpMerge(S,W){var L=S.items,map={},added=[],changed=false,lk=null,i;
   for(i=0;i<W.length;i++){var x=W[i],p=known(x);
     if(p>=0){pos=p+1;if(L[p].k===x.k&&(L[p].text!==x.text||(L[p].xs||'')!==(x.xs||''))){L[p].text=x.text;L[p].x=x.x;L[p].xs=x.xs;changed=true;}if(x.cmd!=null&&L[p].cmd==null)L[p].cmd=x.cmd;
       if(x.att&&!L[p].att){L[p].att=x.att;changed=true;}continue;}
+    /* WAIT-3 (2026-11-07): a file card is put in by time; skip past the ones sent before this message, else every
+       later message lands above them and the cards sit at the bottom for good */
+    var tx=lpT(x.at);if(tx)while(pos<L.length&&L[pos].att&&/^file:/.test(String(L[pos].id||''))&&lpT(L[pos].at)&&lpT(L[pos].at)<=tx)pos++;
     var prev=L[pos-1],next=L[pos],o=prev&&next?(prev.o+next.o)/2:prev?prev.o+1:next?next.o-1:0;
     var ni={k:x.k,id:x.id,role:x.role,text:x.text,at:x.at,o:o,x:x.x,xs:x.xs,cmd:x.cmd,att:x.att||null};L.splice(pos,0,ni);
     if(pos<L.length-1){for(var q=pos;q<L.length;q++)map[L[q].k]=q;if(S.renderFrom>pos)S.renderFrom++;}else map[ni.k]=pos;
@@ -2633,6 +2636,7 @@ function lpDur(at,now){var t=lpT(at);if(!t)return '';var s=Math.max(0,Math.floor
 /* one view for both the card line and the bar: mark (spin / ok / err / none), main words, detail, timer start */
 function lpNowView(sid,row,off){var n=lpNowOf(sid,row),busy=!off&&row&&row.status==='busy',k=n&&n.k,str=function(v){return v==null?'':String(v);};
   var pd=!off&&row&&row.status==='waiting'&&row.pending&&typeof row.pending==='object'?row.pending:null;
+  if(pd&&pd.kind==='blind')return {mk:'ask',t:'Waiting on the laptop',d:'',at:null,live:false};
   if(pd)return {mk:'ask',t:pd.kind==='question'?str(pd.question||pd.message)||'Has a question':'Allow '+(str(pd.tool)||'a tool')+'?',d:'',at:null,live:false};
   var ac=busy&&row.progress&&row.progress.act;
   if(ac&&ac.k==='agent')return {mk:'spin',t:lpActText(ac),d:k==='tool'?str(n.l):'',at:n&&n.at,live:true};
@@ -2669,13 +2673,18 @@ function lpNowGo(){lpJump();var g=document.querySelectorAll('#lpConv details.lps
 function lpKeyBtn(k,label){var b=lpEl('button','lpbtn',label);b.type='button';b.dataset.lptap='key';b.dataset.lpk=String(k);return b;}
 function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
   var p=(S&&S.row&&!S.ghost&&!S.cacheOnly&&S.row.pending&&typeof S.row.pending==='object')?S.row.pending:null;
+  /* WAIT-1 (2026-11-07): "Waiting for you" with nothing to answer. Claude Code says a dialog is open that no hook explained */
+  if(!p&&S&&S.row&&!S.ghost&&!S.cacheOnly&&S.row.status==='waiting')p={kind:'blind',at:S.row.updated_at,eid:'blind'};
   var qst=p&&LP.qstep?LP.qstep[String(LP.sel)+'|'+String(p.eid||p.at||'')]:null;
   var sig=p?JSON.stringify([LP.sel,p.eid||p.at||'',S.row.status||'',p.options||null,p.questions||null,qst||null]):'';
   if(sig===LP.sigs.prompt)return;LP.sigs.prompt=sig;
   var eid=p?String(LP.sel)+'|'+String(p.eid||p.at||'?'):'';if(eid!==LP.promptEid){LP.promptEid=eid;LP.guardAt=performance.now();}
   box.textContent='';if(!p||p.kind!=='question'||!Array.isArray(p.questions))lpTog(lpG('laptop'),'lp-qfull',false);if(!p)return;
-  var card=lpEl('div','lpcard'),h=lpEl('div','lpch');lpTxt(h,vrU()?((p.kind==='question'?'Question':'Permission')+' · '):('// '+(p.kind==='question'?'QUESTION':'PERMISSION')+' · '));
-  var age=lpEl('span','lpage');age.dataset.at=String(p.at||'');lpTxt(age,lpAge(p.at,lpSrvNow())+' ago');h.appendChild(age);card.appendChild(h);
+  var card=lpEl('div','lpcard'),h=lpEl('div','lpch'),nm=p.kind==='blind'?'Waiting on the laptop':p.kind==='question'?'Question':'Permission';lpTxt(h,vrU()?(nm+' · '):('// '+nm.toUpperCase()+' · '));
+  var age=lpEl('span','lpage');age.dataset.at=String(p.at||'');lpTxt(age,lpAge(p.at,lpSrvNow())+' ago');h.appendChild(age);
+  var qn=Number(p.queue)|0;if(qn>0)h.appendChild(lpEl('span','lpqueue',' · '+qn+' more waiting'));card.appendChild(h);
+  if(p.kind==='blind'){card.appendChild(lpEl('div','lpcq','Claude is showing a prompt on the laptop that Relay cannot read'+(p.waitingFor?' ('+String(p.waitingFor)+')':'')+'.'));
+    card.appendChild(lpEl('div','lpcn','Answer it on the laptop, or use the number keys below if you know what it asks. Messages wait until it is answered.'));box.appendChild(card);return;}
   var bs=lpEl('div','lpbtns');
   if(p.kind==='question'&&Array.isArray(p.questions)&&p.questions.length){lpQCard(card,p,eid);box.appendChild(card);return;}
   if(p.kind==='question'){card.appendChild(lpEl('div','lpcq',p.question||p.message||''));
@@ -4899,7 +4908,7 @@ function ui2Tone(slot,name){var k=0,n=String(name||''),i;if(slot)k=slot.charCode
 function ui2Clean(x){var v=String(x==null?'':x).replace(/\*\*|__|`/g,'').replace(/^#+\s*/,'').replace(/\s+/g,' ').trim();try{return lpMask(v);}catch(e){return v;}}
 function ui2ChatState(t){if(t.off||t.ghost||t.cache)return {k:'off',g:null};var g=null,st=String((t.row&&t.row.status)||'idle');try{g=lpProg(t.row);}catch(e){}
   if(st==='waiting'||(g&&g.wait))return {k:'wait',g:g};var al=ui3Alert(t.row);if(al)return {k:'alert',g:g,al:al};if(st==='busy')return {k:'run',g:g};if(g)return {k:'done',g:g};return {k:'idle',g:null};}
-function ui2AskText(row,g){var p=row&&row.pending;if(p&&typeof p==='object'){if(p.kind==='question'){var q=p.question||p.message||(Array.isArray(p.questions)&&p.questions[0]&&p.questions[0].question);return q?ui2Clean(q):'Has a question';}return 'Allow '+ui2Clean(p.tool||'a tool')+'?';}return g&&g.text?ui2Clean(g.text):'Waiting for you';}
+function ui2AskText(row,g){var p=row&&row.pending;if(p&&typeof p==='object'){if(p.kind==='blind')return 'Waiting on the laptop';if(p.kind==='question'){var q=p.question||p.message||(Array.isArray(p.questions)&&p.questions[0]&&p.questions[0].question);return q?ui2Clean(q):'Has a question';}return 'Allow '+ui2Clean(p.tool||'a tool')+'?';}return g&&g.text?ui2Clean(g.text):'Waiting for you';}
 function ui2When(ms){if(!ms)return '';var d=new Date(ms),n=new Date(),day=86400000,a=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),b=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),gap=Math.round((a-b)/day);
   if(gap<=0)return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);if(gap===1)return 'Yesterday';if(gap<7)return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];}
 function ui2ChatRow(t,hero,idx){var sid=String(t.sid),row=t.row||{},nq=lpNice(row.name),nm=nq.title,s=ui2ChatState(t),un=sid===LP.sel?0:lpUnread(sid),mt=lpMuted(sid);
@@ -4986,7 +4995,7 @@ function ui2NowPaint(){var e=document.getElementById('ui2Now');if(!e)return;var 
   var sh=document.getElementById('sheet'),hide=!s||(sh&&sh.classList.contains('on'));
   document.documentElement.toggleAttribute('data-ui2now',!hide);
   if(hide){if(!e.hidden){e.hidden=true;e.textContent='';UI2.nowSig='';}return;}
-  var p=s.pending,eid=String(s.session_id)+'|'+String(p.eid||p.at||''),q=p.kind==='question',what=q?'':ui2NowWhat(p),rk=q?null:lpRisk(p.tool,what),safe=!q&&rk&&!rk.c,nq=lpNice(s.name),sig=[eid,L.length,safe,nq.title].join('|');
+  var p=s.pending,eid=String(s.session_id)+'|'+String(p.eid||p.at||''),q=p.kind==='question'||p.kind==='blind',what=q?'':ui2NowWhat(p),rk=q?null:lpRisk(p.tool,what),safe=!q&&!(Number(p.queue)>0)&&rk&&!rk.c,nq=lpNice(s.name),sig=[eid,L.length,safe,nq.title].join('|');
   if(sig===UI2.nowSig&&!e.hidden)return;UI2.nowSig=sig;if(UI2.nowEid!==eid){UI2.nowEid=eid;UI2.nowShown=Date.now();}
   e.textContent='';e.hidden=false;var av=lpEl('span','lpca',(nq.slot||nq.title.trim().charAt(0)||'C').toUpperCase());av.style.setProperty('--tc',ui2Tone(nq.slot,nq.title));e.appendChild(av);
   var m=lpEl('div','nm');m.appendChild(lpEl('b',null,nq.title+(L.length>1?' +'+(L.length-1):'')));m.appendChild(lpEl('span',null,q?ui2AskText(s,null):(ui2Clean(p.tool||'Tool')+(what?': '+ui2Clean(what):''))));e.appendChild(m);

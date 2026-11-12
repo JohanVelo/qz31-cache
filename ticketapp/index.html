@@ -585,6 +585,7 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpqfoot{position:sticky;bottom:0;margin-top:auto;padding:8px 0 12px;background:inherit}
 .lpqrev{display:flex;flex-direction:column;gap:6px}.lpqrvi{display:flex!important;flex-direction:column;align-items:flex-start;text-align:left;min-height:44px;white-space:normal}
 .lpqrva{font-size:15px;color:var(--txt)}.lpqopen{width:100%;min-height:44px}
+.lppermfull{max-height:34vh;font-size:13px}.lpperm{display:flex;flex-direction:column;gap:8px}.lpperm .lpbtn{width:100%;min-height:48px;white-space:normal}
 #lpChatsB{min-height:44px;margin-left:8px;font-size:15px}
 #lpChats{display:none;position:absolute;inset:0;z-index:1500;background:var(--lpwall,var(--bg));overflow-y:auto;padding:0 0 12px}
 #laptop.lp-chats #lpChats{display:block}
@@ -2258,7 +2259,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261107-1';
+var LP_BUILD='CHAT-20261113-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2676,7 +2677,7 @@ function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
   /* WAIT-1 (2026-11-07): "Waiting for you" with nothing to answer. Claude Code says a dialog is open that no hook explained */
   if(!p&&S&&S.row&&!S.ghost&&!S.cacheOnly&&S.row.status==='waiting')p={kind:'blind',at:S.row.updated_at,eid:'blind'};
   var qst=p&&LP.qstep?LP.qstep[String(LP.sel)+'|'+String(p.eid||p.at||'')]:null;
-  var sig=p?JSON.stringify([LP.sel,p.eid||p.at||'',S.row.status||'',p.options||null,p.questions||null,qst||null]):'';
+  var sig=p?JSON.stringify([LP.sel,p.eid||p.at||'',S.row.status||'',p.options||null,p.questions||null,qst||null,p.perm||null,(LP.pst||{})[String(LP.sel)+'|'+String(p.eid||p.at||'?')]||null]):'';
   if(sig===LP.sigs.prompt)return;LP.sigs.prompt=sig;
   var eid=p?String(LP.sel)+'|'+String(p.eid||p.at||'?'):'';if(eid!==LP.promptEid){LP.promptEid=eid;LP.guardAt=performance.now();}
   box.textContent='';if(!p||p.kind!=='question'||!Array.isArray(p.questions))lpTog(lpG('laptop'),'lp-qfull',false);if(!p)return;
@@ -2690,12 +2691,47 @@ function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
   if(p.kind==='question'){card.appendChild(lpEl('div','lpcq',p.question||p.message||''));
     (Array.isArray(p.options)?p.options:[]).forEach(function(o){if(o&&o.key!=null)bs.appendChild(lpKeyBtn(o.key,String(o.key)+'. '+String(o.label==null?'':o.label)));});
     if(!bs.children.length)card.appendChild(lpEl('div','lpcn','Use the number keys below.'));}
-  else{var t=lpEl('div','lpcq');t.appendChild(lpEl('b',null,p.tool||'Tool'));card.appendChild(t);var what='';
+  else{if(p.perm){lpPermCard(card,p,eid);box.appendChild(card);return;}var t=lpEl('div','lpcq');t.appendChild(lpEl('b',null,p.tool||'Tool'));card.appendChild(t);var what='';
     if(p.input){try{var i=typeof p.input==='string'?JSON.parse(p.input):p.input;what=(i&&(i.command||i.file_path||i.url))||(typeof p.input==='string'?p.input:JSON.stringify(p.input));}catch(e){what=String(p.input);}}
     var rk=lpRisk(p.tool,what);if(rk)card.appendChild(lpEl('div','lprisk'+(rk.c?' '+rk.c:''),rk.t));
     if(what)card.appendChild(lpEl('pre','lppre',typeof what==='string'?what:JSON.stringify(what)));else if(p.message)card.appendChild(lpEl('div','lpcq',p.message));
     var al=lpKeyBtn('1','Allow');al.classList.add('go');bs.appendChild(al);bs.appendChild(lpKeyBtn('Esc','Deny'));}
   if(bs.children.length)card.appendChild(bs);box.appendChild(card);}
+
+/* PERM-1 (2026-11-13, Savepoint 0.6.22): a tool permission dialog in full, answerable here. p.perm is set only when the
+   relay_permission.py hook left a request file; without it the plain Allow / Deny keys card above is still used.
+   The tap sends [[relay-perm]]{req,choice,suggestion_index}; Savepoint writes the file the hook is waiting for. */
+function lpPermVerb(k){return k==='file'?'change a file':k==='command'?'run a command':k==='web'?'read from the web':k==='read'?'read from the laptop':'use a tool';}
+function lpPermCard(card,p,eid){var pm=p.perm,v=pm.view||{},st=(LP.pst=LP.pst||{})[eid]||(LP.pst[eid]={}),lap=lpG('laptop');
+  if(st.fold){lpTog(lap,'lp-qfull',false);var fb=lpEl('button','lpbtn go lpqopen','Answer the permission request');fb.type='button';fb.dataset.lptap='popen';card.appendChild(fb);return;}
+  lpTog(lap,'lp-qfull',true);
+  var top=lpEl('div','lpqtop');top.appendChild(lpEl('span','lpqstep',(pm.who?'A helper wants to ':'Claude wants to ')+lpPermVerb(v.kind)));
+  var hb=lpEl('button','lpbtn lpqhide','Back to chat');hb.type='button';hb.dataset.lptap='pfold';top.appendChild(hb);card.appendChild(top);
+  var t=lpEl('div','lpcq');t.appendChild(lpEl('b',null,pm.tool||p.tool||'Tool'));if(pm.who)t.appendChild(document.createTextNode(' · '+pm.who));card.appendChild(t);
+  var rk=lpRisk(pm.tool,v.primary);if(rk)card.appendChild(lpEl('div','lprisk'+(rk.c?' '+rk.c:''),rk.t));
+  card.appendChild(lpEl('div','lpqn',v.kind==='command'?'Command':v.kind==='file'?'File':v.kind==='web'?'Address':'Request'));
+  card.appendChild(lpEl('pre','lppre lppermfull',v.primary||''));
+  if(v.second){card.appendChild(lpEl('div','lpqn',v.second_label||'Details'));card.appendChild(lpEl('pre','lppre lppermfull',v.second));}
+  if(v.clipped)card.appendChild(lpEl('div','lprisk warn','Long request: Relay shows only the first part. Read the rest on the laptop if you are not sure.'));
+  var bs=lpEl('div','lpbtns lpqfoot lpperm'),done=st.sent;
+  function mk(cls,txt,choice,idx){var b=lpEl('button','lpbtn'+(cls?' '+cls:''),txt);b.type='button';b.dataset.lptap='pgo';b.dataset.choice=choice;if(idx!=null)b.dataset.idx=String(idx);if(done||LP.permBusy)b.disabled=true;return b;}
+  if(done){bs.appendChild(lpEl('div','lpcn',done==='deny'?'Denied ✓ sent to Claude':'Allowed ✓ sent to Claude'));card.appendChild(bs);return;}
+  var bad=!!(rk&&rk.c==='bad');
+  bs.appendChild(mk('go',st.armed?'Tap again to allow':(bad?'Allow once (read it first)':'Allow once'),'allow_once'));
+  (Array.isArray(pm.always)?pm.always:[]).forEach(function(o){bs.appendChild(mk('',String(o.label||'Always allow'),'allow_always',o.index));});
+  bs.appendChild(mk('',"Deny",'deny'));
+  card.appendChild(bs);}
+function lpPermTap(el){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p||!p.perm)return;var eid=String(LP.sel)+'|'+String(p.eid||p.at||'?'),st=(LP.pst=LP.pst||{})[eid]||(LP.pst[eid]={}),w=el.dataset.lptap;
+  function paint(){LP.sigs.prompt=null;lpPaintPrompt(S);}
+  if(w==='pfold'){st.fold=true;paint();return;}if(w==='popen'){st.fold=false;paint();return;}
+  if(w!=='pgo'||st.sent||LP.permBusy)return;
+  var ch=el.dataset.choice,v=p.perm.view||{},rk=lpRisk(p.perm.tool,v.primary);
+  if(ch==='allow_once'&&rk&&rk.c==='bad'&&!st.armed){st.armed=true;paint();return;}
+  var body={req:p.perm.req,choice:ch};if(ch==='allow_always')body.suggestion_index=+el.dataset.idx;
+  LP.permBusy=true;paint();
+  lpSend('text','[[relay-perm]]'+JSON.stringify(body),{armed:true}).then(function(r){LP.permBusy=false;
+    if(!r||!r.ok){toast(String((r&&r.j&&r.j.error)||'send failed'));paint();return;}
+    st.sent=ch==='deny'?'deny':'allow';paint();lpLoad();});}
 
 /* QUESTIONS (CHAT-6, JJ 2026-11-04): every question in full; buttons for the one on screen; answered ones show the pick */
 function lpSpVer(){var S=LP.sess[LP.sel],mid=S&&S.row&&S.row.machine_id,ms=(LP.data&&LP.data.machines)||[];for(var i=0;i<ms.length;i++)if(ms[i]&&ms[i].machine_id===mid)return ms[i].info&&ms[i].info.savepoint;return '';}
@@ -3680,7 +3716,7 @@ function lpTapUp(e){var t=LPT;if(t&&e.type==='touchend'&&e.cancelable&&vrU()&&/^
   else if(w==='retry')lpOnRetry(t.el);else if(w==='chatok')lpOnChatOk();
   else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();
   else if(w==='fshare')lpFcShare(t.el);else if(w==='qreply')lpQReply(t.el);else if(w==='qpick')lpQPick(t.el);else if(w==='qsend')lpQSend();else if(w==='qnext')lpQNav('next');else if(w==='qback')lpQNav('back');
-  else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');
+  else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');else if(w==='pfold'||w==='popen'||w==='pgo')lpPermTap(t.el);
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){if(vrU()&&ui2RowBack(t.el))return;lpChatsClose();lpSelect(t.el.dataset.sid,true);}
   else if(w==='pin')lpPinToggle(t.el.dataset.sid);else if(w==='mute')lpMuteToggle(t.el.dataset.sid);
   else if(w==='srch'){lpAttMenu(false);lpSrchOpen();}else if(w==='bropen')lpBrOpen();else if(w==='brx')lpBrClose();else if(w==='brgo')lpBrGo();else if(w==='doneask')lpDoneAsk();else if(w==='newt')lpNewTOpen();else if(w==='gsopen')gsOpen();else if(w==='newtx')lpNewTClose();else if(w==='newtgo')lpNewTGo();else if(w==='when')lpOnSend(true);else if(w==='wcancel')lpOnWhenCancel(t.el);else if(w==='qk')lpQkOpen(false);else if(w==='qkgo')lpQkGo(+t.el.dataset.i);else if(w==='qkedit')lpQkOpen(true);else if(w==='qksave')lpQkSaveEd();else if(w==='qkx')lpQkClose();else if(w==='srchx')lpSrchClose();else if(w==='srchn')lpSrchGo(1);else if(w==='srchp')lpSrchGo(-1);else if(w==='fdl')lpFcDownload(t.el);}

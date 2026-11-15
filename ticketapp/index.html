@@ -2266,7 +2266,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-26';
+var LP_BUILD='CHAT-20261115-27';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3253,7 +3253,8 @@ function vrBusy(){var a=document.activeElement,t=a&&a.tagName;if(((t==='INPUT'||
   var r=document.getElementById('reply-text');if(r&&r.value.trim())return true;var q=document.getElementById('q');if(q&&q.value)return true;
   var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on'))return true;var g=document.getElementById('gSrch');if(g&&!g.hidden)return true;
   var c=document.getElementById('cmdk');if(c&&c.classList.contains('on'))return true;if(document.querySelector('#teamovl[style*="flex"],#notifovl[style*="flex"],#qrovl[style*="flex"]'))return true;return false;}
-function lpUpdTry(){if(!LP.updNew)return;var a=document.activeElement,busy=vrBusy()||lpBoxVal().trim()||(LP.tray&&LP.sel&&lpTray(LP.sel).length)||LP.sheet||LP.composing||(a&&a.classList&&a.classList.contains('lpqri'));
+/* B9 (CHAT-27): also hold the reload while a send, upload, recording or dictation is in flight */
+function lpUpdTry(){if(!LP.updNew)return;var a=document.activeElement,busy=LP.textBusy||(LP.outbox&&LP.outbox.length)||LP.vox||LP.mic||vrBusy()||lpBoxVal().trim()||(LP.tray&&LP.sel&&lpTray(LP.sel).length)||LP.sheet||LP.composing||(a&&a.classList&&a.classList.contains('lpqri'));
   if(busy){if(!LP.updToast&&lpBoxVal().trim()){LP.updToast=1;toast('A new version is ready: it loads when your message is sent');}clearTimeout(LP.updT);LP.updT=setTimeout(lpUpdTry,15000);return;}
   try{lpDraftNow();}catch(e){}LP.reloadNow();}
 LP.reloadNow=function(){location.reload();};

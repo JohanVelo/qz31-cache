@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-21';
+var LP_BUILD='CHAT-20261115-22';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2466,9 +2466,9 @@ function lpLoad(){
   LP.inflight=true;var wasAll=!LP.fullOnce;
   api(lpStateUrl()).then(function(r){
     if(STATE.view!=='laptop')return;
-    if(r.status===403||r.status===401){lpCode(r);lpDenied();return;}
+    if(r.status===403||r.status===401){lpCode(r);lpRefused(r);return;}
     if(!r.ok||!r.j){lpCode(r);LP.fails++;LP.connErr=(r.j&&r.j.code==='link_off')?'link off':'reconnecting';lpPaintHead();lpKeysState();lpPaintStat();return;}
-    LP.connErr='';LP.fails=0;LP.lastOk=Date.now();var sn=lpT(r.j.server_now);LP.offset=sn?sn-Date.now():0;
+    LP.connErr='';LP.fails=0;LP.denyN=0;LP.lastOk=Date.now();var sn=lpT(r.j.server_now);LP.offset=sn?sn-Date.now():0;
     if(wasAll)LP.fullOnce=true;
     lpIngest(r.j);
   }).catch(function(){LP.fails++;LP.connErr='reconnecting';lpPaintHead();lpKeysState();lpPaintStat();}).then(function(){
@@ -2510,7 +2510,7 @@ function lpHistItems(ms){return (ms||[]).map(function(m){var b=(m&&m.body&&typeo
 function lpHistLoad(sid,before){var S=LP.sess[sid],c=lpChatOf(sid);if(!S||!c||LP.locked||S.histBusy)return;
   S.histBusy=true;var key=c.chat_key;
   api('/laptop/history?chat='+encodeURIComponent(key)+(before?'&before='+encodeURIComponent(before):'')).then(function(r){
-    if(r.status===401||r.status===403){lpCode(r);lpDenied();return;}
+    if(r.status===401||r.status===403){lpCode(r);lpRefused(r);return;}
     if(!r.ok||!r.j||!Array.isArray(r.j.messages))return;
     var H=S.hist&&S.hist.key===key?S.hist:(S.hist={key:key,cmds:{},oldest:0,more:true});
     H.loadedAt=Date.now();H.epoch=c.terminal_epoch;H.handoffs=c.handoff_count;
@@ -3145,7 +3145,7 @@ function lpUploadAll(a,T){var S=LP.sess[a.sid],row=S&&S.row,ch=row&&lpChatOf(row
 /* signed links for the files not up yet, PUT each; a link the bucket refuses (expired) is asked for again once */
 function lpSignPut(ch,need,tries){var todo=need.filter(function(it){return !it.up;});if(!todo.length)return Promise.resolve();
   return api('/laptop/upload',{method:'POST',body:JSON.stringify({chat_key:ch.chat_key,epoch:ch.terminal_epoch,files:todo.map(function(it){return {size:it.blob.size,ext:it.ext};})})}).then(function(r){
-    if(!r.ok){lpCode(r);if(r.status===401||r.status===403)lpDenied();throw lpChatRefusal(r)||String((r.j&&r.j.error)||('upload refused ('+r.status+')'));}
+    if(!r.ok){lpCode(r);if(r.status===401||r.status===403)lpRefused(r);throw lpChatRefusal(r)||String((r.j&&r.j.error)||('upload refused ('+r.status+')'));}
     var ups=(r.j&&r.j.uploads)||[];if(ups.length!==todo.length)throw 'upload refused: bad reply';
     return Promise.all(todo.map(function(it,i){return fetch(ups[i].url,{method:'PUT',headers:{'Content-Type':it.type,'x-upsert':'false'},body:it.blob}).then(function(p){
       if(p.ok){it.up={path:ups[i].path,sha256:it.sha,size:it.blob.size,kind:it.kind,name:it.name,mime:it.type};lpLocal(it);return;}
@@ -3493,7 +3493,7 @@ function lpSend(kind,body,o){o=o||{};
   if(o.whenIdle&&kind==='text')pl.when_idle=true;
   var payload=JSON.stringify(pl),gapTries=0,sawNet=false;
   function once(){return api('/laptop/send',{method:'POST',body:payload}).then(function(r){
-    if(!r.ok){lpCode(r);if(r.status===401||r.status===403)lpDenied();}return r;
+    if(!r.ok){lpCode(r);if(r.status===401||r.status===403)lpRefused(r);}return r;
   },function(){sawNet=true;LP.dbg.codes['network']=(LP.dbg.codes['network']||0)+1;return {ok:false,status:0,net:true,j:{}};});}
   /* a handoff in progress (no live session in the slot for a moment): same send, same id, again in 3 s, up to 4 times */
   function gap(r){if(r.status===409&&r.j&&r.j.code==='between_sessions'&&gapTries++<4){LP.note={sid:o.sid||LP.sel,text:'Terminal between sessions · retrying',until:Date.now()+5000};lpPaintStat();
@@ -3513,7 +3513,7 @@ function lpChatRefusal(r){var c=r&&r.j&&r.j.code;
 function lpOnChatOk(){var S=LP.sess[LP.sel],c=S&&S.row&&lpChatOf(S.row.session_id);if(!c)return;
   api('/laptop/chat-confirm',{method:'POST',body:JSON.stringify({chat_key:c.chat_key,epoch:c.terminal_epoch})}).then(function(r){
     if(r.ok){c.restored_unconfirmed=false;toast('Confirmed: '+String(c.pinned_name||c.locked_name||'terminal'));lpPaintStat();lpLoad();}
-    else{lpCode(r);if(r.status===401||r.status===403){lpDenied();return;}toast('The terminal changed again: check it, then confirm.');lpLoad();}});}
+    else{lpCode(r);if(r.status===401||r.status===403){lpRefused(r);return;}toast('The terminal changed again: check it, then confirm.');lpLoad();}});}
 /* a fresh id for one send: crypto.randomUUID where it exists, else 16 random bytes as hex */
 function lpCid(){try{if(crypto.randomUUID)return crypto.randomUUID();}catch(e){}
   var b=new Uint8Array(16);crypto.getRandomValues(b);return Array.prototype.map.call(b,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
@@ -3616,6 +3616,13 @@ function lpPaintDbg(){var el=lpG('lpDbg');if(!el)return;lpTog(el,'on',LP.dbgOn);
 function lpAges(){var now=lpSrvNow(),xs=document.querySelectorAll('#laptop .lpage');for(var i=0;i<xs.length;i++)lpSetText(xs[i],lpAge(xs[i].dataset.at,now)+' ago');}
 function lpTickFn(){if(STATE.view!=='laptop')return;if(LP.arm&&performance.now()-LP.arm.at>LP_ARM_MS)lpDisarm();
   lpAges();lpPaintHead();lpPaintTabs(lpTabList());lpPaintNow();lpComposerState();lpKeysState();lpPaintStat();lpPaintDbg();lpFitTick();lpNewTWatch();}
+/* 2026-11-15 CHAT-22 (PLAN 2.4, audit B10): a 401/403 no longer wipes drafts, pins, stars and the chat cache at once. Expired sign-in
+   (revoked), a server setting typo (cutoff_invalid) or a gateway 401 with no code show the problem and keep everything; only the
+   owner gate (not_allowed / unauthorized) twice in a row wipes as before. */
+function lpRefused(r){var c=String((r&&r.j&&r.j.code)||'');
+  if(c==='not_allowed'||c==='unauthorized'){LP.denyN=(LP.denyN||0)+1;if(LP.denyN>=2){lpDenied();return true;}}
+  LP.fails++;LP.connErr=c==='revoked'?'sign-in expired: scan the QR again':c==='cutoff_invalid'?'server sign-in setting is broken':(c==='not_allowed'||c==='unauthorized')?'refused: checking again':'server refused: retrying';
+  lpPaintHead();lpKeysState();lpPaintStat();return false;}
 function lpDenied(){lpSheetClose();lpSelOff();lpMicStop();lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
   ['lpConv','lpPend','lpCmds','lpChips'].forEach(function(id){var e=lpG(id);if(e)e.textContent='';});
   lpBox('');lpDisarm();lpPaintTabs([]);lpPaintNow();lpPaintHead();lpPaintStat();lpComposerState();lpKeysState();lpPill();}

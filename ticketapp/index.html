@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-12';
+var LP_BUILD='CHAT-20261115-13';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3769,19 +3769,19 @@ function lpMic(){if(LP.vox){lpVox();return;}
   var R=lpMicApi(),ta=lpG('lpIn');if(!R||!ta)return;var r;try{r=new R();}catch(e){toast('Voice input is not available here');return;}
   var f0=document.activeElement===ta,m={r:r,s:f0?ta.selectionStart:ta.value.length,e:f0?ta.selectionEnd:ta.value.length};LP.mic=m;
   try{r.lang=navigator.language||'en-US';r.interimResults=true;r.continuous=true;r.maxAlternatives=1;}catch(e){}
-  r.onresult=function(ev){if(LP.mic!==m)return;var fin='',mid='',rs=ev.results||[];
+  r.onresult=function(ev){if(LP.mic!==m)return;m.got=1;var fin='',mid='',rs=ev.results||[];
     for(var i=ev.resultIndex||0;i<rs.length;i++){var x=rs[i],w=String((x&&x[0]&&x[0].transcript)||'');if(x&&x.isFinal)fin+=w;else mid+=w;}
     if(fin){var foc=document.activeElement===ta,s=foc?ta.selectionStart:m.s,e=foc?ta.selectionEnd:m.e,bf=ta.value.slice(0,s);fin=(bf&&!/\s$/.test(bf)&&!/^\s/.test(fin)?' ':'')+fin;
       lpInsert(fin,s,e,function(){m.s=m.e=ta.selectionEnd;if(LP.arm)lpDisarm();lpDraftSoon();});}
     lpMicPrev(mid);};
   r.onerror=function(ev){var c=String((ev&&ev.error)||'').replace(/[^a-z-]/g,'').slice(0,30);
-    if(c==='not-allowed'||c==='service-not-allowed'||c==='audio-capture'||c==='network'||c==='language-not-supported'){LP.micDead=true;lpLSset('lp_ws_off','1');LP.mic=null;lpMicState();
-      if(lpVoxOk()){toast('Using the laptop to write it out');lpVox();}else toast('Voice input is not available here');}
+    if(c==='not-allowed'||c==='service-not-allowed'||c==='audio-capture'||c==='network'||c==='language-not-supported'){LP.micDead=true;LP.micWhy=c;LP.mic=null;lpMicState();
+      if(lpVoxOk()){toast('Phone speech said "'+c+'": using the laptop');lpVox();}else toast('Voice input is not available here');}
     else if(c&&c!=='no-speech'&&c!=='aborted')toast('Voice input stopped ('+c+')');};
   r.onend=function(){if(LP.mic===m){LP.mic=null;lpMicState();}};
-  r.onaudiostart=function(){m.aud=1;};
+  r.onaudiostart=r.onstart=r.onsoundstart=r.onspeechstart=function(){m.aud=1;};
   /* iOS home-screen apps have shipped a recogniser that starts and never hears: no audio in 2.5 s = use the laptop instead */
-  setTimeout(function(){if(LP.mic===m&&!m.aud){LP.micDead=true;lpLSset('lp_ws_off','1');try{m.r.abort();}catch(e){}LP.mic=null;lpMicState();if(lpVoxOk()){toast('Using the laptop to write it out');lpVox();}}},2500);
+  setTimeout(function(){if(LP.mic===m&&!m.aud&&!m.got){LP.micDead=true;LP.micWhy='silent';try{m.r.abort();}catch(e){}LP.mic=null;lpMicState();if(lpVoxOk()){toast('Phone speech did not start: using the laptop');lpVox();}}},4000);
   try{r.start();}catch(e){LP.mic=null;LP.micDead=true;if(lpVoxOk()){lpVox();return;}toast('Voice input could not start');}lpMicState();if(LP.mic)lpMicPrev('');}
 
 /* ── D100: compact header: the app's own view strip moves into the LAPTOP head row and goes back exactly on leave ── */

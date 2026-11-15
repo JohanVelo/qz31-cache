@@ -583,6 +583,7 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpqbl{font-size:15px;font-weight:600}
 .lpqq .lpqri{width:100%;box-sizing:border-box;margin-top:6px;font-family:inherit}
 .lpqsend{min-height:44px;width:100%}
+/* CHAT-28 (JJ 2026-11-15): a full-screen question/permission card over the open chat list sat under the dock and search bar: hide them while it is up */html.ui2:has(#laptop.lp-qfull) #ui2Dock,html.ui2:has(#laptop.lp-qfull) #ui2Tool,html.ui2:has(#laptop.lp-qfull) #ui2Fade,html.ui2:has(#laptop.lp-qfull) #ui2Now{display:none!important}
 #laptop.lp-qfull #lpPend{position:absolute;inset:0;z-index:1600;max-height:none;padding:0;background:var(--lpwall,var(--bg));overflow-y:auto}
 #laptop.lp-qfull #lpPend .lpcard{min-height:100%;box-sizing:border-box;border-radius:0;display:flex;flex-direction:column;padding-bottom:0}
 .lpqtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.lpqstep{font-size:15px;font-weight:700}
@@ -2266,7 +2267,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-27';
+var LP_BUILD='CHAT-20261115-28';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,

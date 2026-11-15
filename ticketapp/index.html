@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-8';
+var LP_BUILD='CHAT-20261115-9';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -5356,7 +5356,9 @@ try{var _ui2w=setInterval(function(){var me=STATE.me;if(!me||me.auth===undefined
 <style id="vbCss">
 /* SWIPE-BACK (CHAT-20261113-2): chat -> chat list is a left-edge drag. The list sits under the chat while you drag. */
 /* #lpChats lives INSIDE .lpcol, so the chat's own children slide (--vbx) over a backdrop, and the list waits underneath */
-#laptop.vb-drag #lpChats{display:block!important;z-index:-1!important}
+#laptop.vb-drag #lpChats{display:block!important;z-index:-1!important;visibility:visible!important}
+/* 2026-11-15 (JJ: swipe-back froze for a second): the list is kept laid out, hidden, behind an open chat */
+#laptop.vb-warm:not(.lp-chats) #lpChats{display:block!important;z-index:-1!important;visibility:hidden;pointer-events:none}
 #laptop.vb-drag .lpcol>:not(#lpChats):not(#lpView):not(#lpSheetBg):not(#lpSheet){transform:translate3d(var(--vbx,0px),0,0);transition:var(--vbt,none);will-change:transform}
 #laptop.vb-drag .lpcol::before{content:"";position:absolute;left:0;top:0;right:0;bottom:0;background:var(--lpwall,var(--bg));transform:translate3d(var(--vbx,0px),0,0);transition:var(--vbt,none);box-shadow:-10px 0 28px rgba(0,0,0,.38);will-change:transform}
 </style>
@@ -5367,7 +5369,10 @@ try{var _ui2w=setInterval(function(){var me=STATE.me;if(!me||me.auth===undefined
    drag is clearly sideways, so scrolling is untouched; once it is, touchmove is cancelled. A question or permission card can only
    be MINIMISED this way (the pending badge stays): it is never answered or dropped. Android back (history) uses the same list of
    screens, one level per press; the page keeps at most ONE history entry, pushed only while there is something to go back to. */
-var VB={g:null,has:false,eating:false,t:0,EDGE:30,FRAC:0.35,FLICK:0.5};
+var VB={g:null,has:false,eating:false,t:0,EDGE:30,FRAC:0.35,FLICK:0.5,cpAt:0,skipPaint:false,warmT:0};
+try{var _vbCp=lpChatsPaint;lpChatsPaint=function(){if(VB.skipPaint)return;VB.cpAt=Date.now();return _vbCp.apply(this,arguments);};}catch(e){}
+function vbWarm(){var lap=vbEl('laptop');if(!lap)return;var on=vbChatLevel();lap.classList.toggle('vb-warm',on);
+  if(on&&!(VB.cpAt&&Date.now()-VB.cpAt<20000)&&!VB.g){clearTimeout(VB.warmT);VB.warmT=setTimeout(function(){if(!VB.g&&vbChatLevel()){try{lpChatsPaint();}catch(e){}}},350);}}
 function vbEl(id){return document.getElementById(id);}
 function vbRM(){try{return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){return false;}}
 function vbChatLevel(){try{var lap=vbEl('laptop');if(!lap||STATE.view!=='laptop'||!lap.classList.contains('lp-on')||!LP.started)return false;
@@ -5391,7 +5396,7 @@ function vbLayers(){var L=[],lap=vbEl('laptop'),h=function(id){var e=vbEl(id);re
 function vbFoldCard(){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p)return;if(p.perm)lpPermTap({dataset:{lptap:'pfold'}});else if(Array.isArray(p.questions))lpQNav('fold');}
 function vbBack(){var L=vbLayers();if(!L.length)return false;try{L[0].close();}catch(e){return false;}return true;}
 /* ---- history: one entry, only while a screen can be left ---- */
-function vbCheck(){if(VB.eating)return;var any=vbLayers().length>0;
+function vbCheck(){if(VB.eating)return;try{vbWarm();}catch(e){}var any=vbLayers().length>0;
   if(any&&!VB.has){var ua=window.navigator&&navigator.userActivation;if(ua&&!ua.hasBeenActive)return;try{history.pushState({vrb:1},'');VB.has=true;}catch(e){}}
   else if(!any&&VB.has){VB.eating=true;VB.has=false;try{history.back();}catch(e){VB.eating=false;}}}
 function vbSoon(){clearTimeout(VB.t);VB.t=setTimeout(vbCheck,60);}
@@ -5414,13 +5419,13 @@ function vbAnim(g,to,done){var el=g.el,fin=false,rm=vbRM(),ms=rm?0:210,go=functi
 function vbMove(g,dx){g.dx=Math.max(0,Math.min(dx,g.W));var el=g.el;if(g.layer.n==='chat')el.style.setProperty('--vbx',g.dx+'px');else el.style.transform='translate3d('+g.dx+'px,0,0)';
   if(g.lst)g.lst.style.transform='translate3d('+(-Math.round((1-g.dx/g.W)*g.W*0.3))+'px,0,0)';}
 function vbBegin(g){var lap=vbEl('laptop'),ch=g.layer.n==='chat';
-  if(ch){g.lap=lap;try{lpChatsPaint();}catch(e){}g.lst=vbEl('lpChats');g.el.style.setProperty('--vbt','none');g.el.style.setProperty('--vbx','0px');lap.classList.add('vb-drag');if(g.lst){g.lst.style.transition='none';g.lst.style.transform='translate3d('+(-Math.round(g.W*0.3))+'px,0,0)';}}
+  if(ch){g.lap=lap;if(!(VB.cpAt&&Date.now()-VB.cpAt<30000)){try{lpChatsPaint();}catch(e){}}g.lst=vbEl('lpChats');g.el.style.setProperty('--vbt','none');g.el.style.setProperty('--vbx','0px');lap.classList.add('vb-drag');if(g.lst){g.lst.style.transition='none';g.lst.style.transform='translate3d('+(-Math.round(g.W*0.3))+'px,0,0)';}}
   else{g.el.style.transition='none';g.el.style.willChange='transform';}}
 function vbEnd(g,cancelled){VB.g=null;var ok=false;
   if(!cancelled){var s=g.s,n=s.length,v=0;if(n>1){var a=s[Math.max(0,n-4)],b=s[n-1];v=(b.x-a.x)/Math.max(1,b.t-a.t);}
     ok=g.dx>=g.W*VB.FRAC||(v>=VB.FLICK&&g.dx>=40);}
   var lap=g.lap||vbEl('laptop');
-  if(ok)vbAnim(g,g.W,function(){try{g.layer.close();}catch(e){}vbClear(g.el,g.lst,lap);vbSoon();});
+  if(ok)vbAnim(g,g.W,function(){VB.skipPaint=g.layer.n==='chat'&&VB.cpAt&&Date.now()-VB.cpAt<30000;try{g.layer.close();}catch(e){}VB.skipPaint=false;vbClear(g.el,g.lst,lap);vbSoon();if(g.layer.n==='chat')setTimeout(function(){try{if(LP.chatsOn)lpChatsPaint();}catch(e){}},400);});
   else vbAnim(g,0,function(){vbClear(g.el,g.lst,lap);});}
 document.addEventListener('touchstart',function(e){
   if(VB.g){if(e.touches.length>1&&VB.g.on)vbEnd(VB.g,true);else if(e.touches.length>1)VB.g=null;return;}

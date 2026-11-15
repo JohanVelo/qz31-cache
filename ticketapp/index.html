@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-19';
+var LP_BUILD='CHAT-20261115-20';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3772,7 +3772,8 @@ function lpMicLog(m){if(!m||m.logged)return;m.logged=1;try{var now=performance.n
   api('/clientlog',{method:'POST',body:JSON.stringify({msg:'mic-timing',stack:JSON.stringify(t),ua:navigator.userAgent,page:location.href})}).catch(function(){});}catch(e){}}
 function lpMicOk(){if(lpVoxOk())return true;if(LP.micDead||!lpMicApi()||lpLS('lp_mic_off')==='1')return false;var sa=false;
   try{sa=navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}catch(e){}return !(sa&&lpAppleWebKit());}
-function lpMicShow(){var b=lpG('lpMic');if(!b)return;var h=!lpMicOk();if(b.hidden!==h)b.hidden=h;}
+/* 2026-11-15 CHAT-20 (JJ: "remove the mic button", he dictates with the Wispr Flow keyboard): hidden unless localStorage lp_mic_on='1' */
+function lpMicShow(){var b=lpG('lpMic');if(!b)return;var h=lpLS('lp_mic_on')!=='1'||!lpMicOk();if(b.hidden!==h)b.hidden=h;}
 function lpMicPrev(t){var p=lpG('lpMicPrev');if(!p)return;lpTog(p,'on',!!LP.mic);lpSetText(p,LP.mic?(t||'Listening…'):'');}
 function lpMicState(){var b=lpG('lpMic');if(b){lpTog(b,'lp-rec',!!LP.mic);b.setAttribute('aria-pressed',LP.mic?'true':'false');}lpMicPrev('');}
 function lpMicStop(){lpVoxDrop();var m=LP.mic;if(!m)return;if(!m.why)m.why='abort';lpMicLog(m);LP.mic=null;try{m.r.abort();}catch(e){}lpMicState();}

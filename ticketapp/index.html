@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-7';
+var LP_BUILD='CHAT-20261115-8';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3700,43 +3700,62 @@ function lpPasteText(s,e,no){var ta=lpG('lpIn');
 /* ── 2026-11-15 mic (WhatsApp-style dictation): tap the mic, speak, tap again. The laptop writes it out
    (Wispr Flow when ~/.savepoint-stt/wispr_key.txt holds a key, else local Whisper) and the words land in
    the box; nothing is sent. Same /laptop/voice-sign + /laptop/voice-text route as the ticket form's voice. */
-var LP_VOX_MIN_MS=600,LP_VOX_MAX_MS=300000,LP_VOX_WAIT_MS=100000;
+var LP_VOX_MIN_MS=600,LP_VOX_MAX_MS=300000,LP_VOX_WAIT_MS=100000,LP_VOX_LIVE_MS=1500;
+/* 2026-11-15 live words (JJ "go A"): while recording, the audio so far goes to the laptop every 1.5 s and the words show
+   above the box as you talk. On stop the latest words go into the box at once, then the full pass replaces them (only if
+   the box still holds them unchanged). Same secure route as before: signed upload + /laptop/voice-text. */
 function lpVoxExt(t){t=String(t||'audio/mp4');return /webm/.test(t)?'webm':/ogg/.test(t)?'ogg':/wav/.test(t)?'wav':'m4a';}
 function lpVoxOk(){try{return lpLS('lp_vox_off')!=='1'&&!!(STATE.me&&STATE.me.role==='owner'&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder&&window.crypto&&crypto.subtle);}catch(e){return false;}}
 function lpVoxUi(on,t){var b=lpG('lpMic');if(b){lpTog(b,'lp-rec',!!on);b.setAttribute('aria-pressed',on?'true':'false');}var p=lpG('lpMicPrev');if(p){lpTog(p,'on',!!t);lpSetText(p,t||'');}}
-function lpVoxEnd(v){clearTimeout(v.cap);if(v.st){try{v.st.getTracks().forEach(function(k){k.stop();});}catch(e){}}}
+function lpVoxEnd(v){clearTimeout(v.cap);clearInterval(v.liveT);if(v.st){try{v.st.getTracks().forEach(function(k){k.stop();});}catch(e){}}}
 function lpVoxDrop(){var v=LP.vox;if(!v||v.busy)return;LP.vox=null;v.dropped=true;try{if(v.mr&&v.mr.state!=='inactive')v.mr.stop();}catch(e){}lpVoxEnd(v);lpVoxUi(false,'');}
+function lpVoxType(v){return ((v.mr&&v.mr.mimeType)||(v.chunks[0]&&v.chunks[0].type)||'audio/mp4').split(';')[0];}
 function lpVox(){var v=LP.vox;
-  if(v){if(v.busy)return;if(!v.mr){v.stopOnReady=true;return;}try{v.mr.stop();}catch(e){lpVoxDrop();}return;}
+  if(v){if(v.busy)return;if(!v.mr){v.stopOnReady=true;return;}clearInterval(v.liveT);try{v.mr.stop();}catch(e){lpVoxDrop();}return;}
   v={chunks:[],sid:LP.sel};LP.vox=v;lpVoxUi(true,'Starting the mic…');
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){v.st=st;if(LP.vox!==v||v.dropped){lpVoxEnd(v);return;}
     var mr;try{mr=new MediaRecorder(st,{audioBitsPerSecond:32000});}catch(e){try{mr=new MediaRecorder(st);}catch(e2){lpVoxFail('This phone cannot record here');return;}}v.mr=mr;
     mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)v.chunks.push(ev.data);};mr.onstop=function(){lpVoxStopped(v);};
-    v.t0=Date.now();mr.start();v.ext0=lpVoxExt(mr.mimeType||'');v.signP=api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:1,ext:v.ext0})}).catch(function(){return null;});lpVoxUi(true,'Listening… tap the mic when done');v.cap=setTimeout(function(){if(LP.vox===v&&v.mr&&v.mr.state!=='inactive')v.mr.stop();},LP_VOX_MAX_MS);
-    if(v.stopOnReady)v.mr.stop();},
+    v.t0=Date.now();try{mr.start(400);}catch(e){mr.start();}v.ext0=lpVoxExt(mr.mimeType||'');
+    v.signP=api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:1,ext:v.ext0})}).catch(function(){return null;});
+    lpVoxUi(true,'Listening… tap the mic when done');v.liveT=setInterval(function(){lpVoxLive(v);},LP_VOX_LIVE_MS);
+    v.cap=setTimeout(function(){if(LP.vox===v&&v.mr&&v.mr.state!=='inactive'){clearInterval(v.liveT);v.mr.stop();}},LP_VOX_MAX_MS);
+    if(v.stopOnReady){clearInterval(v.liveT);v.mr.stop();}},
     function(){lpVoxFail('Allow the microphone for Relay');});}
 function lpVoxFail(t){var v=LP.vox;if(v)lpVoxEnd(v);LP.vox=null;lpVoxUi(false,'');toast(t);}
-function lpVoxStopped(v){lpVoxEnd(v);if(v.dropped||LP.vox!==v)return;
-  if(!v.t0||Date.now()-v.t0<LP_VOX_MIN_MS||!v.chunks.length){LP.vox=null;lpVoxUi(false,'');toast('Tap the mic, speak, then tap it again');return;}
-  var type=((v.mr&&v.mr.mimeType)||v.chunks[0].type||'audio/mp4').split(';')[0],ext=lpVoxExt(type);
-  var blob=new Blob(v.chunks,{type:type}),sha;v.busy=true;lpVoxUi(false,'Writing it out…');
+/* one recording to text: signed upload, then the laptop writes it out. Resolves the words, rejects with a reason. */
+function lpVoxSend(blob,type,ext,signP,alive){var sha;
   var hp=blob.arrayBuffer().then(function(buf){return crypto.subtle.digest('SHA-256',buf);}).then(function(h){sha=lpHex(h);});
-  var pre=v.signP&&v.ext0===ext?v.signP.then(function(r){return r&&r.ok&&r.j&&r.j.url?r:api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:blob.size,ext:ext})});}):api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:blob.size,ext:ext})});
-  Promise.all([pre,hp]).then(function(rs){var r=rs[0];
-      if(!r.ok||!r.j||!r.j.url)throw String((r.j&&r.j.error)||'The laptop could not take it');var up=r.j;
+  var fresh=function(){return api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:blob.size,ext:ext})});};
+  var pre=signP?signP.then(function(r){return r&&r.ok&&r.j&&r.j.url?r:fresh();}):fresh();
+  return Promise.all([pre,hp]).then(function(rs){var r=rs[0];
+      if(!r||!r.ok||!r.j||!r.j.url)throw String((r&&r.j&&r.j.error)||'The laptop could not take it');var up=r.j;
       return fetch(up.url,{method:'PUT',headers:{'Content-Type':type,'x-upsert':'false'},body:blob}).then(function(pr){if(!pr.ok)throw 'The recording did not upload';
         return api('/laptop/voice-text',{method:'POST',body:JSON.stringify({machine_id:up.machine_id,path:up.path,size:blob.size,sha256:sha,mime:type,client_id:lpCid()})});});
-    }).then(function(r){if(!r.ok||!r.j||!r.j.id)throw String((r.j&&r.j.error)||'The laptop could not take it');lpVoxPoll(v,r.j.id,Date.now());
-    }).catch(function(e){lpVoxFail(typeof e==='string'?e:'Could not reach Relay');});}
-function lpVoxPoll(v,id,t0){if(LP.vox!==v)return;if(Date.now()-t0>LP_VOX_WAIT_MS){lpVoxFail('The laptop did not answer');return;}
-  setTimeout(function(){api('/laptop/voice-text?id='+encodeURIComponent(id)).then(function(r){var j=r.j||{};if(LP.vox!==v)return;
-      if(j.status==='done'){LP.vox=null;lpVoxUi(false,'');lpVoxWords(v,String(j.text||''));return;}
-      if(j.status==='failed'){lpVoxFail(String(j.reason||'The laptop could not write it out'));return;}
-      lpVoxPoll(v,id,t0);},function(){lpVoxPoll(v,id,t0);});},400);}
-function lpVoxWords(v,text){text=String(text||'').trim();if(!text){toast('No words heard');return;}
-  if(v.sid!==LP.sel){toast('That recording finished after you changed chat, so it was not added');return;}
-  var ta=lpG('lpIn');if(!ta)return;var foc=document.activeElement===ta,s0=foc?ta.selectionStart:ta.value.length,e0=foc?ta.selectionEnd:ta.value.length,before=ta.value.slice(0,s0);
-  lpInsert((before&&!/\s$/.test(before)?' ':'')+lpMask(text),s0,e0,function(){if(LP.arm)lpDisarm();lpDraftSoon();});}
+    }).then(function(r){if(!r.ok||!r.j||!r.j.id)throw String((r.j&&r.j.error)||'The laptop could not take it');return lpVoxWait(r.j.id,Date.now(),alive);});}
+function lpVoxWait(id,t0,alive){return new Promise(function(res,rej){(function next(){if(!alive())return rej('gone');if(Date.now()-t0>LP_VOX_WAIT_MS)return rej('The laptop did not answer');
+  setTimeout(function(){api('/laptop/voice-text?id='+encodeURIComponent(id)).then(function(r){var j=r.j||{};
+      if(j.status==='done')return res(String(j.text||''));if(j.status==='failed')return rej(String(j.reason||'The laptop could not write it out'));next();},next);},400);})();});}
+function lpVoxLive(v){if(LP.vox!==v||v.stopped||v.liveBusy||!v.chunks.length||v.chunks.length===v.liveN)return;
+  var n=v.chunks.length,type=lpVoxType(v);v.liveBusy=true;
+  lpVoxSend(new Blob(v.chunks.slice(0,n),{type:type}),type,lpVoxExt(type),null,function(){return LP.vox===v&&!v.stopped;}).then(function(t){
+    v.liveN=n;t=String(t||'').trim();if(t&&LP.vox===v&&!v.stopped){v.liveText=t;lpVoxUi(true,t);}},function(){}).then(function(){v.liveBusy=false;});}
+function lpVoxStopped(v){lpVoxEnd(v);v.stopped=true;if(v.dropped||LP.vox!==v)return;
+  if(!v.t0||Date.now()-v.t0<LP_VOX_MIN_MS||!v.chunks.length){LP.vox=null;lpVoxUi(false,'');toast('Tap the mic, speak, then tap it again');return;}
+  var type=lpVoxType(v),ext=lpVoxExt(type),blob=new Blob(v.chunks,{type:type});v.busy=true;
+  var prov=v.liveText?lpVoxWords(v,v.liveText):null;lpVoxUi(false,prov?'':'Writing it out…');
+  lpVoxSend(blob,type,ext,v.ext0===ext?v.signP:null,function(){return LP.vox===v;}).then(function(t){LP.vox=null;lpVoxUi(false,'');
+      t=String(t||'').trim();if(!prov){lpVoxWords(v,t);return;}if(!t||lpMask(t)===prov.text)return;lpVoxSwap(v,prov,t);},
+    function(e){if(prov){LP.vox=null;lpVoxUi(false,'');return;}lpVoxFail(typeof e==='string'?e:'Could not reach Relay');});}
+/* puts the words into the box; returns where they went so the full pass can replace them */
+function lpVoxWords(v,text){text=String(text||'').trim();if(!text){toast('No words heard');return null;}
+  if(v.sid!==LP.sel){toast('That recording finished after you changed chat, so it was not added');return null;}
+  var ta=lpG('lpIn');if(!ta)return null;var foc=document.activeElement===ta,s0=foc?ta.selectionStart:ta.value.length,e0=foc?ta.selectionEnd:ta.value.length,before=ta.value.slice(0,s0);
+  var m=lpMask(text),ins=(before&&!/\s$/.test(before)?' ':'')+m;
+  lpInsert(ins,s0,e0,function(){if(LP.arm)lpDisarm();lpDraftSoon();});return {at:s0+ins.length-m.length,text:m};}
+function lpVoxSwap(v,prov,t){if(v.sid!==LP.sel)return;var ta=lpG('lpIn');if(!ta)return;t=lpMask(t);
+  if(ta.value.substr(prov.at,prov.text.length)!==prov.text)return;   /* edited since: leave it alone */
+  lpInsert(t,prov.at,prov.at+prov.text.length,function(){lpDraftSoon();});}
 function lpMicApi(){return window.SpeechRecognition||window.webkitSpeechRecognition||null;}
 function lpMicOk(){if(lpVoxOk())return true;if(LP.micDead||!lpMicApi()||lpLS('lp_mic_off')==='1')return false;var sa=false;
   try{sa=navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}catch(e){}return !(sa&&lpAppleWebKit());}

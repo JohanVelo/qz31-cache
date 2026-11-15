@@ -2267,7 +2267,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-30';
+var LP_BUILD='CHAT-20261116-31';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2497,7 +2497,7 @@ function lpStateUrl(){var q='/laptop/state?v=2'+lpStateIds();if(!LP.fullOnce)ret
   if(LP.sel){var S=LP.sess[LP.sel];q+='&sel='+encodeURIComponent(LP.sel)+'&fp='+encodeURIComponent(S&&S.fp||'');}
   return q;}
 /* back online / back in view: retry now (a sync still in flight retries the moment it ends) */
-function lpRetryNow(){if(STATE.view!=='laptop')return;if(LP.inflight){LP.kick=true;return;}lpLoad();}
+function lpRetryNow(){if(STATE.view!=='laptop')return;LP.oqAt=0;if(LP.inflight){LP.kick=true;return;}lpLoad();}
 function lpCode(r){var k=String(r&&r.status||0)+((r&&r.j&&r.j.code)?' '+String(r.j.code).replace(/[^a-z_]/g,'').slice(0,24):'');LP.dbg.codes[k]=(LP.dbg.codes[k]||0)+1;}
 function lpCmp(a,b){var x=String(a.name||'').toLowerCase(),y=String(b.name||'').toLowerCase();if(x!==y)return x<y?-1:1;var s=String(a.session_id),t=String(b.session_id);return s<t?-1:s>t?1:0;}
 /* ── RELAY CHAT: one chat per terminal slot (server laptop_chats), kept across handoffs ── */
@@ -2576,6 +2576,7 @@ function lpIngest(d){
   LP.prevSids=seen;if(want&&!seen[want]&&++LP.wantTries>5)LP.want=null;
   lpBadge(vis.filter(function(s){return s.status==='waiting'&&now-lpT(s.updated_at)<LP_OFFLINE_MS;}).length);
   lpOutboxCheck(d.commands||[]);
+  lpOqFlush();
   lpPaint();
   lpHistMaybe();
 }
@@ -3041,6 +3042,34 @@ function lpPaintCmds(){var box=lpG('lpCmds');if(!box||LP.selMode)return;var S=LP
 function lpOnRetry(el){var id=el.getAttribute('data-cmd'),c=lpCmdsFor(LP.sel).filter(function(x){return String(x.id)===id;})[0];if(!c)return;
   LP.handled[c.id]=1;if(lpBoxVal().indexOf(String(c.body||''))<0||!String(c.body||''))lpPrepend(String(c.body||''),function(){lpDraftNow();});lpTrayBack(LP.sel,c.attachments);toast('Back in the box: tap Send to try again');
   var ta=lpG('lpIn');if(ta)try{ta.focus();}catch(e){}}
+
+/* ── R1 (CHAT-31, 2026-11-16): a chat send with no signal waits in a SAVED outbox (lp_outq, same client_id) and goes out by itself
+   after the next good sync (network back, app reopened, page reloaded). The server queues a client_id once, so a try that did arrive
+   comes back 'dup', never a second command. Text only (files go back in the tray as before). Older than 30 min = back in the box,
+   never typed late into a terminal that has moved on. Wiped with every other lp_ key. ── */
+var LP_OQ_MS=30*60000,LP_OQ_GAP=5000;
+function lpOqGet(){try{var a=JSON.parse(lpLS('lp_outq')||'[]');return Array.isArray(a)?a.filter(function(x){return x&&typeof x.text==='string'&&x.cid&&x.sid;}):[];}catch(e){return [];}}
+function lpOqPut(a){if(a.length)lpLSset('lp_outq',JSON.stringify(a));else lpLSdel('lp_outq');}
+function lpOqAdd(o,a){var q=lpOqGet().filter(function(x){return x.cid!==a.cid;}),ch=lpChatOf(a.sid);
+  q.push({cid:String(a.cid),sid:String(a.sid),ck:ch?String(ch.chat_key||''):'',text:a.text,whenIdle:!!a.whenIdle,t0:o.t0});lpOqPut(q.slice(-20));lpPaintStat();}
+function lpOqDel(cid){lpOqPut(lpOqGet().filter(function(x){return x.cid!==cid;}));}
+/* the terminal to send to now: the same session, else whoever holds the same chat after a handoff */
+function lpOqSid(x){var S=LP.sess[x.sid];if(S&&S.row&&!S.ghost&&!S.cacheOnly)return x.sid;if(!x.ck)return null;
+  var by=LP.chatBy||{};for(var k in by){if(by[k]&&by[k].chat_key===x.ck){var T=LP.sess[k];if(T&&T.row&&!T.ghost&&!T.cacheOnly)return k;}}return null;}
+function lpOqFlush(){if(LP.oqBusy||LP.locked||!LP.data)return;var q=lpOqGet();if(!q.length)return;
+  if(Date.now()-(LP.oqAt||0)<LP_OQ_GAP)return;LP.oqAt=Date.now();
+  q.forEach(function(x){if(!LP.outbox.some(function(o){return o.cid===x.cid;}))LP.outbox.push({sid:x.sid,text:x.text,t0:+x.t0||0,id:null,state:'waiting',cid:x.cid});});
+  var x=q[0],o=LP.outbox.filter(function(y){return y.cid===x.cid;})[0],next=function(){LP.oqAt=0;setTimeout(lpOqFlush,0);};
+  if(!(Date.now()-(+x.t0||0)<LP_OQ_MS)){lpOqDel(x.cid);lpOutDel(o);lpRefill(o,'Not sent: no signal for 30 min. It is back in the box.');next();return;}
+  var sid=lpOqSid(x);if(!sid){lpOqDel(x.cid);lpOutDel(o);lpRefill(o,'Not sent: that terminal is gone. It is back in the box.');next();return;}
+  o.sid=sid;LP.oqBusy=true;
+  lpSend('text',x.text,{armed:true,sid:sid,cid:x.cid,whenIdle:x.whenIdle}).then(function(r){LP.oqBusy=false;
+    if(r.net){lpPaintStat();return;}   /* still no signal: stays saved, tried again after the next good sync */
+    lpOqDel(x.cid);
+    if(r.ok){o.id=(r.j&&r.j.id!=null)?r.j.id:null;o.state='queued';if(o.id==null)lpOutDel(o);toast(r.j&&r.j.dup?'Back online: it had already arrived':'Back online: sent');lpLoad();}
+    else if(r.status===401||r.status===403)lpOutDel(o);
+    else{lpOutDel(o);lpRefill(o,r.refused?'Not sent: '+r.refused:(lpChatRefusal(r)||String((r.j&&r.j.error)||('Refused ('+r.status+')'))));}
+    lpPaintStat();next();},function(){LP.oqBusy=false;});}
 
 /* ── outbox and refill (F3): sent text waits in memory; a refusal, failure or expiry puts it back ── */
 function lpOutDel(o){LP.outbox=LP.outbox.filter(function(x){return x!==o;});}
@@ -3613,6 +3642,7 @@ function lpDoSend(a){var S=LP.sess[a.sid],raw=lpBoxVal();lpBox(raw.trim()===a.te
   pre.then(function(r){LP.textBusy=false;if(!r.ok&&withF)lpTrayBack(a.sid,null,T);
     if(r.ok){delete LP.risky[a.sid+''+a.text];o.id=(r.j&&r.j.id!=null)?r.j.id:null;o.state='queued';if(o.id==null)lpOutDel(o);LP.textOff=false;
       if(r.j&&r.j.dup)toast('Already queued, not sent twice');if(a.sid===LP.sel&&!lpBoxVal().trim())lpLSdel('lp_draft_'+a.sid);lpLoad();}
+    else if(r.net&&!withF&&a.cid){o.state='waiting';o.cid=a.cid;lpOqAdd(o,a);toast('No signal: it will send by itself when you are back online');}
     else if(r.net){lpOutDel(o);LP.risky[a.sid+'\u0001'+a.text]=a.cid||1;LP.note={sid:a.sid,text:'Network error: it may have been typed. Check the terminal.',until:Date.now()+30000};toast('Network error: it may have been typed');}
     else if(r.status===401||r.status===403)lpOutDel(o);
     else{lpOutDel(o);if(r.wasNet)LP.risky[a.sid+'\u0001'+a.text]=a.cid;if(r.j&&r.j.code==='text_off')LP.textOff=true;if(r.j&&(r.j.code==='terminal_changed'||r.j.code==='laptop_needs_update'))lpLoad();
@@ -3624,6 +3654,7 @@ function lpPaintStat(){var el=lpG('lpStat');if(!el)return;var S=LP.sess[LP.sel],
   else if(!LP.data)t=LP.cacheShown?'Showing saved messages · connecting…':'Connecting…';
   else if(S&&S.ghost)t='terminal gone · Send is off · pick another tab';
   else if(S&&S.row&&lpOff(S.row))t='Window offline since '+lpClock(S.row.updated_at)+' · Send and keys are off';
+  else if(mine.some(function(o){return o.state==='waiting';})){var wn=mine.filter(function(o){return o.state==='waiting';}).length;t=(wn>1?wn+' messages':'1 message')+' waiting for signal · sends by itself when back online';}
   else if(n&&n.sid===LP.sel)t=n.text;
   else if(mine.length)t='';   /* CHAT-8: the bubble's ticks say it (WhatsApp), no status line */
   /* with no phone watching, the laptop checks in every 15 s; this phone just told it to speed up */

@@ -3764,7 +3764,7 @@ function lpMicPrev(t){var p=lpG('lpMicPrev');if(!p)return;lpTog(p,'on',!!LP.mic)
 function lpMicState(){var b=lpG('lpMic');if(b){lpTog(b,'lp-rec',!!LP.mic);b.setAttribute('aria-pressed',LP.mic?'true':'false');}lpMicPrev('');}
 function lpMicStop(){lpVoxDrop();var m=LP.mic;if(!m)return;LP.mic=null;try{m.r.abort();}catch(e){}lpMicState();}
 function lpMic(){if(LP.vox){lpVox();return;}
-  if(!LP.mic&&(!lpMicApi()||LP.micDead||lpLS('lp_ws_off')==='1')){if(lpVoxOk())lpVox();return;}
+  if(!LP.mic&&(!lpMicApi()||LP.micDead||lpLS('lp_ws_off2')==='1')){if(lpVoxOk())lpVox();return;}
   if(LP.mic){var m0=LP.mic;try{m0.r.stop();}catch(e){lpMicStop();}return;}
   var R=lpMicApi(),ta=lpG('lpIn');if(!R||!ta)return;var r;try{r=new R();}catch(e){toast('Voice input is not available here');return;}
   var f0=document.activeElement===ta,m={r:r,s:f0?ta.selectionStart:ta.value.length,e:f0?ta.selectionEnd:ta.value.length};LP.mic=m;

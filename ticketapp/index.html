@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-14';
+var LP_BUILD='CHAT-20261115-15';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3847,7 +3847,7 @@ function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow()
     /* 2026-11-15 (JJ: blank band under the composer after coming back from another app): leave with no box focused, so iOS
        never brings the page back sized for a keyboard that is no longer there. The draft is already saved above. */
     var a=document.activeElement;if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){try{a.blur();}catch(e){}}}
-  else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);lpFit();[150,500,1200].forEach(function(ms){setTimeout(function(){if(LP.started&&document.visibilityState==='visible'){if(window.scrollY||document.documentElement.scrollTop)window.scrollTo(0,0);lpFit();}},ms);});}}
+  else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);lpFit();[150,500,1200].forEach(function(ms){setTimeout(function(){if(document.visibilityState!=='visible')return;try{if(typeof ui2Kb==='function')ui2Kb();}catch(e){}if(LP.started){if(window.scrollY||document.documentElement.scrollTop)window.scrollTo(0,0);lpFit();}},ms);});}}
 function lpOnSelChange(){if(LP.arm&&!lpSelSame(lpSelSnap(),LP.arm.sel))lpDisarm();if(LP.queued&&!lpFrozen())lpPaintConv(false);}
 function lpStart(){if(LP.started)return;LP.started=true;
   var m=document.querySelector('meta[name="viewport"]');if(m){LP.meta=m.getAttribute('content');if(!/interactive-widget/.test(LP.meta||'')&&!lpAppleWebKit())m.setAttribute('content',(LP.meta||'')+',interactive-widget=resizes-content');}
@@ -4994,6 +4994,9 @@ function ui2Tick(){if(document.hidden||!UI2.on)return;ui2Badges();ui2NowPaint();
 function ui2OnScroll(){var y=document.getElementById('app').scrollTop,t=document.getElementById('ui2Tool');if(!t)return;if(Math.abs(y-UI2.lastY)<8)return;var down=y>UI2.lastY&&y>60;UI2.lastY=y;if(t.classList.contains('tuck')!==down&&document.activeElement&&document.activeElement.id!=='q')t.classList.toggle('tuck',down);}
 /* keyboard up on a phone: the search pill rides above it and the bar steps aside */
 function ui2Kb(){if(!UI2.on)return;var vv=window.visualViewport,r=document.documentElement,kb=0;if(vv&&!ui2IsWide())kb=Math.max(0,Math.round(window.innerHeight-(vv.offsetTop+vv.height)));
+  /* 2026-11-15 (JJ 500_1.jpg: search pill floating mid-list after an app switch): iOS can keep reporting a keyboard that has
+     closed. Nothing focused for typing = no keyboard. */
+  var fa0=document.activeElement;if(!(fa0&&(fa0.tagName==='TEXTAREA'||fa0.tagName==='INPUT'||fa0.isContentEditable)))kb=0;
   var a=document.activeElement,typing=a&&a.id==='q'&&!ui2IsWide();
   r.style.setProperty('--ui2kb',kb+'px');if(typing||kb>120)r.setAttribute('data-ui2kb','1');else r.removeAttribute('data-ui2kb');
   if(typing){var t=document.getElementById('ui2Tool');if(t)t.classList.remove('tuck');}}

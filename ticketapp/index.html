@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-23';
+var LP_BUILD='CHAT-20261115-24';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2486,7 +2486,9 @@ function lpPollMs(){var S=LP.sess[LP.sel],r=S&&S.row;
 /* RELAY P1: ask only for what this phone has not got. First load: every session's messages (all=1);
    after that only the open session's, and only when its fingerprint (fp) changed. An older server
    ignores the extra parameters and sends the full list, which lpIngest still takes. */
-function lpStateUrl(){var q='/laptop/state?v=2';if(!LP.fullOnce)return q+'&all=1';
+/* B5 (CHAT-24): name the sends still waiting (&ids=), so the server returns them even past its newest-20 window */
+function lpStateIds(){var a=[];(LP.outbox||[]).forEach(function(o){var n=Number(o&&o.id);if(Number.isSafeInteger(n)&&n>0&&a.indexOf(n)<0&&a.length<40)a.push(n);});return a.length?'&ids='+a.join(','):'';}
+function lpStateUrl(){var q='/laptop/state?v=2'+lpStateIds();if(!LP.fullOnce)return q+'&all=1';
   if(LP.sel){var S=LP.sess[LP.sel];q+='&sel='+encodeURIComponent(LP.sel)+'&fp='+encodeURIComponent(S&&S.fp||'');}
   return q;}
 /* back online / back in view: retry now (a sync still in flight retries the moment it ends) */

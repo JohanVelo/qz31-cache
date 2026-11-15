@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-6';
+var LP_BUILD='CHAT-20261115-7';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3799,7 +3799,12 @@ function lpFit(){var el=lpG('laptop');if(!el||STATE.view!=='laptop'||!LP.started
        so a page opened (or rotated) with the keyboard already up still knows it is up; only full-width windows (never split view) */
     var sc=vv.scale||1,vh=vv.height*sc,w=Math.round((vv.width||window.innerWidth)*sc);if(LP.vvW!==w){LP.vvW=w;LP.vvMax=0;}LP.vvMax=Math.max(LP.vvMax||0,vh,window.innerHeight);
     var scr=0;try{if(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&screen.width&&screen.height){var dw=Math.abs(w-screen.width),dh=Math.abs(w-screen.height);if(Math.min(dw,dh)<=8)scr=dw<=dh?screen.height:screen.width;}}catch(e){}
-    lpTog(el,'lp-kb',vh<Math.max(LP.vvMax*0.8,scr*0.7));}else h=window.innerHeight-top;
+    var kbUp=vh<Math.max(LP.vvMax*0.8,scr*0.7);
+    /* 2026-11-15: iOS can close the keyboard (mic tap, swipe) and leave visualViewport reporting the small height, so the
+       composer floated mid-screen over a blank band. Nothing focused for typing = no keyboard: use the tallest height seen. */
+    var fa=document.activeElement,typing=!!(fa&&(fa.tagName==='TEXTAREA'||(fa.tagName==='INPUT'&&!/^(button|checkbox|radio|range|file|submit)$/i.test(fa.type||''))||fa.isContentEditable));
+    if(kbUp&&!typing){kbUp=false;var full=Math.round(LP.vvMax/sc)-top;if(full>h)h=full;}
+    lpTog(el,'lp-kb',kbUp);}else h=window.innerHeight-top;
   el.style.top=Math.round(top)+'px';el.style.height=Math.max(160,Math.round(h))+'px';LP.fitKey=lpFitKey();LP.fitH=el.style.height;
   /* a small visible area (keyboard up under the top bar) caps the box so the composer never slides under the keyboard */
   var mx=Math.max(44,Math.min(140,Math.round(Math.max(160,h)*0.28)));if(el.style.getPropertyValue('--lpinmax')!==String(mx))el.style.setProperty('--lpinmax',Number(mx));}
@@ -3809,7 +3814,7 @@ function lpBlurFit(e){var el=lpG('laptop');if(!el||!e||!e.target||!el.contains(e
 /* the 1 s safety refit (iOS can close the keyboard without a resize event): only when the visible area moved
    since the last fit or the column height was changed by something else, so an idle tick reads no layout */
 function lpFitKey(){var vv=window.visualViewport;return [window.innerHeight,window.innerWidth,vv?vv.height:0,vv?vv.offsetTop:0,vv?vv.width:0,vv?vv.scale:0].join(',');}
-function lpFitTick(){var el=lpG('laptop');if(!el||!LP.started)return;if(LP.fitKey===lpFitKey()&&LP.fitH===el.style.height)return;lpFit();}
+function lpFitTick(){var el=lpG('laptop');if(!el||!LP.started)return;var fa=document.activeElement,stuck=el.classList.contains('lp-kb')&&!(fa&&(fa.tagName==='TEXTAREA'||fa.tagName==='INPUT'||fa.isContentEditable));if(!stuck&&LP.fitKey===lpFitKey()&&LP.fitH===el.style.height)return;lpFit();}
 function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);lpFit();}}
 function lpOnSelChange(){if(LP.arm&&!lpSelSame(lpSelSnap(),LP.arm.sel))lpDisarm();if(LP.queued&&!lpFrozen())lpPaintConv(false);}
 function lpStart(){if(LP.started)return;LP.started=true;

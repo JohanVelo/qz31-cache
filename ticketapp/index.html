@@ -738,7 +738,8 @@ body.vr-lt #laptop{--lpsent:#D9FDD3;--lprecv:#FFFFFF;--lpwall:#EFEAE2;--lpwtx2:#
 .lpfp{white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #lpView{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;box-sizing:border-box}
 #lpView.on{display:flex}
-#lpView img{max-width:100%;max-height:calc(100% - 52px);object-fit:contain}
+#lpView img{max-width:100%;max-height:calc(100% - 52px);object-fit:contain;touch-action:none;will-change:transform}
+#lpView{touch-action:none}
 #lpViewO{font-size:15px;color:#fff;min-height:44px;display:inline-flex;align-items:center;padding:0 12px}
 #laptop.lp-drop .lppw{outline:2px dashed var(--cyan);outline-offset:-6px}
 .lptool.lp-off{opacity:.45}
@@ -2265,7 +2266,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-24';
+var LP_BUILD='CHAT-20261115-25';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3474,10 +3475,27 @@ function lpRecDone(r){if(LP.rec!==r)return;LP.rec=null;lpTog(lpG('laptop'),'lp-r
   var type=(r.mr&&r.mr.mimeType)||r.chunks[0].type||'audio/mp4',ext=/webm/.test(type)?'webm':/ogg/.test(type)?'ogg':'m4a';
   var f;try{f=new File(r.chunks,'voice-note-'+Math.round(ms/1000)+'s.'+ext,{type:type.split(';')[0]});}catch(e){f=new Blob(r.chunks,{type:type.split(';')[0]});f.name='voice-note.'+ext;}
   lpAddFiles([f]);setTimeout(function(){LP.recSwallow=false;lpOnSend();},50);}
+/* 2026-11-15 CHAT-25 (PLAN 4.5): photo viewer zoom. Two fingers pinch (1x to 5x), one finger drags while zoomed, double tap
+   toggles 2.5x at the tapped spot. A single tap at 1x still closes (after 320 ms, so a double tap can arrive first). */
+function lpVzApply(){var z=LP.vz,i=lpG('lpViewI');if(!z||!i)return;i.style.transform=z.s>1.001?'translate('+Math.round(z.x)+'px,'+Math.round(z.y)+'px) scale('+(Math.round(z.s*100)/100)+')':'';}
+function lpVzDist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1;}
+function lpVzStart(e){var z=LP.vz;if(!z)return;var t=e.touches||[];
+  if(t.length>=2){z.mode='pinch';z.d0=lpVzDist(t[0],t[1]);z.s0=z.s;z.mx=(t[0].clientX+t[1].clientX)/2;z.my=(t[0].clientY+t[1].clientY)/2;z.x0=z.x;z.y0=z.y;}
+  else if(t.length===1&&z.s>1.001){z.mode='pan';z.px=t[0].clientX;z.py=t[0].clientY;z.x0=z.x;z.y0=z.y;}else z.mode='';}
+function lpVzMove(e){var z=LP.vz;if(!z||!z.mode)return;var t=e.touches||[];
+  if(z.mode==='pinch'&&t.length>=2){z.s=Math.max(1,Math.min(5,z.s0*lpVzDist(t[0],t[1])/z.d0));z.x=z.x0+(t[0].clientX+t[1].clientX)/2-z.mx;z.y=z.y0+(t[0].clientY+t[1].clientY)/2-z.my;z.moved=true;}
+  else if(z.mode==='pan'&&t.length===1){var dx=t[0].clientX-z.px,dy=t[0].clientY-z.py;z.x=z.x0+dx;z.y=z.y0+dy;if(Math.abs(dx)+Math.abs(dy)>6)z.moved=true;}
+  else return;if(e.cancelable)e.preventDefault();lpVzApply();}
+function lpVzEnd(e){var z=LP.vz;if(!z)return;if(!(e.touches||[]).length){if(z.s<1.05){z.s=1;z.x=0;z.y=0;}z.mode='';lpVzApply();}else lpVzStart(e);}
+function lpViewTap(x,y){var z=LP.vz;if(!z){lpViewClose();return;}if(z.moved){z.moved=false;return;}var now=Date.now();
+  if(z.lastTap&&now-z.lastTap<320){clearTimeout(z.tapT);z.lastTap=0;
+    if(z.s>1.001){z.s=1;z.x=0;z.y=0;}else{z.s=2.5;z.x=(innerWidth/2-x)*1.5;z.y=(innerHeight/2-y)*1.5;}lpVzApply();return;}
+  z.lastTap=now;clearTimeout(z.tapT);z.tapT=setTimeout(function(){if(LP.vz===z&&z.s<=1.001)lpViewClose();},320);}
 function lpViewOpen(im){var v=lpG('lpView');if(!v||!im||!im.getAttribute('src'))return;v.textContent='';
   var i=lpEl('img');i.id='lpViewI';i.src=im.src;i.alt=im.alt||'photo';var o=lpEl('a',null,'Open full size');o.id='lpViewO';o.href=im.src;o.target='_blank';o.rel='noopener noreferrer';
-  v.appendChild(i);v.appendChild(o);LP.viewOn=true;lpTog(v,'on',true);}
-function lpViewClose(){var v=lpG('lpView');LP.viewOn=false;lpTog(v,'on',false);if(v)v.textContent='';}
+  v.appendChild(i);v.appendChild(o);LP.viewOn=true;lpTog(v,'on',true);LP.vz={s:1,x:0,y:0};
+  if(!v._vz){v._vz=1;v.addEventListener('touchstart',lpVzStart,{passive:false});v.addEventListener('touchmove',lpVzMove,{passive:false});v.addEventListener('touchend',lpVzEnd);v.addEventListener('touchcancel',lpVzEnd);}}
+function lpViewClose(){var v=lpG('lpView');if(LP.vz)clearTimeout(LP.vz.tapT);LP.vz=null;LP.viewOn=false;lpTog(v,'on',false);if(v)v.textContent='';}
 
 /* ── sending ── */
 function lpSend(kind,body,o){o=o||{};
@@ -3847,7 +3865,7 @@ function lpTapUp(e){var t=LPT;if(t&&e.type==='touchend'&&e.cancelable&&vrU()&&/^
   else if(w==='copy')lpOnCopy(t.el);else if(w==='sheet')lpOnSheet(t.el.getAttribute('data-act'));else if(w==='sheetbg')lpSheetClose();
   else if(w==='selcopy')lpSelCopy(t.el);else if(w==='seldone')lpSelOff();else if(w==='paste')lpPaste();else if(w==='mic')lpMic();
   else if(w==='retry')lpOnRetry(t.el);else if(w==='chatok')lpOnChatOk();
-  else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewClose();
+  else if(w==='att')lpOnAtt();else if(w==='attfile')lpOnAttFile();else if(w==='trayx')lpTrayDel(t.el.dataset.id);else if(w==='view')lpViewOpen(t.el);else if(w==='viewx')lpViewTap(x,y);
   else if(w==='fshare')lpFcShare(t.el);else if(w==='qreply')lpQReply(t.el);else if(w==='qpick')lpQPick(t.el);else if(w==='qsend')lpQSend();else if(w==='qnext')lpQNav('next');else if(w==='qback')lpQNav('back');
   else if(w==='qgo')lpQNav('go',+t.el.dataset.qi);else if(w==='qfold')lpQNav('fold');else if(w==='qopen')lpQNav('open');else if(w==='pfold'||w==='popen'||w==='pgo')lpPermTap(t.el,t.t);
   else if(w==='chats')lpChatsOpen();else if(w==='chatsx')lpChatsClose();else if(w==='chatgo'){if(vrU()&&ui2RowBack(t.el))return;lpChatsClose();lpSelect(t.el.dataset.sid,true);}

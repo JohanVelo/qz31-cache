@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-15';
+var LP_BUILD='CHAT-20261115-16';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -5431,7 +5431,10 @@ function vbKids(el){var out=[];if(!el)return out;for(var i=0;i<el.children.lengt
 function vbSet(g,tf,tr){var a=(g.kids||[]).concat(g.bd?[g.bd]:[]);for(var i=0;i<a.length;i++){a[i].style.transition=tr;a[i].style.transform=tf;}}
 function vbClearKids(){var g=VB.last;if(!g)return;VB.last=null;(g.kids||[]).forEach(function(k){k.style.transform='';k.style.transition='';k.style.willChange='';});if(g.bd&&g.bd.parentNode)g.bd.parentNode.removeChild(g.bd);}
 function vbClear(el,lst,lap){vbClearKids();if(el){el.style.transform='';el.style.transition='';el.style.willChange='';el.style.boxShadow='';el.style.removeProperty('--vbx');el.style.removeProperty('--vbt');}if(lst){lst.style.transform='';lst.style.transition='';}if(lap)lap.classList.remove('vb-drag');}
-function vbAnim(g,to,done){var el=g.el,fin=false,rm=vbRM(),ms=rm?0:210,go=function(){if(fin)return;fin=true;done();},ch=g.layer.n==='chat',tr='transform '+ms+'ms cubic-bezier(.2,.8,.2,1)';
+/* 2026-11-15 (relay-lab swipe S2: a second swipe began while the first was still sliding out; the first one's clean-up then wiped the
+   second one's panels, and the second one's own clean-up found nothing left to clear, so the whole chat stayed parked off-screen at
+   translate3d(W)). VB.fin finishes the animation in flight at once, so every swipe starts from a settled page. */
+function vbAnim(g,to,done){var el=g.el,fin=false,rm=vbRM(),ms=rm?0:210,go=function(){if(fin)return;fin=true;if(VB.fin===go)VB.fin=null;done();},ch=g.layer.n==='chat',tr='transform '+ms+'ms cubic-bezier(.2,.8,.2,1)';VB.fin=go;
   if(!ms){if(ch)vbSet(g,'translate3d('+to+'px,0,0)','none');else{el.style.transition='none';el.style.transform='translate3d('+to+'px,0,0)';}setTimeout(go,0);return;}
   if(ch)vbSet(g,'translate3d('+to+'px,0,0)',tr);else{el.style.transition=tr;el.style.transform='translate3d('+to+'px,0,0)';}
   if(g.lst){g.lst.style.transition=tr;g.lst.style.transform='translate3d('+(to>0?0:-Math.round(g.W*0.3))+'px,0,0)';}
@@ -5449,6 +5452,7 @@ function vbEnd(g,cancelled){VB.g=null;var ok=false;
   else vbAnim(g,0,function(){vbClear(g.el,g.lst,lap);});}
 document.addEventListener('touchstart',function(e){
   if(VB.g){if(e.touches.length>1&&VB.g.on)vbEnd(VB.g,true);else if(e.touches.length>1)VB.g=null;return;}
+  if(VB.fin){try{VB.fin();}catch(x){}}
   if(e.touches.length!==1)return;var t=e.touches[0];if(t.clientX>VB.EDGE||t.clientX<0)return;
   var tg=e.target;if(tg&&tg.closest&&tg.closest('textarea,input,select,[contenteditable="true"]'))return;
   try{if(LP.selMode||LP.rec)return;var sel=window.getSelection&&window.getSelection();if(sel&&!sel.isCollapsed&&String(sel).length)return;}catch(x){}

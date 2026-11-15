@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-4';
+var LP_BUILD='CHAT-20261115-5';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3709,7 +3709,7 @@ function lpVox(){var v=LP.vox;
   if(v){if(v.busy)return;if(!v.mr){v.stopOnReady=true;return;}try{v.mr.stop();}catch(e){lpVoxDrop();}return;}
   v={chunks:[],sid:LP.sel};LP.vox=v;lpVoxUi(true,'Starting the mic…');
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){v.st=st;if(LP.vox!==v||v.dropped){lpVoxEnd(v);return;}
-    var mr;try{mr=new MediaRecorder(st);}catch(e){lpVoxFail('This phone cannot record here');return;}v.mr=mr;
+    var mr;try{mr=new MediaRecorder(st,{audioBitsPerSecond:32000});}catch(e){try{mr=new MediaRecorder(st);}catch(e2){lpVoxFail('This phone cannot record here');return;}}v.mr=mr;
     mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)v.chunks.push(ev.data);};mr.onstop=function(){lpVoxStopped(v);};
     v.t0=Date.now();mr.start();lpVoxUi(true,'Listening… tap the mic when done');v.cap=setTimeout(function(){if(LP.vox===v&&v.mr&&v.mr.state!=='inactive')v.mr.stop();},LP_VOX_MAX_MS);
     if(v.stopOnReady)v.mr.stop();},
@@ -3719,8 +3719,8 @@ function lpVoxStopped(v){lpVoxEnd(v);if(v.dropped||LP.vox!==v)return;
   if(!v.t0||Date.now()-v.t0<LP_VOX_MIN_MS||!v.chunks.length){LP.vox=null;lpVoxUi(false,'');toast('Tap the mic, speak, then tap it again');return;}
   var type=((v.mr&&v.mr.mimeType)||v.chunks[0].type||'audio/mp4').split(';')[0],ext=/webm/.test(type)?'webm':/ogg/.test(type)?'ogg':/wav/.test(type)?'wav':'m4a';
   var blob=new Blob(v.chunks,{type:type}),sha;v.busy=true;lpVoxUi(false,'Writing it out…');
-  blob.arrayBuffer().then(function(buf){return crypto.subtle.digest('SHA-256',buf);}).then(function(h){sha=lpHex(h);
-    return api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:blob.size,ext:ext})});}).then(function(r){
+  var hp=blob.arrayBuffer().then(function(buf){return crypto.subtle.digest('SHA-256',buf);}).then(function(h){sha=lpHex(h);});
+  Promise.all([api('/laptop/voice-sign',{method:'POST',body:JSON.stringify({size:blob.size,ext:ext})}),hp]).then(function(rs){var r=rs[0];
       if(!r.ok||!r.j||!r.j.url)throw String((r.j&&r.j.error)||'The laptop could not take it');var up=r.j;
       return fetch(up.url,{method:'PUT',headers:{'Content-Type':type,'x-upsert':'false'},body:blob}).then(function(pr){if(!pr.ok)throw 'The recording did not upload';
         return api('/laptop/voice-text',{method:'POST',body:JSON.stringify({machine_id:up.machine_id,path:up.path,size:blob.size,sha256:sha,mime:type,client_id:lpCid()})});});
@@ -3730,7 +3730,7 @@ function lpVoxPoll(v,id,t0){if(LP.vox!==v)return;if(Date.now()-t0>LP_VOX_WAIT_MS
   setTimeout(function(){api('/laptop/voice-text?id='+encodeURIComponent(id)).then(function(r){var j=r.j||{};if(LP.vox!==v)return;
       if(j.status==='done'){LP.vox=null;lpVoxUi(false,'');lpVoxWords(v,String(j.text||''));return;}
       if(j.status==='failed'){lpVoxFail(String(j.reason||'The laptop could not write it out'));return;}
-      lpVoxPoll(v,id,t0);},function(){lpVoxPoll(v,id,t0);});},1200);}
+      lpVoxPoll(v,id,t0);},function(){lpVoxPoll(v,id,t0);});},400);}
 function lpVoxWords(v,text){text=String(text||'').trim();if(!text){toast('No words heard');return;}
   if(v.sid!==LP.sel){toast('That recording finished after you changed chat, so it was not added');return;}
   var ta=lpG('lpIn');if(!ta)return;var s0=ta.selectionStart,e0=ta.selectionEnd,before=ta.value.slice(0,s0);

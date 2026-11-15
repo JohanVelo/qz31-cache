@@ -2267,7 +2267,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-29';
+var LP_BUILD='CHAT-20261115-30';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -5272,10 +5272,18 @@ function s6SignBody(raw){var pl;try{pl=JSON.parse(raw);}catch(e){return Promise.
       return crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},rec.priv,new TextEncoder().encode(data));}).then(function(sg){sig.s=s6B64u(sg);pl.sig=sig;return JSON.stringify(pl);});
   }).catch(function(){return null;});}
 /* Every send goes through api(), so the Now bar's Allow and every retry are covered and lpSend is not touched. S6_WAIT is the most a send can ever wait for its signature. */
+/* CHAT-30 (S6/B7): voice-to-text and New terminal are signed too, over exactly the command the SERVER builds from the
+   request (velocity-relay handleLaptopVoiceText / handleLaptopNewTerminal), so the laptop can run in enforce mode. */
+function s6Clean(v,n){return typeof v==='string'?v.replace(/[\x00-\x1f\x7f]/g,' ').trim().slice(0,n):'';}
+function s6SignAs(raw,p){var pl;try{pl=JSON.parse(raw);}catch(e){return Promise.resolve(null);}if(!pl||pl.sig)return Promise.resolve(null);var cmd;
+  if(p==='/laptop/voice-text')cmd={session_id:'voice-text',kind:'text',body:'[[relay-voice-text]]',attachments:[{sha256:pl.sha256,size:pl.size,kind:'file',mime:pl.mime}]};
+  else{var o={},nm=s6Clean(pl.name,60),cw=s6Clean(pl.cwd,400),ac=s6Clean(pl.account,60);if(nm)o.name=nm;if(cw)o.cwd=cw;if(ac)o.account=ac;cmd={session_id:'new-terminal',kind:'text',body:'[[relay-new-terminal]]'+JSON.stringify(o)};}
+  return s6SignBody(JSON.stringify(cmd)).then(function(sb){if(typeof sb!=='string')return null;var sg=JSON.parse(sb).sig;if(!sg)return null;pl.sig=sg;return JSON.stringify(pl);},function(){return null;});}
 function ui2S6Mount(){if(S6.wrapped)return;S6.wrapped=true;var _api=api;api=function(p,opt){
-    if(p!=='/laptop/send'||!opt||typeof opt.body!=='string'||!s6On())return _api(p,opt);
+    var also=(p==='/laptop/voice-text'||p==='/laptop/new-terminal')&&opt&&String(opt.method||'GET').toUpperCase()==='POST';
+    if((p!=='/laptop/send'&&!also)||!opt||typeof opt.body!=='string'||!s6On())return _api(p,opt);
     var timer=null,late=new Promise(function(res){timer=setTimeout(function(){res(null);},S6_WAIT);}),sign;
-    try{sign=s6SignBody(opt.body);}catch(e){sign=Promise.resolve(null);}
+    try{sign=also?s6SignAs(opt.body,p):s6SignBody(opt.body);}catch(e){sign=Promise.resolve(null);}
     return Promise.race([sign,late]).then(function(b){clearTimeout(timer);return b;},function(){clearTimeout(timer);return null;}).then(function(b){if(typeof b!=='string')return _api(p,opt);var o={};for(var k in opt)o[k]=opt[k];o.body=b;return _api(p,o);});};
   /* read the key ahead, so a normal send only spends the few ms of signing, never a cold key store (the 800 ms limit is for faults) */
   setTimeout(function(){if(s6On())s6Key();},1500);

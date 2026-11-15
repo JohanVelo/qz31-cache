@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-18';
+var LP_BUILD='CHAT-20261115-19';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3707,13 +3707,22 @@ var LP_VOX_MIN_MS=600,LP_VOX_MAX_MS=300000,LP_VOX_WAIT_MS=100000,LP_VOX_LIVE_MS=
 function lpVoxExt(t){t=String(t||'audio/mp4');return /webm/.test(t)?'webm':/ogg/.test(t)?'ogg':/wav/.test(t)?'wav':'m4a';}
 function lpVoxOk(){try{return lpLS('lp_vox_off')!=='1'&&!!(STATE.me&&STATE.me.role==='owner'&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder&&window.crypto&&crypto.subtle);}catch(e){return false;}}
 function lpVoxUi(on,t){var b=lpG('lpMic');if(b){lpTog(b,'lp-rec',!!on);b.setAttribute('aria-pressed',on?'true':'false');}var p=lpG('lpMicPrev');if(p){lpTog(p,'on',!!t);lpSetText(p,t||'');}}
-function lpVoxEnd(v){clearTimeout(v.cap);clearInterval(v.liveT);if(v.st){try{v.st.getTracks().forEach(function(k){k.stop();});}catch(e){}}}
+function lpVoxEnd(v){clearTimeout(v.cap);clearInterval(v.liveT);lpMicKeep();}
+/* 2026-11-15 CHAT-19 (JJ: iOS asked "Allow microphone" on every tap): one grant is reused while Relay is open; the mic is let go
+   after 2 min without dictation or as soon as the app goes to the background */
+var LP_MIC_KEEP_MS=120000;
+function lpMicKeep(){clearTimeout(LP.micRelT);if(LP.micSt)LP.micRelT=setTimeout(lpMicRelease,LP_MIC_KEEP_MS);}
+function lpMicRelease(){clearTimeout(LP.micRelT);var st=LP.micSt;LP.micSt=null;if(LP.vox&&LP.vox.st===st)lpVoxDrop();if(st){try{st.getTracks().forEach(function(k){k.stop();});}catch(e){}}}
+function lpMicGum(){clearTimeout(LP.micRelT);var st=LP.micSt,live=false;try{live=!!st&&st.getTracks().some(function(k){return k.readyState!=='ended';});}catch(e){}
+  if(live)return Promise.resolve(st);return navigator.mediaDevices.getUserMedia({audio:true}).then(function(s2){LP.micSt=s2;return s2;});}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&LP.micSt){var st=LP.micSt;LP.micSt=null;clearTimeout(LP.micRelT);
+  if(LP.vox)lpVoxDrop();try{st.getTracks().forEach(function(k){k.stop();});}catch(e){}}});
 function lpVoxDrop(){var v=LP.vox;if(!v||v.busy)return;LP.vox=null;v.dropped=true;try{if(v.mr&&v.mr.state!=='inactive')v.mr.stop();}catch(e){}lpVoxEnd(v);lpVoxUi(false,'');}
 function lpVoxType(v){return ((v.mr&&v.mr.mimeType)||(v.chunks[0]&&v.chunks[0].type)||'audio/mp4').split(';')[0];}
 function lpVox(){var v=LP.vox;
   if(v){if(v.busy)return;if(!v.mr){v.stopOnReady=true;return;}clearInterval(v.liveT);try{v.mr.stop();}catch(e){lpVoxDrop();}return;}
   v={chunks:[],sid:LP.sel};LP.vox=v;lpVoxUi(true,'Starting the mic…');
-  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){v.st=st;if(LP.vox!==v||v.dropped){lpVoxEnd(v);return;}
+  lpMicGum().then(function(st){v.st=st;if(LP.vox!==v||v.dropped){lpVoxEnd(v);return;}
     var mr;try{mr=new MediaRecorder(st,{audioBitsPerSecond:32000});}catch(e){try{mr=new MediaRecorder(st);}catch(e2){lpVoxFail('This phone cannot record here');return;}}v.mr=mr;
     mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)v.chunks.push(ev.data);};mr.onstop=function(){lpVoxStopped(v);};
     v.t0=Date.now();try{mr.start(400);}catch(e){mr.start();}v.ext0=lpVoxExt(mr.mimeType||'');

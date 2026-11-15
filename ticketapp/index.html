@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-22';
+var LP_BUILD='CHAT-20261115-23';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3620,8 +3620,11 @@ function lpTickFn(){if(STATE.view!=='laptop')return;if(LP.arm&&performance.now()
    (revoked), a server setting typo (cutoff_invalid) or a gateway 401 with no code show the problem and keep everything; only the
    owner gate (not_allowed / unauthorized) twice in a row wipes as before. */
 function lpRefused(r){var c=String((r&&r.j&&r.j.code)||'');
-  if(c==='not_allowed'||c==='unauthorized'){LP.denyN=(LP.denyN||0)+1;if(LP.denyN>=2){lpDenied();return true;}}
-  LP.fails++;LP.connErr=c==='revoked'?'sign-in expired: scan the QR again':c==='cutoff_invalid'?'server sign-in setting is broken':(c==='not_allowed'||c==='unauthorized')?'refused: checking again':'server refused: retrying';
+  /* CHAT-23 (security review): revoked = lost or stolen phone, wipe at once; any other code but cutoff_invalid (a server setting, not this
+     phone) fails closed on the second refusal in a row */
+  if(c==='revoked'){lpDenied();return true;}
+  if(c!=='cutoff_invalid'){LP.denyN=(LP.denyN||0)+1;if(LP.denyN>=2){lpDenied();return true;}}
+  LP.fails++;LP.connErr=c==='cutoff_invalid'?'server sign-in setting is broken':'refused: checking again';
   lpPaintHead();lpKeysState();lpPaintStat();return false;}
 function lpDenied(){lpSheetClose();lpSelOff();lpMicStop();lpWipe();LP.data=null;LP.vis=[];LP.sel=null;LP.convSid=null;LP.rowEls={};LP.sigs={};LP.promptEid='';
   ['lpConv','lpPend','lpCmds','lpChips'].forEach(function(id){var e=lpG(id);if(e)e.textContent='';});

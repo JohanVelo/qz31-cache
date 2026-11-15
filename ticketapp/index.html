@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-17';
+var LP_BUILD='CHAT-20261115-18';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3768,6 +3768,9 @@ function lpMicPrev(t){var p=lpG('lpMicPrev');if(!p)return;lpTog(p,'on',!!LP.mic)
 function lpMicState(){var b=lpG('lpMic');if(b){lpTog(b,'lp-rec',!!LP.mic);b.setAttribute('aria-pressed',LP.mic?'true':'false');}lpMicPrev('');}
 function lpMicStop(){lpVoxDrop();var m=LP.mic;if(!m)return;if(!m.why)m.why='abort';lpMicLog(m);LP.mic=null;try{m.r.abort();}catch(e){}lpMicState();}
 function lpMic(){if(LP.vox){lpVox();return;}
+  /* 2026-11-15 CHAT-18 (JJ: phone speech "not accurate, I like the way Wispr Flow does it"): the laptop's Whisper large-v3-turbo is the
+     default; localStorage lp_mic_apple='1' puts phone speech first again */
+  if(!LP.mic&&lpLS('lp_mic_apple')!=='1'&&lpVoxOk()){lpVox();return;}
   if(!LP.mic&&(!lpMicApi()||LP.micDead||lpLS('lp_ws_off2')==='1')){if(lpVoxOk())lpVox();return;}
   if(LP.mic){var m0=LP.mic;m0.why='user';m0.tu=performance.now();try{m0.r.stop();}catch(e){lpMicStop();}return;}
   var R=lpMicApi(),ta=lpG('lpIn');if(!R||!ta)return;var r;try{r=new R();}catch(e){toast('Voice input is not available here');return;}

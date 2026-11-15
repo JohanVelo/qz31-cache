@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-20';
+var LP_BUILD='CHAT-20261115-21';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3235,9 +3235,14 @@ function lpFcDownload(b){var a=lpFcFind(b.dataset.path);if(!a)return;var st=(LP.
   var u=lpFurl(a.path);if(!u){var ch=lpChatOf(LP.sel);if(ch)lpFurlLoad(ch.chat_key,[a.path]);toast('Getting the link · tap Download again');return;}
   var w=window.open(u+(u.indexOf('?')<0?'?':'&')+'download='+encodeURIComponent(a.name),'_blank','noopener');if(!w)location.href=u+(u.indexOf('?')<0?'?':'&')+'download='+encodeURIComponent(a.name);}
 var LP_UPD_MS=300000;
-function lpUpdCheck(){if(!/^https:/.test(location.protocol)||LP.updBusy)return;LP.updBusy=true;
-  fetch(location.pathname+'?v='+Date.now(),{cache:'no-store',credentials:'omit'}).then(function(r){return r.ok?r.text():'';}).then(function(h){LP.updBusy=false;
-    var m=/var LP_BUILD='([^']+)'/.exec(h||'');if(!m||m[1]===LP_BUILD)return;LP.updNew=m[1];lpUpdTry();},function(){LP.updBusy=false;});}
+/* 2026-11-15 CHAT-21 (PLAN 3.3, audit P3): read the ~20-byte version.txt first; the ~615 KB page is fetched only when it differs
+   (to confirm the CDN already serves the new page, so a lagging CDN never causes a reload loop) or when version.txt is missing. */
+function lpUpdCheck(){if(!/^https:/.test(location.protocol))return;lpUpdFetch();}
+function lpUpdPage(){return fetch(location.pathname+'?v='+Date.now(),{cache:'no-store',credentials:'omit'}).then(function(r){return r.ok?r.text():'';}).then(function(h){
+    var m=/var LP_BUILD='([^']+)'/.exec(h||'');if(!m||m[1]===LP_BUILD)return;LP.updNew=m[1];lpUpdTry();});}
+function lpUpdFetch(){if(LP.updBusy)return;LP.updBusy=true;var done=function(){LP.updBusy=false;};
+  fetch(location.pathname.replace(/[^\/]*$/,'')+'version.txt?v='+Date.now(),{cache:'no-store',credentials:'omit'}).then(function(r){return r.ok?r.text():null;},function(){return null;}).then(function(t){
+    t=t==null?null:String(t).trim();if(t&&/^[A-Za-z0-9._-]{3,60}$/.test(t)){if(t===LP_BUILD)return;return lpUpdPage();}return lpUpdPage();}).then(done,done);}
 function vrBusy(){var a=document.activeElement,t=a&&a.tagName;if(((t==='INPUT'||t==='TEXTAREA')&&a.value)||t==='SELECT'||(a&&a.isContentEditable))return true;
   var r=document.getElementById('reply-text');if(r&&r.value.trim())return true;var q=document.getElementById('q');if(q&&q.value)return true;
   var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('on'))return true;var g=document.getElementById('gSrch');if(g&&!g.hidden)return true;

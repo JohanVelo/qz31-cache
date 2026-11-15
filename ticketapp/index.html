@@ -3815,7 +3815,11 @@ function lpBlurFit(e){var el=lpG('laptop');if(!el||!e||!e.target||!el.contains(e
    since the last fit or the column height was changed by something else, so an idle tick reads no layout */
 function lpFitKey(){var vv=window.visualViewport;return [window.innerHeight,window.innerWidth,vv?vv.height:0,vv?vv.offsetTop:0,vv?vv.width:0,vv?vv.scale:0].join(',');}
 function lpFitTick(){var el=lpG('laptop');if(!el||!LP.started)return;var fa=document.activeElement,stuck=el.classList.contains('lp-kb')&&!(fa&&(fa.tagName==='TEXTAREA'||fa.tagName==='INPUT'||fa.isContentEditable));if(!stuck&&LP.fitKey===lpFitKey()&&LP.fitH===el.style.height)return;lpFit();}
-function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();}else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);lpFit();}}
+function lpVis(){if(document.visibilityState==='hidden'){lpDisarm();lpDraftNow();lpMicStop();
+    /* 2026-11-15 (JJ: blank band under the composer after coming back from another app): leave with no box focused, so iOS
+       never brings the page back sized for a keyboard that is no longer there. The draft is already saved above. */
+    var a=document.activeElement;if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){try{a.blur();}catch(e){}}}
+  else{lpRetryNow();if(LP.rtInfo)lpRtEnsure(LP.rtInfo);lpFit();[150,500,1200].forEach(function(ms){setTimeout(function(){if(LP.started&&document.visibilityState==='visible'){if(window.scrollY||document.documentElement.scrollTop)window.scrollTo(0,0);lpFit();}},ms);});}}
 function lpOnSelChange(){if(LP.arm&&!lpSelSame(lpSelSnap(),LP.arm.sel))lpDisarm();if(LP.queued&&!lpFrozen())lpPaintConv(false);}
 function lpStart(){if(LP.started)return;LP.started=true;
   var m=document.querySelector('meta[name="viewport"]');if(m){LP.meta=m.getAttribute('content');if(!/interactive-widget/.test(LP.meta||'')&&!lpAppleWebKit())m.setAttribute('content',(LP.meta||'')+',interactive-widget=resizes-content');}

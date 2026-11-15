@@ -552,6 +552,7 @@ body.lp-compact #app>.top{display:none}
 #lpMic.lp-rec{color:var(--txt);border-color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan)}
 #lpMicPrev{position:absolute;left:10px;right:10px;bottom:calc(100% + 8px);z-index:3;display:none;padding:10px 12px;background:var(--cell);border:1px solid var(--cyan);border-radius:12px;font-size:15px;line-height:1.4;color:var(--txt2);box-shadow:0 6px 22px rgba(0,0,0,.3)}
 #lpMicPrev.on{display:block}
+#lpIn::placeholder{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){#laptop *{transition:none!important;animation:none!important}}
 /* ── RELAY CHAT (CHAT-20261104): WhatsApp-inspired, Velocity-made. Bubbles, ticks, date pills, grouping, fibre wallpaper,
    working dots, light mode. Laptop tab only; every colour comes from Relay's own tokens. ── */
@@ -2264,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-3';
+var LP_BUILD='CHAT-20261115-4';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3532,7 +3533,7 @@ function lpPh(){var ta=lpG('lpIn');if(!ta)return;var S=LP.sess[LP.sel],r=S&&S.ro
     /* two terminals that read alike get the full name, then the folder, then a short session id (as the old confirm did) */
     if(oth(function(x){return lpShortName(x.row.name)===n;})){n=lpSlotName(r.name);if(oth(function(x){return lpSlotName(x.row.name)===n;})){var me=list.filter(function(x){return x.sid===LP.sel;})[0];
       n+=' · '+lpBase(r.cwd)+(me&&lpTwin(list,me)?' · '+lpShortId(list,me):'');}}
-    t='Message '+n;}
+    t='Message';}
   if(ta.placeholder!==t)ta.placeholder=t;}
 function lpOnKey(k,downT){if(downT-LP.guardAt<LP_GUARD_MS||!lpFresh())return;
   lpSend('key',k).then(function(r){if(r.ok){lpQStep(k);lpLoad();}else if(r.net)toast('send failed: offline');else if(r.status&&r.status!==401&&r.status!==403)toast(String((r.j&&r.j.error)||'send failed'));});}

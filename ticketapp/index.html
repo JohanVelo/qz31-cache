@@ -2264,7 +2264,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261113-2';
+var LP_BUILD='CHAT-20261115-1';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -2713,7 +2713,7 @@ function lpPaintPrompt(S){var box=lpG('lpPend');if(!box)return;
     if(what)card.appendChild(lpEl('pre','lppre',typeof what==='string'?what:JSON.stringify(what)));else if(p.message)card.appendChild(lpEl('div','lpcq',p.message));
     var al=lpKeyBtn('1','Allow');al.classList.add('go');bs.appendChild(al);bs.appendChild(lpKeyBtn('Esc','Deny'));}
   if(bs.children.length)card.appendChild(bs);box.appendChild(card);}
-
+
 /* PERM-1 (2026-11-13, Savepoint 0.6.22): a tool permission dialog in full, answerable here. p.perm is set only when the
    relay_permission.py hook left a request file; without it the plain Allow / Deny keys card above is still used.
    The tap sends [[relay-perm]]{req,choice,suggestion_index}; Savepoint writes the file the hook is waiting for. */
@@ -3006,9 +3006,14 @@ function lpShownIt(S,c){if(!S)return null;var L=S.items,b=lpMaskMemo(String(c.bo
 /* Item 14: take back a message still waiting for Claude to finish; it comes back as a bubble with Send again */
 function lpOnWhenCancel(el){var id=+el.dataset.cmd;if(!id||el.disabled)return;el.disabled=true;
   api('/laptop/cancel',{method:'POST',body:JSON.stringify({id:id})}).then(function(r){if(!r.ok)toast((r.j&&r.j.error)||'Could not cancel it');lpLoad();},function(){el.disabled=false;toast('No connection: not cancelled');});}
+/* 2026-11-15: answers, permission taps and lock/pair sends are commands, not words: show what was chosen, never the raw [[relay-...]] JSON */
+function lpQBody(b){b=String(b||'');var m=/^\[\[relay-(answers|perm|lock|pair)\]\]/.exec(b);if(!m)return b;var j=null;try{j=JSON.parse(b.slice(m[0].length));}catch(e){}
+  if(m[1]==='answers'){var a=j&&Array.isArray(j.answers)?j.answers:[];return a.length?'Answered: '+a.map(function(x){return Array.isArray(x)?x.join(', '):String(x);}).join(' · '):'Answered the question';}
+  if(m[1]==='perm'){var ch=j&&j.choice;return ch==='allow_once'?'Allowed once':ch==='allow_always'?'Allowed always':ch==='deny'?'Denied':'Answered the permission request';}
+  return m[1]==='lock'?'Locked Relay':'Paired this phone';}
 function lpQFill(q,c){var st=String(c.status||'queued'),rd=lpReadOf(c),held=!!c.when_idle&&st==='queued',gone=st==='expired'&&!!(c.result&&c.result.reason==='cancelled'),tk=rd?['\u2713\u2713','Claude has started on it']:held?['\u2713','Waiting for Claude to finish']:gone?['!','Cancelled']:(LP_TICK[st]||['\u2713',st]),bad=st==='failed'||st==='expired';
   q.className='lpq lpq-'+st.replace(/[^a-z]/g,'')+(rd?' lpq-read':'');q.dataset.cmd=String(c.id);q.textContent='';
-  var n=(c.attachments||[]).length;if(n)lpAttEls(q,c);if(String(c.body||'').trim())lpTxt(q,String(c.body));
+  var n=(c.attachments||[]).length;if(n)lpAttEls(q,c);var qb=lpQBody(c.body);if(qb.trim())lpTxt(q,qb);
   var meta=lpEl('span','lpqm'),qd=lpEl('span',({done:'lpdot lpd-i',queued:'lpdot lpd-b',delivered:'lpdot lpd-b',failed:'lpdot lpd-w',expired:'lpdot lpd-w'})[st]||'lpdot lpd-o');qd.setAttribute('aria-hidden','true');meta.appendChild(qd);meta.appendChild(lpEl('span','lpqt',lpHm(c.created_at)));var tick=lpEl('span','lpqk');tick.dataset.tk=tk[0];tick.setAttribute('role','img');tick.setAttribute('aria-label',tk[1]);tick.title=tk[1];meta.appendChild(tick);q.appendChild(meta);
   if(held){q.classList.add('lpq-held');q.appendChild(lpEl('div','lpqh','Sends when Claude finishes'));var cb=lpEl('button','lpbtn lpqc','Cancel');cb.type='button';cb.dataset.lptap='wcancel';cb.dataset.cmd=String(c.id);q.appendChild(cb);}
   if(bad){q.appendChild(lpEl('div','lpqw',st==='failed'?'Failed: '+String((c.result&&c.result.reason)||'the laptop refused it'):tk[1]));

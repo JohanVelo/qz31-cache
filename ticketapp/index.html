@@ -2265,7 +2265,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261115-11';
+var LP_BUILD='CHAT-20261115-12';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -5403,7 +5403,11 @@ function vbLayers(){var L=[],lap=vbEl('laptop'),h=function(id){var e=vbEl(id);re
 function vbFoldCard(){var S=LP.sess[LP.sel],p=S&&S.row&&S.row.pending;if(!p)return;if(p.perm)lpPermTap({dataset:{lptap:'pfold'}});else if(Array.isArray(p.questions))lpQNav('fold');}
 function vbBack(){var L=vbLayers();if(!L.length)return false;try{L[0].close();}catch(e){return false;}return true;}
 /* ---- history: one entry, only while a screen can be left ---- */
-function vbCheck(){if(VB.eating)return;try{vbWarm();}catch(e){}var any=vbLayers().length>0;
+/* 2026-11-15 (JJ: after many swipes it freezes on a picture of the screen): on iPhone a history entry turns on iOS's own
+   edge swipe-back, which shows a snapshot of the page and fights this page's swipe. No entry on Apple touch devices;
+   Android's back button still gets one. An entry left from before is dropped once. */
+function vbNoHist(){try{return typeof lpAppleWebKit==='function'&&lpAppleWebKit()&&navigator.maxTouchPoints>0;}catch(e){return false;}}
+function vbCheck(){if(VB.eating)return;try{vbWarm();}catch(e){}var any=vbLayers().length>0;if(vbNoHist()){if(VB.has){VB.eating=true;VB.has=false;try{history.back();}catch(e){VB.eating=false;}}return;}
   if(any&&!VB.has){var ua=window.navigator&&navigator.userActivation;if(ua&&!ua.hasBeenActive)return;try{history.pushState({vrb:1},'');VB.has=true;}catch(e){}}
   else if(!any&&VB.has){VB.eating=true;VB.has=false;try{history.back();}catch(e){VB.eating=false;}}}
 function vbSoon(){clearTimeout(VB.t);VB.t=setTimeout(vbCheck,60);}

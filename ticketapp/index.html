@@ -516,6 +516,8 @@ body.lp-compact #app>.top{display:none}
 .lpm-u>.lpcopy{position:absolute;right:calc(100% + 4px);bottom:0}
 .lpm-u>.lpcopy::after{content:none}
 .lpm-a,.lpm-u{-webkit-touch-callout:none}
+@media (hover:none) and (pointer:coarse){.lpm-a,.lpm-u{-webkit-user-select:none;user-select:none}}
+#laptop.lp-sheet #lpPane,#laptop.lp-sheet #lpSheet,#laptop.lp-sheet #lpSheet *{-webkit-user-select:none;user-select:none}
 .lpm-a.lpheld,.lpm-u.lpheld{outline:2px solid var(--cyan);outline-offset:4px;border-radius:10px}
 .lpcbar{display:flex;align-items:center;min-height:44px;padding:0 0 0 10px}
 .lpcbar .lplang{flex:1 1 auto;min-width:0;padding:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -2267,7 +2269,7 @@ function setView(v){
    its own scroll pane with a 'Jump to latest' pill, a masked 7-day phone cache, and every terminal listed.
    Nothing from the server is parsed as HTML: values go in with textContent or a dataset, and every
    control is a delegated listener, so no transcript value ever sits in an on*= attribute. */
-var LP_BUILD='CHAT-20261116-31';
+var LP_BUILD='CHAT-20261116-32';
 var LP_FRESH_MS=8000,LP_OFFLINE_MS=90000,LP_HIDE_MS=600000,LP_ARM_MS=5000,LP_ARM_MIN_MS=400,LP_GUARD_MS=400,
   LP_STICK_PX=80,LP_POLL_MS=2000,LP_RETRY_MS=1200,LP_MAX=500,LP_WEEK=7*864e5,LP_RENDER_N=60,LP_MORE_N=50,LP_TEXT_MAX=4000,LP_CHIP_MS=120000;
 var LP={sel:null,timer:null,tick:null,data:null,vis:[],inflight:false,sess:{},fullOnce:false,firstPicked:false,userPicked:false,
@@ -3715,6 +3717,7 @@ function lpPressDown(e){if(LP.selMode||LP.sheet||(e.button!=null&&e.button>0))re
 function lpPressMove(e){var p=LP.press;if(!p||e.pointerId!==p.pid)return;var dx=e.clientX-p.x,dy=e.clientY-p.y;if(dx*dx+dy*dy>LP_HOLD_PX*LP_HOLD_PX)lpPressEnd();}
 function lpSheetOpen(m){var it=m&&m._it;if(!it||!m.isConnected)return;lpSheetClose();
   try{var g=getSelection(),pn=lpG('lpPane');if(g&&!g.isCollapsed&&pn&&pn.contains(g.anchorNode))g.removeAllRanges();}catch(e){}
+  [60,300].forEach(function(t){setTimeout(function(){try{if(!LP.sheet)return;var g=getSelection();if(g&&!g.isCollapsed)g.removeAllRanges();}catch(e){}},t);});
   var red=String(it.text).indexOf('[redacted]')>=0;LP.sheet={m:m,it:it,red:red};
   lpSetText(lpG('lpSheetQ'),String(it.text).slice(0,240));var rs=lpG('lpSheetResend');if(rs)rs.hidden=!(it.role==='user'&&!red);
   var sst=lpG('lpSheetStar');if(sst)lpSetText(sst,lpStarred(m.dataset.k)?'Unstar':'Star');
